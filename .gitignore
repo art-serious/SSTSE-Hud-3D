@@ -1,0 +1,12 @@
+Bin/
+Debug/
+Release/
+*.dll
+**/EntitiesMP/*.cpp
+**/EntitiesMP/*.h
+**/EntitiesMP/Debug/
+**/EntitiesMP/Release/
+**/GameMP/Debug/
+**/GameMP/Release/
+**/GameMP/*.cpp
+**/GameGUIMP/*.cpp

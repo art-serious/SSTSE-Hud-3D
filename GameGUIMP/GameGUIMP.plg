@@ -1,0 +1,62 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: GameMP - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP6CC8.bat" with contents
+[
+@echo off
+copy Release\GameMP.dll D:\DebugSam\TSE\Bin >nul
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP6CC8.bat""
+<h3>Output Window</h3>
+Copying GameMP binaries to D:\DebugSam\TSE\Bin
+<h3>
+--------------------Configuration: GameGUIMP - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP6E01.tmp" with contents
+[
+/nologo /dll /incremental:no /pdb:"Release/GameGUIMP.pdb" /map:"Release/GameGUIMP.map" /debug /machine:I386 /out:"Release/GameGUIMP.dll" /implib:"Release/GameGUIMP.lib" /pdbtype:sept 
+.\Release\ActionsListControl.obj
+.\Release\AxisListCtrl.obj
+.\Release\ConsoleSymbolsCombo.obj
+.\Release\DlgAudioQuality.obj
+.\Release\DlgConsole.obj
+.\Release\DlgEditButtonAction.obj
+.\Release\DlgPlayerAppearance.obj
+.\Release\DlgPlayerControls.obj
+.\Release\DlgPlayerSettings.obj
+.\Release\DlgRenameControls.obj
+.\Release\DlgSelectPlayer.obj
+.\Release\DlgVideoQuality.obj
+.\Release\EditConsole.obj
+.\Release\GameGUI.obj
+.\Release\LocalPlayersList.obj
+.\Release\PressKeyEditControl.obj
+.\Release\StdAfx.obj
+.\Release\GameGUI.res
+\MyMod\Sources\GameMP\Release\GameMP.lib
+]
+Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP6E01.tmp""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP6E02.bat" with contents
+[
+@echo off
+copy Release\GameGUIMP.dll D:\DebugSam\TSE\Bin >nul
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP6E02.bat""
+Linking...
+   Creating library Release/GameGUIMP.lib and object Release/GameGUIMP.exp
+<h3>Output Window</h3>
+Copying GameGUIMP binaries to D:\DebugSam\TSE\Bin
+
+
+
+<h3>Results</h3>
+GameGUIMP.dll - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: EntitiesMP - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPCBDE.tmp" with contents
+[
+/nologo /G5 /MD /W3 /GX /Zi /Ox /Ot /Og /Oi /Oy- /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Fr"Release/" /Fp"Release/EntitiesMP.pch" /Yu"StdH.h" /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\MyMod\Sources\EntitiesMP\Common\HUD.cpp"
+]
+Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPCBDE.tmp"" 
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPCBDF.tmp" with contents
+[
+/nologo /subsystem:windows /dll /incremental:no /pdb:"Release/EntitiesMP.pdb" /map:"Release/EntitiesMP.map" /debug /machine:I386 /out:"Release/EntitiesMP.dll" /implib:"Release/EntitiesMP.lib" /pdbtype:sept 
+.\Release\Common.obj
+.\Release\EmanatingParticles.obj
+.\Release\HUD.obj
+.\Release\Particles.obj
+.\Release\PathFinding.obj
+.\Release\StdH.obj
+.\Release\AirElemental.obj
+.\Release\AmmoItem.obj
+.\Release\AmmoPack.obj
+.\Release\AnimationChanger.obj
+.\Release\AnimationHub.obj
+.\Release\AreaMarker.obj
+.\Release\ArmorItem.obj
+.\Release\BackgroundViewer.obj
+.\Release\BasicEffects.obj
+.\Release\Beast.obj
+.\Release\BigHead.obj
+.\Release\BlendController.obj
+.\Release\BloodSpray.obj
+.\Release\Boneman.obj
+.\Release\Bouncer.obj
+.\Release\Bullet.obj
+.\Release\Camera.obj
+.\Release\CameraMarker.obj
+.\Release\CannonBall.obj
+.\Release\CannonRotating.obj
+.\Release\CannonStatic.obj
+.\Release\ChainsawFreak.obj
+.\Release\Copier.obj
+.\Release\Counter.obj
+.\Release\CrateBus.obj
+.\Release\CrateRider.obj
+.\Release\CreditsHolder.obj
+.\Release\Damager.obj
+.\Release\Debris.obj
+.\Release\DebugEntityStatesDisplay.obj
+.\Release\Demon.obj
+.\Release\DestroyableArchitecture.obj
+.\Release\Devil.obj
+.\Release\DevilMarker.obj
+.\Release\DevilProjectile.obj
+.\Release\DoorController.obj
+.\Release\EffectMarker.obj
+.\Release\Effector.obj
+.\Release\Elemental.obj
+.\Release\EnemyBase.obj
+.\Release\EnemyCounter.obj
+.\Release\EnemyDive.obj
+.\Release\EnemyFly.obj
+.\Release\EnemyMarker.obj
+.\Release\EnemyRunInto.obj
+.\Release\EnemySpawner.obj
+.\Release\EnvironmentBase.obj
+.\Release\EnvironmentMarker.obj
+.\Release\EnvironmentParticlesHolder.obj
+.\Release\Eruptor.obj
+.\Release\ExotechLarva.obj
+.\Release\ExotechLarvaBattery.obj
+.\Release\ExotechLarvaCharger.obj
+.\Release\Eyeman.obj
+.\Release\Fireworks.obj
+.\Release\Fish.obj
+.\Release\Flame.obj
+.\Release\FogMarker.obj
+.\Release\Gizmo.obj
+.\Release\Global.obj
+.\Release\GradientMarker.obj
+.\Release\GravityMarker.obj
+.\Release\GravityRouter.obj
+.\Release\Grunt.obj
+.\Release\GruntSka.obj
+.\Release\Guffy.obj
+.\Release\HazeMarker.obj
+.\Release\Headman.obj
+.\Release\HealthItem.obj
+.\Release\HudPicHolder.obj
+.\Release\Item.obj
+.\Release\KeyItem.obj
+.\Release\LarvaOffspring.obj
+.\Release\Light.obj
+.\Release\Lightning.obj
+.\Release\Marker.obj
+.\Release\MessageHolder.obj
+.\Release\MessageItem.obj
+.\Release\MeteorShower.obj
+.\Release\MirrorMarker.obj
+.\Release\ModelDestruction.obj
+.\Release\ModelHolder.obj
+.\Release\ModelHolder2.obj
+.\Release\ModelHolder3.obj
+.\Release\MoneyItem.obj
+.\Release\WorldLinkController.obj
+.\Release\MovingBrush.obj
+.\Release\MovingBrushMarker.obj
+.\Release\MusicChanger.obj
+.\Release\MusicHolder.obj
+.\Release\NavigationMarker.obj
+.\Release\ParticlesHolder.obj
+.\Release\Pendulum.obj
+.\Release\PhotoAlbum.obj
+.\Release\Player.obj
+.\Release\PlayerActionMarker.obj
+.\Release\PlayerAnimator.obj
+.\Release\PlayerMarker.obj
+.\Release\PlayerView.obj
+.\Release\PlayerWeapons.obj
+.\Release\PlayerWeaponsEffects.obj
+.\Release\PowerUpItem.obj
+.\Release\Projectile.obj
+.\Release\PyramidSpaceShip.obj
+.\Release\PyramidSpaceShipMarker.obj
+.\Release\Reminder.obj
+.\Release\RollingStone.obj
+.\Release\Santa.obj
+.\Release\Scorpman.obj
+.\Release\ScrollHolder.obj
+.\Release\SeriousBomb.obj
+.\Release\Ship.obj
+.\Release\ShipMarker.obj
+.\Release\Shooter.obj
+.\Release\Shop.obj
+.\Release\SoundHolder.obj
+.\Release\SpawnerProjectile.obj
+.\Release\Spinner.obj
+.\Release\StormController.obj
+.\Release\Summoner.obj
+.\Release\SummonerMarker.obj
+.\Release\Switch.obj
+.\Release\TacticsChanger.obj
+.\Release\TacticsHolder.obj
+.\Release\Teleport.obj
+.\Release\TextFXHolder.obj
+.\Release\TimeController.obj
+.\Release\TouchField.obj
+.\Release\Trigger.obj
+.\Release\Twister.obj
+.\Release\VisualCounter.obj
+.\Release\VisualTimer.obj
+.\Release\VoiceHolder.obj
+.\Release\Walker.obj
+.\Release\Watcher.obj
+.\Release\WatchPlayers.obj
+.\Release\Water.obj
+.\Release\WeaponItem.obj
+.\Release\Werebull.obj
+.\Release\Woman.obj
+.\Release\WorldBase.obj
+.\Release\WorldLink.obj
+.\Release\WorldSettingsController.obj
+]
+Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPCBDF.tmp""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPCBF0.bat" with contents
+[
+@echo off
+copy Release\EntitiesMP.dll d:\DebugSam\TSE\Bin\ >nul
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSPCBF0.bat""
+Compiling...
+Command line warning D4002 : ignoring unknown option '/Ot'
+Command line warning D4002 : ignoring unknown option '/Og'
+Command line warning D4002 : ignoring unknown option '/Oi'
+Command line warning D4002 : ignoring unknown option '/Oy-'
+HUD.cpp
+Linking...
+   Creating library Release/EntitiesMP.lib and object Release/EntitiesMP.exp
+<h3>Output Window</h3>
+Copying EntitiesMP binaries to d:\DebugSam\TSE\Bin
+<h3>
+--------------------Configuration: GameMP - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPCE42.tmp" with contents
+[
+user32.lib /nologo /subsystem:windows /dll /incremental:no /pdb:"Release/GameMP.pdb" /map:"Release/GameMP.map" /debug /machine:I386 /out:"Release/GameMP.dll" /implib:"Release/GameMP.lib" /pdbtype:sept 
+.\Release\Camera.obj
+.\Release\CompMessage.obj
+.\Release\CompModels.obj
+.\Release\Computer.obj
+.\Release\Console.obj
+.\Release\Controls.obj
+.\Release\Game.obj
+.\Release\LCDDrawing.obj
+.\Release\LoadingHook.obj
+.\Release\Map.obj
+.\Release\SessionProperties.obj
+.\Release\StdAfx.obj
+.\Release\WEDInterface.obj
+\MyMod\Sources\EntitiesMP\Release\EntitiesMP.lib
+]
+Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPCE42.tmp""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPCE43.bat" with contents
+[
+@echo off
+copy Release\GameMP.dll d:\DebugSam\TSE\Bin >nul
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSPCE43.bat""
+Linking...
+   Creating library Release/GameMP.lib and object Release/GameMP.exp
+<h3>Output Window</h3>
+Copying GameMP binaries to d:\DebugSam\TSE\Bin
+
+
+
+<h3>Results</h3>
+GameMP.dll - 0 error(s), 4 warning(s)
+</pre>
+</body>
+</html>
