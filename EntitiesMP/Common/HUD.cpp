@@ -1239,6 +1239,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
     HUD_DrawIcon(   fCol,         fRow, _atoPowerups[i], _colHUD, fNormValue, TRUE);
     HUD_DrawBar(    fCol+fBarPos, fRow, fOneUnitS/5, fOneUnitS-2, BO_DOWN, NONE, fNormValue);
 	}*/
+
     // play sound if icon is flashing
     if(fNormValue<=(_cttHUD.ctt_fLowMedium/2)) {
       // activate blinking only if value is <= half the low edge
@@ -1376,6 +1377,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
   COLOR colMana, colFrags, colDeaths, colHealth, colArmor, colLatency;
   COLOR colScore  = _colHUD;
   INDEX iScoreSum = 0;
+  INDEX iScoreNextCredit = 0;
 
   CTString strGameMode, strGameDifficulty;
 
@@ -1384,6 +1386,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
 	case  0: strGameMode = TRANS("Cooperative"); break;
 	case  1: strGameMode = TRANS("Scorematch");  break;
 	case  2: strGameMode = TRANS("Fragmatch");   break;
+  case  3: strGameMode = TRANS("Survival cooperation");   break;
   }
 
   switch (GetSP()->sp_gdGameDifficulty) {
@@ -1438,99 +1441,122 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
       psSquadLevel.ps_iSecrets += psLevel.ps_iSecrets ;
     }}
 
-	const INDEX      iDeaths  = _penPlayer->m_psGameStats.ps_iDeaths;
-	CMusicHolder &mh = (CMusicHolder&)*_penPlayer->m_penMainMusicHolder;
-	INDEX iTimerCD = -1;
-	INDEX iHUDTimerCD = -1;
-	iTimerCD = mh.m_fLevelTime + GetSP()->sp_fForceSpectateCD;
-	iHUDTimerCD = iTimerCD - _pTimer->CurrentTick();
-	
+	  const INDEX iDeaths  = _penPlayer->m_psGameStats.ps_iDeaths;
+	  CMusicHolder &mh = (CMusicHolder&)*_penPlayer->m_penMainMusicHolder;
+	  INDEX iTimerCD = -1;
+	  INDEX iHUDTimerCD = -1;
+	  iTimerCD = mh.m_fLevelTime + GetSP()->sp_fForceSpectateCD;
+	  iHUDTimerCD = iTimerCD - _pTimer->CurrentTick();
 
-	CTString strSecrets, strKills, strSessionTime, strDeaths, strCredits, strMaxCredits, strEnemyStrength, strCoopRespawnCDLeft;
-	strKills.PrintF(  "%i / %i", psSquadLevel.ps_iKills,   _penPlayer->m_psLevelTotal.ps_iKills);
-	strSecrets.PrintF("%i / %i", psSquadLevel.ps_iSecrets, _penPlayer->m_psLevelTotal.ps_iSecrets);
-	strDeaths.PrintF( "%d",  iDeaths);
-	strCredits.PrintF("%d / %d", GetSP()->sp_ctCreditsLeft, GetSP()->sp_ctCredits);
-	strSessionTime.PrintF("%s", TimeToString(_pNetwork->GetGameTime()));
-	strGameMode.PrintF("%s - %s", strGameMode, strGameDifficulty);
-	strCoopRespawnCDLeft.PrintF("%i", iHUDTimerCD);
-	INDEX iEnemyStrengthPercent = 100 + (GetSP()->sp_fExtraEnemyStrength + GetSP()->sp_fExtraEnemyStrengthPerPlayer * _pNetwork->ga_sesSessionState.GetPlayersCount()) * 100;
-	strEnemyStrength.PrintF("%i%s", iEnemyStrengthPercent, "%");
+    if (GetSP()->sp_gmGameMode==3) {
+      iScoreNextCredit = mh.GetNextMilestonePoints() - mh.m_iLevelScore;
+    }
 
-    // loop thru players 
-	
-	INDEX iAmmoXPosition = 350;
-	INDEX iTimeXPosition = -150;
+	  CTString strSecrets, strKills, strSessionTime, strDeaths, strCredits, strMaxCredits, strEnemyStrength, strCoopRespawnCDLeft, strLevelScore, strScoreNextCredit;
+	  strKills.PrintF(  "%i / %i", psSquadLevel.ps_iKills,   _penPlayer->m_psLevelTotal.ps_iKills);
+	  strSecrets.PrintF("%i / %i", psSquadLevel.ps_iSecrets, _penPlayer->m_psLevelTotal.ps_iSecrets);
+	  strDeaths.PrintF( "%d",  iDeaths);
 
-	if( hud_iShowPlayers==1 || hud_iShowPlayers==-1 /*&& !bSinglePlay*/ && _penPlayer->m_bShowingTabInfo) {
-        // printout location and info aren't the same for deathmatch and coop play
-		const FLOAT fCharWidth = (PIX)((_pfdDisplayFont->GetWidth()-2) *fTextScale);
-		DIO_DrawBcg( ESP_Middle,    0,                ESP_Middle,    0, ESP_Middle, 1280, ESP_Middle, 900, 0x00000080); // table background
-		DIO_DrawBcg( ESP_Middle,    0,                ESP_Middle, -355, ESP_Middle, 1240, ESP_Middle,   4, 0xFFFFFF80); // caption line
-		DIO_DrawBcg( ESP_Middle,    0,                ESP_Middle,  360, ESP_Middle, 1240, ESP_Middle,   4, 0xFFFFFF80); // stats line
-		DIO_DrawText(ESP_Middle,    0,                ESP_Middle, -400, TranslateConst(_penPlayer->en_pwoWorld->GetName(), 0),    2, ESP_Middle,  C_WHITE); //map name
+    if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+      strCredits.PrintF("%d", GetSP()->sp_ctCreditsLeft);
+    } else {
+      strCredits.PrintF("%d / %d", GetSP()->sp_ctCreditsLeft, GetSP()->sp_ctCredits);
+    }
 
-		if( bFragMatch || bScoreMatch) {
-			iTimeXPosition = -350;
-		} else { iTimeXPosition = -150;}
-		DIO_DrawText(ESP_Middle, iTimeXPosition,      ESP_Middle,  405, TRANS("Time"),  2, ESP_Middle,  C_WHITE); //elapsed time
-		DIO_DrawText(ESP_Middle, iTimeXPosition,      ESP_Middle,  440, strSessionTime, 2, ESP_Middle,  C_WHITE);
-		DIO_DrawText(ESP_Middle,    0,                ESP_Middle, -365, strGameMode,    2, ESP_Middle, _colHUD);
+	  strSessionTime.PrintF("%s", TimeToString(_pNetwork->GetGameTime()));
+	  strGameMode.PrintF("%s - %s", strGameMode, strGameDifficulty);
+    strCoopRespawnCDLeft.PrintF("%i", iHUDTimerCD);
+	  //strLevelScore.PrintF("%i", mh.m_iLevelScore);
+	  INDEX iEnemyStrengthPercent = 100 + (GetSP()->sp_fExtraEnemyStrength + GetSP()->sp_fExtraEnemyStrengthPerPlayer * _pNetwork->ga_sesSessionState.GetPlayersCount()) * 100;
+	  strEnemyStrength.PrintF("%i%s", iEnemyStrengthPercent, "%");
+    strScoreNextCredit.PrintF("%i", iScoreNextCredit);
 
-		DIO_DrawText(ESP_Middle, -570,                ESP_Middle, -315, TRANS("Ping"),        2, ESP_Middle, _colHUD);
+      // loop thru players 
+	  
+	  INDEX iAmmoXPosition = 350;
+	  INDEX iTimeXPosition = -150;
 
-		if( bCooperative || bSinglePlay) {
-			DIO_DrawText(ESP_Middle, -310,            ESP_Middle, -315, TRANS("Player"),      2, ESP_Middle, _colHUD); // captions
-			DIO_DrawText(ESP_Middle,  -50,            ESP_Middle, -315, TRANS("Health"),      2, ESP_Middle, _colHUD);
-			DIO_DrawText(ESP_Middle,   50,            ESP_Middle, -315, TRANS("Armor"),       2, ESP_Middle, _colHUD);
+	  if( hud_iShowPlayers==1 || hud_iShowPlayers==-1 /*&& !bSinglePlay*/ && _penPlayer->m_bShowingTabInfo) {
+          // printout location and info aren't the same for deathmatch and coop play
+		  const FLOAT fCharWidth = (PIX)((_pfdDisplayFont->GetWidth()-2) *fTextScale);
+		  DIO_DrawBcg( ESP_Middle,    0,            ESP_Middle,    0, ESP_Middle, 1280, ESP_Middle, 900, 0x00000080); // table background
+		  DIO_DrawBcg( ESP_Middle,    0,            ESP_Middle, -355, ESP_Middle, 1240, ESP_Middle,   4, 0xFFFFFF80); // caption line
+		  DIO_DrawBcg( ESP_Middle,    0,            ESP_Middle,  360, ESP_Middle, 1240, ESP_Middle,   4, 0xFFFFFF80); // stats line
+		  DIO_DrawText(ESP_Middle,    0,            ESP_Middle, -400, TranslateConst(_penPlayer->en_pwoWorld->GetName(), 0),    2, ESP_Middle,  C_WHITE); //map name
 
-			if (!_penPlayer->m_bShopInTheWorld){
-				DIO_DrawText(ESP_Middle,  150,        ESP_Middle, -315, TRANS("Deaths"),      2, ESP_Middle, _colHUD);
-				} else {
-				DIO_DrawText(ESP_Middle,  150,        ESP_Middle, -315, TRANS("Money"),       2, ESP_Middle, _colHUD);
-			}
-	  		DIO_DrawText(ESP_Middle,  iAmmoXPosition, ESP_Middle, -315, TRANS("Ammo"),        2, ESP_Middle, _colHUD);
-			DIO_DrawText(ESP_Middle,  555,            ESP_Middle, -315, TRANS("Distance"),    2, ESP_Middle, _colHUD);
-			
-			if (GetSP()->sp_bFriendlyFire && GetSP()->sp_bCooperative) {
-				DIO_DrawText(ESP_Middle, -500,        ESP_Middle,  405, TRANS("^cff9900Friendly"),   2, ESP_Middle, C_WHITE);
-				DIO_DrawText(ESP_Middle, -500,        ESP_Middle,  440, TRANS("^cff9000fire"),       2, ESP_Middle, C_WHITE);
-			}
+		  if( bFragMatch || bScoreMatch) {
+			  iTimeXPosition = -350;
+		  } else { iTimeXPosition = -150;}
+		  DIO_DrawText(ESP_Middle, iTimeXPosition,  ESP_Middle,  405, TRANS("Time"),  2, ESP_Middle,  C_WHITE); //elapsed time
+		  DIO_DrawText(ESP_Middle, iTimeXPosition,  ESP_Middle,  440, strSessionTime, 2, ESP_Middle,  C_WHITE);
+		  DIO_DrawText(ESP_Middle,    0,            ESP_Middle, -365, strGameMode,    2, ESP_Middle, _colHUD);
 
-			if (iEnemyStrengthPercent > 100) {
-				DIO_DrawText(ESP_Middle, -300,        ESP_Middle,  405, TRANS("Enemy strength"),     2, ESP_Middle, C_WHITE);
-				DIO_DrawText(ESP_Middle, -300,        ESP_Middle,  440, strEnemyStrength,     2, ESP_Middle, C_WHITE);
-			}
-			DIO_DrawText(ESP_Middle,    0,            ESP_Middle,  405, TRANS("Kills"),       2, ESP_Middle, C_WHITE); //kills
-			DIO_DrawText(ESP_Middle,    0,            ESP_Middle,  440, strKills,             2, ESP_Middle, C_WHITE);
-			DIO_DrawText(ESP_Middle,  150,            ESP_Middle,  405, TRANS("Secrets"),     2, ESP_Middle, C_WHITE); //secrets
-			DIO_DrawText(ESP_Middle,  150,            ESP_Middle,  440, strSecrets,           2, ESP_Middle, C_WHITE);
-			if (bCooperative) {
-				DIO_DrawText(ESP_Middle,  300,        ESP_Middle,  405, TRANS("Deaths"),      2, ESP_Middle, C_WHITE); //deaths
-				DIO_DrawText(ESP_Middle,  300,        ESP_Middle,  440, strDeaths,            2, ESP_Middle, C_WHITE);
-			}
-			if (GetSP()->sp_ctCredits!=-1 && bCooperative) {
-				DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  405, TRANS("Credits"),      2, ESP_Middle, C_WHITE); //credits
-				if (GetSP()->sp_ctCredits==0) {
-				DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  440, TRANS("^cff9900None"), 2, ESP_Middle, C_WHITE); //credits
-				} else {
-				DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  440, strCredits, 2, ESP_Middle, C_WHITE);
-				}
-			}
-			if (GetSP()->sp_ctCredits!=-1 && bCooperative && iHUDTimerCD>0) {
-				DIO_DrawText(ESP_Middle,  570,        ESP_Middle, -400, strCoopRespawnCDLeft, 2, ESP_Middle, C_WHITE);  //Timer of free respawn in the co-op without credits
-			}
+		  DIO_DrawText(ESP_Middle, -570,            ESP_Middle, -315, TRANS("Ping"),        2, ESP_Middle, _colHUD);
 
-		} else if( bScoreMatch) {
-			DIO_DrawText(ESP_Middle, -150,            ESP_Middle, -315, TRANS("Player"),      2, ESP_Middle, _colHUD); // captions
-			DIO_DrawText(ESP_Middle,  400,            ESP_Middle, -315, TRANS("Score"),       2, ESP_Middle, _colHUD);
-			DIO_DrawText(ESP_Middle,  550,            ESP_Middle, -315, TRANS("Value"),       2, ESP_Middle, _colHUD);
-		} else { // fragmatch!
-			DIO_DrawText(ESP_Middle, -150,            ESP_Middle, -315, TRANS("Player"),      2, ESP_Middle, _colHUD);
-			DIO_DrawText(ESP_Middle,  400,            ESP_Middle, -315, TRANS("Frags"),       2, ESP_Middle, _colHUD);
-			DIO_DrawText(ESP_Middle,  550,            ESP_Middle, -315, TRANS("Deaths"),      2, ESP_Middle, _colHUD);		 
-		}
-	}
+		  if( bCooperative || bSinglePlay) {
+			  DIO_DrawText(ESP_Middle, -310,          ESP_Middle, -315, TRANS("Player"),      2, ESP_Middle, _colHUD); // captions
+			  DIO_DrawText(ESP_Middle,  -50,          ESP_Middle, -315, TRANS("Health"),      2, ESP_Middle, _colHUD);
+			  DIO_DrawText(ESP_Middle,   50,          ESP_Middle, -315, TRANS("Armor"),       2, ESP_Middle, _colHUD);
+
+			  if (!_penPlayer->m_bShopInTheWorld) {
+          if (bCooperative) {
+            DIO_DrawText(ESP_Middle,  150,        ESP_Middle, -315, TRANS("Deaths"),      2, ESP_Middle, _colHUD);
+          }
+				  } else {
+				  DIO_DrawText(ESP_Middle,  150,        ESP_Middle, -315, TRANS("Money"),       2, ESP_Middle, _colHUD);
+			  }
+	  	    DIO_DrawText(ESP_Middle,  iAmmoXPosition, ESP_Middle, -315, TRANS("Ammo"),    2, ESP_Middle, _colHUD);
+			    if (bCooperative) {
+            DIO_DrawText(ESP_Middle,  555,        ESP_Middle, -315, TRANS("Distance"),    2, ESP_Middle, _colHUD);
+          }
+			  
+			  if (GetSP()->sp_bFriendlyFire && GetSP()->sp_bCooperative) {
+				  DIO_DrawText(ESP_Middle, -500,        ESP_Middle,  405, TRANS("^cff9900Friendly"),   2, ESP_Middle, C_WHITE);
+				  DIO_DrawText(ESP_Middle, -500,        ESP_Middle,  440, TRANS("^cff9900fire"),       2, ESP_Middle, C_WHITE);
+			  }
+
+			  if (iEnemyStrengthPercent > 100) {
+				  DIO_DrawText(ESP_Middle, -300,        ESP_Middle,  405, TRANS("Enemy strength"),     2, ESP_Middle, C_WHITE);
+				  DIO_DrawText(ESP_Middle, -300,        ESP_Middle,  440, strEnemyStrength,     2, ESP_Middle, C_WHITE);
+			  }
+			  DIO_DrawText(ESP_Middle,    0,          ESP_Middle,  405, TRANS("Kills"),       2, ESP_Middle, C_WHITE); //kills
+			  DIO_DrawText(ESP_Middle,    0,          ESP_Middle,  440, strKills,             2, ESP_Middle, C_WHITE);
+			  DIO_DrawText(ESP_Middle,  150,          ESP_Middle,  405, TRANS("Secrets"),     2, ESP_Middle, C_WHITE); //secrets
+			  DIO_DrawText(ESP_Middle,  150,          ESP_Middle,  440, strSecrets,           2, ESP_Middle, C_WHITE);
+			  if (bCooperative) {
+          if (GetSP()->sp_gmGameMode==3) {
+				    DIO_DrawText(ESP_Middle,  300,        ESP_Middle,  405, TRANS("Goal"),       2, ESP_Middle, C_WHITE); //credits left for extra life
+				    DIO_DrawText(ESP_Middle,  300,        ESP_Middle,  440, strScoreNextCredit,  2, ESP_Middle, C_WHITE);
+          } else {
+				    DIO_DrawText(ESP_Middle,  300,        ESP_Middle,  405, TRANS("Deaths"),     2, ESP_Middle, C_WHITE); //deaths
+				    DIO_DrawText(ESP_Middle,  300,        ESP_Middle,  440, strDeaths,           2, ESP_Middle, C_WHITE);
+          }
+			  }
+			  if (GetSP()->sp_ctCredits!=-1 && bCooperative) {
+				  DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  405, TRANS("Credits"),      2, ESP_Middle, C_WHITE); //credits
+				  if (GetSP()->sp_ctCredits==0) {
+				  DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  440, TRANS("^cff9900None"), 2, ESP_Middle, C_WHITE); //no respawn
+				  } else {
+				  DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  440, strCredits, 2, ESP_Middle, C_WHITE);
+				  }
+			  }
+			  if (GetSP()->sp_ctCredits!=-1 && bCooperative && iHUDTimerCD>0) {
+				  DIO_DrawText(ESP_Middle,  570,        ESP_Middle, -400, strCoopRespawnCDLeft, 2, ESP_Middle, C_WHITE);  //Timer of free respawn in the co-op without credits
+			  }
+			  /*if (GetSP()->sp_ctCredits!=-1 && bCooperative) {
+				  DIO_DrawText(ESP_Middle,  570,        ESP_Middle, -370, strLevelScore,        2, ESP_Middle, C_WHITE);  //Score of current level
+			  }*/
+
+		  } else if( bScoreMatch) {
+			  DIO_DrawText(ESP_Middle, -150,          ESP_Middle, -315, TRANS("Player"),      2, ESP_Middle, _colHUD); // captions
+			  DIO_DrawText(ESP_Middle,  400,          ESP_Middle, -315, TRANS("Score"),       2, ESP_Middle, _colHUD);
+			  DIO_DrawText(ESP_Middle,  550,          ESP_Middle, -315, TRANS("Value"),       2, ESP_Middle, _colHUD);
+		  } else { // fragmatch!
+			  DIO_DrawText(ESP_Middle, -150,          ESP_Middle, -315, TRANS("Player"),      2, ESP_Middle, _colHUD);
+			  DIO_DrawText(ESP_Middle,  400,          ESP_Middle, -315, TRANS("Frags"),       2, ESP_Middle, _colHUD);
+			  DIO_DrawText(ESP_Middle,  550,          ESP_Middle, -315, TRANS("Deaths"),      2, ESP_Middle, _colHUD);		 
+		  }
+	  }
 
     for( INDEX i=0; i<iPlayers; i++)
     { // get player name and mana
@@ -1547,26 +1573,26 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
       const INDEX      iDeaths  = penPlayer->m_psGameStats.ps_iDeaths;
       const INDEX      iHealth  = ClampDn( (INDEX)ceil( penPlayer->GetHealth()), 0L);
       const INDEX      iArmor   = ClampDn( (INDEX)ceil( penPlayer->m_fArmor),    0L);
-	  const INDEX      iAmmo    = penPlayer->GetPlayerWeapons()->GetAmmo();
-	        INDEX      iLatency = ceil(penPlayer->en_tmPing*1000.0f);
-			INDEX      iListValuePosY    = -275+(40*i);
+      const INDEX      iAmmo    = penPlayer->GetPlayerWeapons()->GetAmmo();
+	          INDEX      iLatency = ceil(penPlayer->en_tmPing*1000.0f);
+			      INDEX      iListValuePosY    = -275+(40*i);
 			
       CTString strScore, strMana, strFrags, strDeaths, strHealth, strArmor, strMoney, strAmmo, strLatency, strDistance;
-	  strScore.PrintF(     "%d",  iScore);
-      strMana.PrintF(      "%d",  iMana);
-      strFrags.PrintF(     "%d",  iFrags);
-      strDeaths.PrintF(    "%d",  iDeaths);
-      strHealth.PrintF(    "%d",  iHealth);
-      strArmor.PrintF(     "%d",  iArmor);
-	  strAmmo.PrintF(      "%d",  iAmmo);
-      strMoney.PrintF(     "$%i", iMoney);
-	  strLatency.PrintF(   "%i",  iLatency);
-	  strDistance.PrintF(  "%i",  (INDEX)(_penPlayer->GetPlacement().pl_PositionVector - penPlayer->GetPlacement().pl_PositionVector).Length());
+         strScore.PrintF("%d",  iScore  );
+          strMana.PrintF("%d",  iMana   );
+         strFrags.PrintF("%d",  iFrags  );
+        strDeaths.PrintF("%d",  iDeaths );
+        strHealth.PrintF("%d",  iHealth );
+         strArmor.PrintF("%d",  iArmor  );
+          strAmmo.PrintF("%d",  iAmmo   );
+         strMoney.PrintF("%i$", iMoney  );
+       strLatency.PrintF("%i",  iLatency);
+      strDistance.PrintF("%i",  (INDEX)(_penPlayer->GetPlacement().pl_PositionVector - penPlayer->GetPlacement().pl_PositionVector).Length());
 	  
       // determine corresponding colors
-      colHealth = C_mlRED;
-	  colLatency = C_mlRED;
-      colMana = colScore = colFrags = colDeaths = colArmor = C_lGRAY;
+      colHealth  = C_mlRED;
+      colLatency = C_mlRED;
+      colMana    = colScore = colFrags = colDeaths = colArmor = C_lGRAY;
       if( iMana   > _penPlayer->m_iMana)                      { bMaxMana   = FALSE; colMana   = C_WHITE; }
       if( iScore  > _penPlayer->m_psGameStats.ps_iScore)      { bMaxScore  = FALSE; colScore  = C_WHITE; }
       if( iFrags  > _penPlayer->m_psGameStats.ps_iKills)      { bMaxFrags  = FALSE; colFrags  = C_WHITE; }
@@ -1578,34 +1604,34 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
       }
       if( iHealth>25)  colHealth  = _colHUD;
       if( iArmor >25)  colArmor   = _colHUD;
-	  if( iLatency  <150) {colLatency = _colHUD;} else if (iLatency <300) {colLatency = C_WHITE;} else {colLatency = C_mlRED;}
+      if( iLatency  <150) {colLatency = _colHUD;} else if (iLatency <300) {colLatency = C_WHITE;} else {colLatency = C_mlRED;}
       // eventually print it out
 
       if( hud_iShowPlayers==1 || hud_iShowPlayers==-1 /*&& !bSinglePlay*/ && _penPlayer->m_bShowingTabInfo) {
         // printout location and info aren't the same for deathmatch and coop play
         const FLOAT fCharWidth = (PIX)((_pfdDisplayFont->GetWidth()-2) *fTextScale);
 
-	  INDEX iLineHeight = 40;
-		if (bCurrentPlayer) {
-			DIO_DrawBcg( ESP_Middle,    0, ESP_Middle, -295+(40*i), ESP_Middle, 1240, ESP_Middle, iLineHeight, 0xFFFFFF40); //current player
-			}
+	      INDEX iLineHeight = 40;
+		    if (bCurrentPlayer) {
+			    DIO_DrawBcg( ESP_Middle,    0, ESP_Middle, -295+(40*i), ESP_Middle, 1240, ESP_Middle, iLineHeight, 0xFFFFFF40); //current player
+			  }
 
         if( bCooperative || bSinglePlay) {
 
 			//Render table score
 		
-			if (!GetSP()->sp_bInfiniteAmmo) {                                                                               //Render Ammo info for each player
-				const INDEX iAmmoTypesTotal = 7;
-				INDEX iCurrentAmmoTypesCount = 0;
+			    if (!GetSP()->sp_bInfiniteAmmo) {                                                                               //Render Ammo info for each player
+				  const INDEX iAmmoTypesTotal = 7;
+				  INDEX iCurrentAmmoTypesCount = 0;
 
- 				// count available ammo types for center align
-				for( INDEX bb=0; bb<=iAmmoTypesTotal; bb++) {
-				  // if no ammo and hasn't got that weapon - just skip this ammo
-				  AmmoInfo &ai = _aaiAmmo[bb];
-				  if( ai.ai_iAmmoAmmount==0 && !ai.ai_bHasWeapon) continue;
+ 				  // count available ammo types for center align
+				  for( INDEX bb=0; bb<=iAmmoTypesTotal; bb++) {
+				    // if no ammo and hasn't got that weapon - just skip this ammo
+				    AmmoInfo &ai = _aaiAmmo[bb];
+				    if( ai.ai_iAmmoAmmount==0 && !ai.ai_bHasWeapon) continue;
 
-				  iCurrentAmmoTypesCount++;
-				}
+				    iCurrentAmmoTypesCount++;
+				  }
  
 				INDEX iAmmoIndex = 0;
 				for( INDEX ii=iAmmoTypesTotal; ii>=0; ii--) {
@@ -1650,29 +1676,31 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
 			DIO_DrawText(ESP_Middle,    0, ESP_Middle, iListValuePosY, "/",        2, ESP_Middle, colScore   |_ulAlphaHUD);
 			DIO_DrawText(ESP_Middle,   50, ESP_Middle, iListValuePosY, strArmor,   2, ESP_Middle, colArmor   |_ulAlphaHUD);
 			
-			if (!_penPlayer->m_bShopInTheWorld){
-			DIO_DrawText(ESP_Middle,  150, ESP_Middle, iListValuePosY, strDeaths,  2, ESP_Middle, colScore   |_ulAlphaHUD);
-			} else {
-			DIO_DrawText(ESP_Middle,  150, ESP_Middle, iListValuePosY, strMoney,   2, ESP_Middle, colScore   |_ulAlphaHUD);
-			}
+			if (bCooperative) {
+        if (!_penPlayer->m_bShopInTheWorld){
+			    DIO_DrawText(ESP_Middle,  150, ESP_Middle, iListValuePosY, strDeaths,  2, ESP_Middle, colScore   |_ulAlphaHUD);
+			    } else {
+			    DIO_DrawText(ESP_Middle,  150, ESP_Middle, iListValuePosY, strMoney,   2, ESP_Middle, colScore   |_ulAlphaHUD);
+			  }
+      }
 
 			if (!bCurrentPlayer) {
-			DIO_DrawText(ESP_Middle,  555, ESP_Middle, iListValuePosY, strDistance, 2, ESP_Middle, colScore  |_ulAlphaHUD);
-			DIO_DrawIcon(ESP_Middle,  605, ESP_Middle, iListValuePosY-22, _toPointer, GetAngleFromTo(_penPlayer, penPlayer), C_WHITE);
-			}
+			  DIO_DrawText(ESP_Middle,  555, ESP_Middle, iListValuePosY, strDistance, 2, ESP_Middle, colScore  |_ulAlphaHUD);
+			  DIO_DrawIcon(ESP_Middle,  605, ESP_Middle, iListValuePosY-22, _toPointer, GetAngleFromTo(_penPlayer, penPlayer), C_WHITE);
+			  }
 
-        } else if( bScoreMatch) { 
-			DIO_DrawText(ESP_Middle, -570, ESP_Middle, iListValuePosY, strLatency, 2, ESP_Middle, colLatency |_ulAlphaHUD); // values
-			DIO_DrawText(ESP_Middle, -150, ESP_Middle, iListValuePosY, strName,    2, ESP_Middle, _colHUD    |_ulAlphaHUD);
-			DIO_DrawText(ESP_Middle,  400, ESP_Middle, iListValuePosY, strScore,   2, ESP_Middle, colScore   |_ulAlphaHUD);
-			DIO_DrawText(ESP_Middle,  475, ESP_Middle, iListValuePosY, "/",        2, ESP_Middle, _colHUD    |_ulAlphaHUD);
-			DIO_DrawText(ESP_Middle,  550, ESP_Middle, iListValuePosY, strMana,    2, ESP_Middle, colMana    |_ulAlphaHUD);
-        } else { // fragmatch!
-			DIO_DrawText(ESP_Middle, -570, ESP_Middle, iListValuePosY, strLatency, 2, ESP_Middle, colLatency |_ulAlphaHUD); // values
-			DIO_DrawText(ESP_Middle, -150, ESP_Middle, iListValuePosY, strName,    2, ESP_Middle, _colHUD    |_ulAlphaHUD);
-			DIO_DrawText(ESP_Middle,  400, ESP_Middle, iListValuePosY, strFrags,   2, ESP_Middle, colFrags   |_ulAlphaHUD);
-			DIO_DrawText(ESP_Middle,  475, ESP_Middle, iListValuePosY, "/",        2, ESP_Middle, _colHUD    |_ulAlphaHUD);
-			DIO_DrawText(ESP_Middle,  550, ESP_Middle, iListValuePosY, strDeaths,  2, ESP_Middle, colDeaths  |_ulAlphaHUD);		 
+      } else if( bScoreMatch) { 
+			  DIO_DrawText(ESP_Middle, -570, ESP_Middle, iListValuePosY, strLatency, 2, ESP_Middle, colLatency |_ulAlphaHUD); // values
+			  DIO_DrawText(ESP_Middle, -150, ESP_Middle, iListValuePosY, strName,    2, ESP_Middle, _colHUD    |_ulAlphaHUD);
+			  DIO_DrawText(ESP_Middle,  400, ESP_Middle, iListValuePosY, strScore,   2, ESP_Middle, colScore   |_ulAlphaHUD);
+			  DIO_DrawText(ESP_Middle,  475, ESP_Middle, iListValuePosY, "/",        2, ESP_Middle, _colHUD    |_ulAlphaHUD);
+			  DIO_DrawText(ESP_Middle,  550, ESP_Middle, iListValuePosY, strMana,    2, ESP_Middle, colMana    |_ulAlphaHUD);
+      } else { // fragmatch!
+			  DIO_DrawText(ESP_Middle, -570, ESP_Middle, iListValuePosY, strLatency, 2, ESP_Middle, colLatency |_ulAlphaHUD); // values
+			  DIO_DrawText(ESP_Middle, -150, ESP_Middle, iListValuePosY, strName,    2, ESP_Middle, _colHUD    |_ulAlphaHUD);
+			  DIO_DrawText(ESP_Middle,  400, ESP_Middle, iListValuePosY, strFrags,   2, ESP_Middle, colFrags   |_ulAlphaHUD);
+			  DIO_DrawText(ESP_Middle,  475, ESP_Middle, iListValuePosY, "/",        2, ESP_Middle, _colHUD    |_ulAlphaHUD);
+			  DIO_DrawText(ESP_Middle,  550, ESP_Middle, iListValuePosY, strDeaths,  2, ESP_Middle, colDeaths  |_ulAlphaHUD);		 
 			}
 		}
 	

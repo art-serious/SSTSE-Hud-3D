@@ -58,6 +58,7 @@ public:
 #define SPF_DEATHMATCH    (1L<<17)    // active in deathmatch mode
 #define SPF_COOPERATIVE   (1L<<18)    // active in cooperative mode
 #define SPF_FLYOVER       (1L<<19)    // active in flyover (camera) mode
+#define SPF_SURVIVALCOOP  (1L<<20)    // active in survival cooperative mode
 
 #define SPF_MASK_GAMEMODE 0xFFFF0000L    // mask for game type flags
 

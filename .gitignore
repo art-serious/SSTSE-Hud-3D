@@ -2,6 +2,9 @@ Bin/
 Debug/
 Release/
 *.dll
+*.plg
+*.ncb
+*.opt
 **/EntitiesMP/*.cpp
 **/EntitiesMP/*.h
 **/EntitiesMP/Debug/
@@ -10,3 +13,6 @@ Release/
 **/GameMP/Release/
 **/GameMP/*.cpp
 **/GameGUIMP/*.cpp
+GameMP/GameMP.plg
+Sources.ncb
+Sources.opt

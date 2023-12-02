@@ -267,6 +267,9 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheSound(SOUND_KNIFE_HIGH            );
     pdec->PrecacheSound(SOUND_KNIFE_LONG            );
     pdec->PrecacheSound(SOUND_KNIFE_LOW             );
+
+    pdec->PrecacheSound(SOUND_KNIFE_BRINGUP         );
+    pdec->PrecacheSound(SOUND_KNIFE_BRINGDOWN       );
   }
 
   if ( ulAvailable&(1<<(WEAPON_COLT-1)) ) {
@@ -279,31 +282,40 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheTexture(TEXTURE_COLTBULLETS       );  
     pdec->PrecacheSound(SOUND_COLT_FIRE             );
     pdec->PrecacheSound(SOUND_COLT_RELOAD           );
+
+    pdec->PrecacheSound(SOUND_COLT_BRINGUP          );
+    pdec->PrecacheSound(SOUND_COLT_BRINGDOWN        );
   }
 
   if ( ulAvailable&(1<<(WEAPON_SINGLESHOTGUN-1)) ) {
-    pdec->PrecacheModel(MODEL_SINGLESHOTGUN     );    
-    pdec->PrecacheModel(MODEL_SS_SLIDER         );    
-    pdec->PrecacheModel(MODEL_SS_HANDLE         );    
-    pdec->PrecacheModel(MODEL_SS_BARRELS        );    
-    pdec->PrecacheTexture(TEXTURE_SS_HANDLE     );    
-    pdec->PrecacheTexture(TEXTURE_SS_BARRELS    );    
-    pdec->PrecacheSound(SOUND_SINGLESHOTGUN_FIRE);    
+    pdec->PrecacheModel(MODEL_SINGLESHOTGUN          );    
+    pdec->PrecacheModel(MODEL_SS_SLIDER              );    
+    pdec->PrecacheModel(MODEL_SS_HANDLE              );    
+    pdec->PrecacheModel(MODEL_SS_BARRELS             );    
+    pdec->PrecacheTexture(TEXTURE_SS_HANDLE          );    
+    pdec->PrecacheTexture(TEXTURE_SS_BARRELS         );    
+    pdec->PrecacheSound(SOUND_SINGLESHOTGUN_FIRE     );  
+    
+    pdec->PrecacheSound(SOUND_SINGLESHOTGUN_BRINGUP  );
+    pdec->PrecacheSound(SOUND_SINGLESHOTGUN_BRINGDOWN);
   }
 
   if ( ulAvailable&(1<<(WEAPON_DOUBLESHOTGUN-1)) ) {
-    pdec->PrecacheModel(MODEL_DOUBLESHOTGUN        ); 
-    pdec->PrecacheModel(MODEL_DS_HANDLE            ); 
-    pdec->PrecacheModel(MODEL_DS_BARRELS           ); 
-    pdec->PrecacheModel(MODEL_DS_AMMO              ); 
-    pdec->PrecacheModel(MODEL_DS_SWITCH            ); 
-    pdec->PrecacheModel(MODEL_DS_HANDWITHAMMO      ); 
-    pdec->PrecacheTexture(TEXTURE_DS_HANDLE        );   
-    pdec->PrecacheTexture(TEXTURE_DS_BARRELS       );   
-    pdec->PrecacheTexture(TEXTURE_DS_AMMO          );   
-    pdec->PrecacheTexture(TEXTURE_DS_SWITCH        );   
-    pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_FIRE   ); 
-    pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_RELOAD ); 
+    pdec->PrecacheModel(MODEL_DOUBLESHOTGUN          ); 
+    pdec->PrecacheModel(MODEL_DS_HANDLE              ); 
+    pdec->PrecacheModel(MODEL_DS_BARRELS             ); 
+    pdec->PrecacheModel(MODEL_DS_AMMO                ); 
+    pdec->PrecacheModel(MODEL_DS_SWITCH              ); 
+    pdec->PrecacheModel(MODEL_DS_HANDWITHAMMO        ); 
+    pdec->PrecacheTexture(TEXTURE_DS_HANDLE          );   
+    pdec->PrecacheTexture(TEXTURE_DS_BARRELS         );   
+    pdec->PrecacheTexture(TEXTURE_DS_AMMO            );   
+    pdec->PrecacheTexture(TEXTURE_DS_SWITCH          );   
+    pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_FIRE     ); 
+    pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_RELOAD   ); 
+
+    pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_BRINGUP  ); 
+    pdec->PrecacheSound(SOUND_DOUBLESHOTGUN_BRINGDOWN); 
   }
 
   if ( ulAvailable&(1<<(WEAPON_TOMMYGUN-1)) ) {
@@ -312,6 +324,9 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheModel(MODEL_TG_SLIDER             );
     pdec->PrecacheTexture(TEXTURE_TG_BODY           );  
     pdec->PrecacheSound(SOUND_TOMMYGUN_FIRE         );
+
+    pdec->PrecacheSound(SOUND_TOMMYGUN_BRINGUP      );
+    pdec->PrecacheSound(SOUND_TOMMYGUN_BRINGDOWN    );
   }
 
   if ( ulAvailable&(1<<(WEAPON_SNIPER-1)) ) {
@@ -319,6 +334,8 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheModel(MODEL_SNIPER_BODY     ); 
     pdec->PrecacheTexture(TEXTURE_SNIPER_BODY );   
     pdec->PrecacheSound(SOUND_SNIPER_FIRE     ); 
+    pdec->PrecacheSound(SOUND_SNIPER_BRINGUP  ); 
+    pdec->PrecacheSound(SOUND_SNIPER_BRINGDOWN); 
   }
 
   if ( ulAvailable&(1<<(WEAPON_MINIGUN-1)) ) {
@@ -333,6 +350,8 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheSound(SOUND_MINIGUN_SPINUP   );     
     pdec->PrecacheSound(SOUND_MINIGUN_SPINDOWN );     
     pdec->PrecacheSound(SOUND_MINIGUN_CLICK    );     
+    pdec->PrecacheSound(SOUND_MINIGUN_BRINGUP  );
+    pdec->PrecacheSound(SOUND_MINIGUN_BRINGDOWN);
   }
                                          
   if ( ulAvailable&(1<<(WEAPON_ROCKETLAUNCHER-1)) ) {
@@ -342,7 +361,9 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheModel(MODEL_RL_ROCKET          );   
     pdec->PrecacheTexture(TEXTURE_RL_BODY        );     
     pdec->PrecacheTexture(TEXTURE_RL_ROCKET      );     
-    pdec->PrecacheSound(SOUND_ROCKETLAUNCHER_FIRE);   
+    pdec->PrecacheSound(SOUND_ROCKETLAUNCHER_FIRE);
+    pdec->PrecacheSound(SOUND_ROCKETLAUNCHER_BRINGUP); 
+    pdec->PrecacheSound(SOUND_ROCKETLAUNCHER_BRINGDOWN); 
     pdec->PrecacheClass(CLASS_PROJECTILE, PRT_ROCKET);
   }                                        
 
@@ -354,6 +375,8 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheTexture(TEXTURE_GL_BODY           );   
     pdec->PrecacheTexture(TEXTURE_GL_MOVINGPART     );
     pdec->PrecacheSound(SOUND_GRENADELAUNCHER_FIRE ); 
+    pdec->PrecacheSound(SOUND_GRENADELAUNCHER_BRINGUP ); 
+    pdec->PrecacheSound(SOUND_GRENADELAUNCHER_BRINGDOWN ); 
     pdec->PrecacheClass(CLASS_PROJECTILE, PRT_GRENADE);
   }
 
@@ -400,6 +423,8 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheSound(SOUND_FL_FIRE     );
     pdec->PrecacheSound(SOUND_FL_START    );
     pdec->PrecacheSound(SOUND_FL_STOP     );
+    pdec->PrecacheSound(SOUND_FL_BRINGUP  );
+    pdec->PrecacheSound(SOUND_FL_BRINGDOWN);
     pdec->PrecacheClass(CLASS_PROJECTILE, PRT_FLAME);
   }
 
@@ -411,6 +436,8 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheTexture(TEXTURE_LS_BODY  );  
     pdec->PrecacheTexture(TEXTURE_LS_BARREL);  
     pdec->PrecacheSound(SOUND_LASER_FIRE);
+    pdec->PrecacheSound(SOUND_LASER_BRINGUP);
+    pdec->PrecacheSound(SOUND_LASER_BRINGDOWN);
     pdec->PrecacheClass(CLASS_PROJECTILE, PRT_LASER_RAY);
   }
 /*
@@ -437,6 +464,9 @@ void CPlayerWeapons_Precache(ULONG ulAvailable)
     pdec->PrecacheSound(SOUND_CANNON    );
     pdec->PrecacheSound(SOUND_CANNON_PREPARE);
     pdec->PrecacheClass(CLASS_CANNONBALL);
+
+    pdec->PrecacheSound(SOUND_CANNON_BRINGUP);
+    pdec->PrecacheSound(SOUND_CANNON_BRINGDOWN);
   }
 
   // precache animator too
@@ -654,6 +684,9 @@ components:
  24 sound   SOUND_KNIFE_HIGH            "Models\\Weapons\\Knife\\Sounds\\High.wav",
  25 sound   SOUND_KNIFE_LONG            "Models\\Weapons\\Knife\\Sounds\\Long.wav",
  26 sound   SOUND_KNIFE_LOW             "Models\\Weapons\\Knife\\Sounds\\Low.wav",
+
+ 310 sound   SOUND_KNIFE_BRINGUP         "Models\\Weapons\\Knife\\Sounds\\BringUp.wav",
+ 311 sound   SOUND_KNIFE_BRINGDOWN       "Models\\Weapons\\Knife\\Sounds\\BringDown.wav",
  
 // ************** COLT **************
  30 model   MODEL_COLT                  "Models\\Weapons\\Colt\\Colt.mdl",
@@ -666,6 +699,9 @@ components:
  37 sound   SOUND_COLT_FIRE             "Models\\Weapons\\Colt\\Sounds\\Fire.wav",
  38 sound   SOUND_COLT_RELOAD           "Models\\Weapons\\Colt\\Sounds\\Reload.wav",
 
+320 sound   SOUND_COLT_BRINGUP          "Models\\Weapons\\Colt\\Sounds\\BringUp.wav",
+321 sound   SOUND_COLT_BRINGDOWN        "Models\\Weapons\\Colt\\Sounds\\BringDown.wav",
+
 // ************** SINGLE SHOTGUN ************
  40 model   MODEL_SINGLESHOTGUN         "Models\\Weapons\\SingleShotgun\\SingleShotgun.mdl",
  41 model   MODEL_SS_SLIDER             "Models\\Weapons\\SingleShotgun\\Slider.mdl",
@@ -674,6 +710,9 @@ components:
  44 texture TEXTURE_SS_HANDLE           "Models\\Weapons\\SingleShotgun\\Handle.tex",
  45 texture TEXTURE_SS_BARRELS          "Models\\Weapons\\SingleShotgun\\Barrels.tex",
  46 sound   SOUND_SINGLESHOTGUN_FIRE    "Models\\Weapons\\SingleShotgun\\Sounds\\_Fire.wav",
+
+330 sound   SOUND_SINGLESHOTGUN_BRINGUP "Models\\Weapons\\SingleShotgun\\Sounds\\BringUp.wav",
+331 sound   SOUND_SINGLESHOTGUN_BRINGDOWN "Models\\Weapons\\SingleShotgun\\Sounds\\BringDown.wav",
 
 // ************** DOUBLE SHOTGUN **************
  50 model   MODEL_DOUBLESHOTGUN         "Models\\Weapons\\DoubleShotgun\\DoubleShotgun.mdl",
@@ -689,12 +728,18 @@ components:
  60 sound   SOUND_DOUBLESHOTGUN_FIRE    "Models\\Weapons\\DoubleShotgun\\Sounds\\Fire.wav",
  61 sound   SOUND_DOUBLESHOTGUN_RELOAD  "Models\\Weapons\\DoubleShotgun\\Sounds\\Reload.wav",
 
+340 sound   SOUND_DOUBLESHOTGUN_BRINGUP "Models\\Weapons\\DoubleShotgun\\Sounds\\BringUp.wav",
+341 sound   SOUND_DOUBLESHOTGUN_BRINGDOWN"Models\\Weapons\\DoubleShotgun\\Sounds\\BringDown.wav",
+
 // ************** TOMMYGUN **************
  70 model   MODEL_TOMMYGUN              "Models\\Weapons\\TommyGun\\TommyGun.mdl",
  71 model   MODEL_TG_BODY               "Models\\Weapons\\TommyGun\\Body.mdl",
  72 model   MODEL_TG_SLIDER             "Models\\Weapons\\TommyGun\\Slider.mdl",
  73 texture TEXTURE_TG_BODY             "Models\\Weapons\\TommyGun\\Body.tex",
  74 sound   SOUND_TOMMYGUN_FIRE         "Models\\Weapons\\TommyGun\\Sounds\\_Fire.wav",
+
+350 sound   SOUND_TOMMYGUN_BRINGUP      "Models\\Weapons\\TommyGun\\Sounds\\BringUp.wav",
+351 sound   SOUND_TOMMYGUN_BRINGDOWN    "Models\\Weapons\\TommyGun\\Sounds\\BringDown.wav",
 
 // ************** MINIGUN **************
  80 model   MODEL_MINIGUN               "Models\\Weapons\\MiniGun\\MiniGun.mdl",
@@ -709,6 +754,9 @@ components:
  88 sound   SOUND_MINIGUN_SPINDOWN      "Models\\Weapons\\MiniGun\\Sounds\\RotateDown.wav",
  89 sound   SOUND_MINIGUN_CLICK         "Models\\Weapons\\MiniGun\\Sounds\\Click.wav",
 
+360 sound   SOUND_MINIGUN_BRINGUP       "Models\\Weapons\\MiniGun\\Sounds\\BringUp.wav",
+361 sound   SOUND_MINIGUN_BRINGDOWN     "Models\\Weapons\\MiniGun\\Sounds\\BringDown.wav",
+
 // ************** ROCKET LAUNCHER **************
  90 model   MODEL_ROCKETLAUNCHER        "Models\\Weapons\\RocketLauncher\\RocketLauncher.mdl",
  91 model   MODEL_RL_BODY               "Models\\Weapons\\RocketLauncher\\Body.mdl",
@@ -719,6 +767,9 @@ components:
  96 texture TEXTURE_RL_ROCKET           "Models\\Weapons\\RocketLauncher\\Projectile\\Rocket.tex",
  97 sound   SOUND_ROCKETLAUNCHER_FIRE   "Models\\Weapons\\RocketLauncher\\Sounds\\_Fire.wav",
 
+370 sound   SOUND_ROCKETLAUNCHER_BRINGUP "Models\\Weapons\\RocketLauncher\\Sounds\\BringUp.wav",
+371 sound   SOUND_ROCKETLAUNCHER_BRINGDOWN "Models\\Weapons\\RocketLauncher\\Sounds\\BringDown.wav",
+
 // ************** GRENADE LAUNCHER **************
 100 model   MODEL_GRENADELAUNCHER       "Models\\Weapons\\GrenadeLauncher\\GrenadeLauncher.mdl",
 101 model   MODEL_GL_BODY               "Models\\Weapons\\GrenadeLauncher\\Body.mdl",
@@ -727,12 +778,18 @@ components:
 104 texture TEXTURE_GL_BODY             "Models\\Weapons\\GrenadeLauncher\\Body.tex",
 105 texture TEXTURE_GL_MOVINGPART       "Models\\Weapons\\GrenadeLauncher\\MovingPipe.tex",
 106 sound   SOUND_GRENADELAUNCHER_FIRE  "Models\\Weapons\\GrenadeLauncher\\Sounds\\_Fire.wav",
+380 sound   SOUND_GRENADELAUNCHER_BRINGUP "Models\\Weapons\\GrenadeLauncher\\Sounds\\BringUp.wav",
+381 sound   SOUND_GRENADELAUNCHER_BRINGDOWN "Models\\Weapons\\GrenadeLauncher\\Sounds\\BringDown.wav",
 
 // ************** SNIPER **************
 110 model   MODEL_SNIPER                "ModelsMP\\Weapons\\Sniper\\Sniper.mdl",
 111 model   MODEL_SNIPER_BODY           "ModelsMP\\Weapons\\Sniper\\Body.mdl",
 112 texture TEXTURE_SNIPER_BODY         "ModelsMP\\Weapons\\Sniper\\Body.tex",
 113 sound   SOUND_SNIPER_FIRE           "ModelsMP\\Weapons\\Sniper\\Sounds\\Fire.wav",
+
+390 sound   SOUND_SNIPER_BRINGUP        "ModelsMP\\Weapons\\Sniper\\Sounds\\BringUp.wav",
+391 sound   SOUND_SNIPER_BRINGDOWN      "ModelsMP\\Weapons\\Sniper\\Sounds\\BringDown.wav",
+
 //114 sound   SOUND_SNIPER_RELOAD         "ModelsMP\\Weapons\\Sniper\\Sounds\\Reload.wav",
 //115 sound   SOUND_SNIPER_ZOOM           "ModelsMP\\Weapons\\Sniper\\Sounds\\Zoom.wav",
 
@@ -762,6 +819,9 @@ components:
 138 sound   SOUND_FL_STOP               "ModelsMP\\Weapons\\Flamer\\Sounds\\Stop.wav",
 139 texture TEXTURE_FL_FUELRESERVOIR    "ModelsMP\\Weapons\\Flamer\\FuelReservoir.tex",
 
+400 sound   SOUND_FL_BRINGUP            "ModelsMP\\Weapons\\Flamer\\Sounds\\BringUp.wav",
+401 sound   SOUND_FL_BRINGDOWN          "ModelsMP\\Weapons\\Flamer\\Sounds\\BringDown.wav",
+
 
 // ************** LASER **************
 140 model   MODEL_LASER                 "Models\\Weapons\\Laser\\Laser.mdl",
@@ -770,6 +830,9 @@ components:
 144 texture TEXTURE_LS_BODY             "Models\\Weapons\\Laser\\Body.tex",
 145 texture TEXTURE_LS_BARREL           "Models\\Weapons\\Laser\\Barrel.tex",
 146 sound   SOUND_LASER_FIRE            "Models\\Weapons\\Laser\\Sounds\\_Fire.wav",
+
+410 sound   SOUND_LASER_BRINGUP         "Models\\Weapons\\Laser\\Sounds\\BringUp.wav",
+411 sound   SOUND_LASER_BRINGDOWN       "Models\\Weapons\\Laser\\Sounds\\BringDown.wav",
 
 
 // ************** CHAINSAW **************
@@ -809,6 +872,8 @@ components:
 174 sound   SOUND_CANNON                "Models\\Weapons\\Cannon\\Sounds\\Fire.wav",
 175 sound   SOUND_CANNON_PREPARE        "Models\\Weapons\\Cannon\\Sounds\\Prepare.wav",
 //175 model   MODEL_CN_LIGHT              "Models\\Weapons\\Cannon\\Light.mdl",
+420 sound   SOUND_CANNON_BRINGUP        "Models\\Weapons\\Cannon\\Sounds\\BringUp.wav",
+421 sound   SOUND_CANNON_BRINGDOWN      "Models\\Weapons\\Cannon\\Sounds\\BringDown.wav",
 
 // ************** REFLECTIONS **************
 200 texture TEX_REFL_BWRIPLES01         "Models\\ReflectionTextures\\BWRiples01.tex",
@@ -3782,41 +3847,71 @@ procedures:
       case WEAPON_NONE:
         break;
       // knife have different stands
-      case WEAPON_KNIFE: 
+      case WEAPON_KNIFE:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_KNIFE_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         if (m_iKnifeStand==1) {
           m_iAnim = KNIFE_ANIM_PULLOUT;
         } else if (m_iKnifeStand==3) {
           m_iAnim = KNIFE_ANIM_PULLOUT;
         }
         break;
-      case WEAPON_DOUBLECOLT: case WEAPON_COLT:
+      case WEAPON_DOUBLECOLT: case WEAPON_COLT:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);
+        PlaySound(pl.m_soWeaponAmbient, SOUND_COLT_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
         m_iAnim = COLT_ANIM_DEACTIVATE;
         break;
-      case WEAPON_SINGLESHOTGUN:
+      case WEAPON_SINGLESHOTGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_SINGLESHOTGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = SINGLESHOTGUN_ANIM_DEACTIVATE;
         break;
-      case WEAPON_DOUBLESHOTGUN:
+      case WEAPON_DOUBLESHOTGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_DOUBLESHOTGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = DOUBLESHOTGUN_ANIM_DEACTIVATE;
         break;
-      case WEAPON_TOMMYGUN:
+      case WEAPON_TOMMYGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_TOMMYGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = TOMMYGUN_ANIM_DEACTIVATE;
         break;
-      case WEAPON_SNIPER:
+      case WEAPON_SNIPER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_SNIPER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = SNIPER_ANIM_DEACTIVATE;
         break;
-      case WEAPON_MINIGUN:
+      case WEAPON_MINIGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_MINIGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = MINIGUN_ANIM_DEACTIVATE;
         break;
-      case WEAPON_ROCKETLAUNCHER:
+      case WEAPON_ROCKETLAUNCHER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_ROCKETLAUNCHER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = ROCKETLAUNCHER_ANIM_DEACTIVATE;
         break;
-      case WEAPON_GRENADELAUNCHER:
+      case WEAPON_GRENADELAUNCHER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_GRENADELAUNCHER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = GRENADELAUNCHER_ANIM_DEACTIVATE;
         break;
 /*      case WEAPON_PIPEBOMB:
         m_iAnim = HANDWITHBOMB_ANIM_DEACTIVATE;
         break;*/
-      case WEAPON_FLAMER:
+      case WEAPON_FLAMER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_FL_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = FLAMER_ANIM_DEACTIVATE;
         break;
       case WEAPON_CHAINSAW: {
@@ -3825,7 +3920,10 @@ procedures:
         if(_pNetwork->IsPlayerLocal(m_penPlayer)) {IFeel_StopEffect("ChainsawIdle");}
         m_iAnim = CHAINSAW_ANIM_DEACTIVATE;
         break; }
-      case WEAPON_LASER:
+      case WEAPON_LASER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_LASER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = LASER_ANIM_DEACTIVATE;
         break;
 /*
@@ -3833,7 +3931,10 @@ procedures:
         m_iAnim = GHOSTBUSTER_ANIM_DEACTIVATE;
         break;
         */
-      case WEAPON_IRONCANNON:
+      case WEAPON_IRONCANNON:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_CANNON_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
 //      case WEAPON_NUKECANNON:
         m_iAnim = CANNON_ANIM_DEACTIVATE;
         break;
@@ -3892,47 +3993,77 @@ procedures:
     SetCurrentWeaponModel();
     // start current weapon bring up animation
     switch (m_iCurrentWeapon) {
-      case WEAPON_KNIFE: 
+      case WEAPON_KNIFE:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_KNIFE_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = KNIFE_ANIM_PULL;
         m_iKnifeStand = 1;
         break;
-      case WEAPON_COLT: case WEAPON_DOUBLECOLT:
+      case WEAPON_COLT: case WEAPON_DOUBLECOLT:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_COLT_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = COLT_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         SetFlare(1, FLARE_REMOVE);
         break;
-      case WEAPON_SINGLESHOTGUN:
+      case WEAPON_SINGLESHOTGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_SINGLESHOTGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = SINGLESHOTGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         break;
-      case WEAPON_DOUBLESHOTGUN:
+      case WEAPON_DOUBLESHOTGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_DOUBLESHOTGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = DOUBLESHOTGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         break;
-      case WEAPON_TOMMYGUN:
+      case WEAPON_TOMMYGUN:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_TOMMYGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = TOMMYGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         break;
-      case WEAPON_SNIPER:
+      case WEAPON_SNIPER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_SNIPER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
         m_iAnim = SNIPER_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         break;
       case WEAPON_MINIGUN: {
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_MINIGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
         CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
         m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         break; }
-      case WEAPON_ROCKETLAUNCHER:
+      case WEAPON_ROCKETLAUNCHER: {
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_ROCKETLAUNCHER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
         m_iAnim = ROCKETLAUNCHER_ANIM_ACTIVATE;
         break;
-      case WEAPON_GRENADELAUNCHER:
+      case WEAPON_GRENADELAUNCHER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_GRENADELAUNCHER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
         m_iAnim = GRENADELAUNCHER_ANIM_ACTIVATE;
         break;
 /*    case WEAPON_PIPEBOMB:
         m_iAnim = HANDWITHBOMB_ANIM_ACTIVATE;
         break;*/
-      case WEAPON_FLAMER:
+      case WEAPON_FLAMER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_FL_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
         m_iAnim = FLAMER_ANIM_ACTIVATE;
         break;
       case WEAPON_CHAINSAW: {
@@ -3941,14 +4072,20 @@ procedures:
         pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
         PlaySound(pl.m_soWeaponAmbient, SOUND_CS_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);        
         break; }
-      case WEAPON_LASER:
+      case WEAPON_LASER:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_LASER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
         m_iAnim = LASER_ANIM_ACTIVATE;
         break;
 /*    case WEAPON_GHOSTBUSTER:
         m_iAnim = GHOSTBUSTER_ANIM_ACTIVATE;
         break;
         */
-      case WEAPON_IRONCANNON:
+      case WEAPON_IRONCANNON:{
+        CPlayer &pl = (CPlayer&)*m_penPlayer;
+        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+        PlaySound(pl.m_soWeaponAmbient, SOUND_CANNON_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
 //      case WEAPON_NUKECANNON:
         m_iAnim = CANNON_ANIM_ACTIVATE;
         break;

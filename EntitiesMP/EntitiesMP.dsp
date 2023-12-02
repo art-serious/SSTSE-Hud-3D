@@ -549,6 +549,10 @@ SOURCE=.\MoneyItem.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ShieldItem.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\WorldLinkController.cpp
 # End Source File
 # Begin Source File
@@ -1620,6 +1624,14 @@ SOURCE=.\MoneyItem.h
 # Begin Source File
 
 SOURCE=.\MoneyItem_tables.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ShieldItem.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ShieldItem_tables.h
 # End Source File
 # Begin Source File
 
@@ -4666,6 +4678,37 @@ InputName=MoneyItem
 # Begin Custom Build - EntitiesMP/$(InputName).es
 InputPath=.\MoneyItem.es
 InputName=MoneyItem
+
+"$(InputName).cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd                                                                                                                    ..\  
+	ecc EntitiesMP/$(InputName).es 
+	
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\ShieldItem.es
+
+!IF  "$(CFG)" == "EntitiesMP - Win32 Release"
+
+# Begin Custom Build - EntitiesMP/$(InputName).es
+InputPath=.\ShieldItem.es
+InputName=ShieldItem
+
+"$(InputName).cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	cd                                                                                                                    ..\  
+	ecc EntitiesMP/$(InputName).es 
+	
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "EntitiesMP - Win32 Debug"
+
+# Begin Custom Build - EntitiesMP/$(InputName).es
+InputPath=.\ShieldItem.es
+InputName=ShieldItem
 
 "$(InputName).cpp" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	cd                                                                                                                    ..\  

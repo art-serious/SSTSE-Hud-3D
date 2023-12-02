@@ -17,8 +17,8 @@ functions:
 
 procedures:
   RestartLevel(){
-	CPrintF(TRANS("All players are dead. The level will be restarted in 5 seconds.\n"));
-	autowait(6.5f);
+	CPrintF(TRANS("^cFFFF00All players are dead. The level will be restarted in 10 seconds.^C\n"));
+	autowait(10.5f);
 	((CSessionProperties*)GetSP())->sp_ctCreditsLeft=GetSP()->sp_ctCredits;
 	_pNetwork->ChangeLevel(_pNetwork->GetCurrentWorld(), false, 0);
 	return;

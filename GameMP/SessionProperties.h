@@ -8,6 +8,7 @@ public:
     GM_COOPERATIVE = 0,
     GM_SCOREMATCH,
     GM_FRAGMATCH,
+    GM_SURVIVALCOOP,
   };
   enum GameDifficulty {
     GD_TOURIST = -1,
@@ -58,16 +59,18 @@ public:
   INDEX sp_ctCreditsLeft;       // number of credits left on this level
   FLOAT sp_tmSpawnInvulnerability;   // how many seconds players are invunerable after respawning
 
-  INDEX sp_iBlood;         // blood/gibs type (0=none, 1=green, 2=red, 3=hippie)
-  BOOL  sp_bGibs;          // enable/disable gibbing
+  INDEX sp_iBlood;            // blood/gibs type (0=none, 1=green, 2=red, 3=hippie)
+  BOOL  sp_bGibs;             // enable/disable gibbing
 
-  BOOL  sp_bEndOfGame;     // marked when dm game is finished (any of the limits reached)
+  BOOL  sp_bEndOfGame;        // marked when dm game is finished (any of the limits reached)
 
-  ULONG sp_ulLevelsMask;    // mask of visited levels so far
+  ULONG sp_ulLevelsMask;      // mask of visited levels so far
 
   BOOL  sp_bUseExtraEnemies;  // spawn extra multiplayer enemies
 
-  FLOAT sp_fForceSpectateCD; // Newcomers will be forced to spectate after timer
+  FLOAT sp_fForceSpectateCD;  // Newcomers will be forced to spectate after timer
+  INDEX sp_bGiveExtraShield;  // Give extra MaxShield after complete level
+  FLOAT sp_fStartMaxShield;   // Give some MaxShield on the start game
 };
 
 // NOTE: never instantiate CSessionProperties, as its size is not fixed to the size defined in engine

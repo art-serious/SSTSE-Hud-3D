@@ -50,41 +50,6 @@ functions:
       CMusicHolder *pmh = (CMusicHolder *)penMainMusicHolder;
       BOOL bNew = (pmh->m_penRespawnMarker!=this);
       pmh->m_penRespawnMarker = this;
-	  // decrement credits
-		if (GetSP()->sp_ctCredits!=-1) {
-		  BOOL bAllPlayersAlive = TRUE;
-		  for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
-			CPlayer *ppl = (CPlayer *)&*GetPlayerEntity(iPlayer);
-			if (ppl==NULL) { 
-			  continue;
-			}
-
-			if (!(ppl->GetFlags()&ENF_ALIVE)) {
-				ppl->SendEvent(EEnd());
-				bAllPlayersAlive = FALSE;
-			}
-		  }
-
-		  BOOL bCreditsMax = GetSP()->sp_ctCreditsLeft >= GetSP()->sp_ctCredits;
-		  if (bAllPlayersAlive) {
-			if (!bCreditsMax) {
-			  ((CSessionProperties*)GetSP())->sp_ctCreditsLeft++;
-			  CPrintF(TRANS("The team received an extra credit!\n"));
-			  //PlaySound(m_soExtraCredit, SOUND_EXTRA_CREDIT, 0);
-			  for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
-				CPlayer *ppl = (CPlayer *)&*GetPlayerEntity(iPlayer);
-				if (ppl==NULL) { 
-				  continue;
-				}
-				ppl->m_soHighScore.Set3DParameters(25.0f, 5.0f, 1.0f, 1.0f);
-				PlaySound(ppl->m_soHighScore, SOUND_EXTRA_CREDIT, SOF_3D|SOF_LOCAL);
-			  }
-
-			}
-		  } else {
-			CPrintF(TRANS("Fallen players are riding the gun again\n"));
-		  }
-		}
 
       // if this is a new marker and we are in single player and the trigger originator is valid
       CEntity *penCaused = ((ETrigger&)ee).penCaused;

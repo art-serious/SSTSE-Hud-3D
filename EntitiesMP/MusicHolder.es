@@ -5,6 +5,7 @@
 #include "EntitiesMP/EnemySpawner.h"
 #include "EntitiesMP/Trigger.h"
 #include "EntitiesMP/Woman.h"
+#include <EntitiesMP/Player.h>
 %}
 
 
@@ -26,6 +27,7 @@ event EChangeMusic {
 %{
 #define MUSIC_VOLUMEMIN   0.02f     // minimum volume (considered off)
 #define MUSIC_VOLUMEMAX   0.98f     // maximum volume (considered full)
+
 
 float FadeInFactor(TIME fFadeTime)
 {
@@ -100,8 +102,11 @@ properties:
 133 INDEX m_iSubChannel3 = 1,
 134 INDEX m_iSubChannel4 = 1,
 
-// Survival co-op
+// HUD 3D - Survival co-op
 300 FLOAT m_fLevelTime = -1.0f,  //Time point when the level was started
+// HUD 3D - Score of current level, needed for giving extra credits in co-op mode
+301 INDEX m_iLevelScore  = 0,
+302 INDEX m_iCurrentMilestone = 0,
 
   {
     // array of enemies that make fuss
@@ -110,10 +115,89 @@ properties:
 
 components:
   1 model   MODEL_MARKER     "Models\\Editor\\MusicHolder.mdl",
-  2 texture TEXTURE_MARKER   "Models\\Editor\\MusicHolder.tex"
-
+  2 texture TEXTURE_MARKER   "Models\\Editor\\MusicHolder.tex",
+  3 sound   SOUND_EXTRA_CREDIT "Sounds\\Misc\\ExtraLife.wav",
 
 functions:
+	  
+	  INDEX GetNextMilestonePoints() {
+		switch (m_iCurrentMilestone) {
+			case 0:  return 25000;
+			case 1:  return 50000;
+			case 2:  return 100000;
+			case 3:  return 200000;
+			case 4:  return 500000;
+			case 5:  return 1000000;
+			case 6:  return 2000000;
+			case 7:  return 5000000;
+			case 8:  return 10000000;
+			case 9:  return 25000000;
+			case 10: return 50000000;
+		}
+		return MAX_SLONG;
+	  }
+
+    /* Handle an event, return false if the event is not handled. */
+  BOOL HandleEvent(const CEntityEvent &ee)
+  {
+    if (ee.ee_slEvent==EVENTCODE_EReceiveScore)
+    {
+	  INDEX iPreviousLevelScore = m_iLevelScore;
+
+      EReceiveScore eReceiveScore = ((EReceiveScore &) ee);
+	  m_iLevelScore += eReceiveScore.iPoints;
+	  
+	  // increment credits
+
+	  if (GetSP()->sp_ctCredits!=-1 && GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
+		  while (TRUE) {
+			if (GetNextMilestonePoints() < m_iLevelScore) {
+			  // dobavim jizn'
+			  m_iCurrentMilestone++;
+
+			  BOOL bAllPlayersAlive = TRUE;
+			  for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+				CPlayer *ppl = (CPlayer *)&*GetPlayerEntity(iPlayer);
+				if (ppl==NULL) { 
+				  continue;
+				}
+
+				if (!(ppl->GetFlags()&ENF_ALIVE)) {
+					ppl->SendEvent(EEnd());
+					bAllPlayersAlive = FALSE;
+				}
+			  }
+
+			  BOOL bCreditsMax = GetSP()->sp_ctCreditsLeft >= GetSP()->sp_ctCredits;
+			  if (bAllPlayersAlive) {
+				if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+				  ((CSessionProperties*)GetSP())->sp_ctCreditsLeft++;		
+				  CPrintF(TRANS("The team received an extra credit!\n"));
+				  for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+					CPlayer *ppl = (CPlayer *)&*GetPlayerEntity(iPlayer);
+					if (ppl==NULL) { 
+					  continue;
+					}
+					ppl->m_soHighScore.Set3DParameters(5000.0f, 5000.0f, 2.0f, 1.0f);
+					PlaySound(ppl->m_soHighScore, SOUND_EXTRA_CREDIT, SOF_3D|SOF_LOCAL);
+				  }
+
+				}
+			  } else {
+				CPrintF(TRANS("Fallen players are riding the gun again\n"));
+			  }
+
+			  continue;
+			}
+			break;
+		  }
+	  }
+	  return TRUE;
+    }
+
+	return CRationalEntity::HandleEvent(ee);
+  }
+
   // count enemies in current world
   void CountEnemies(void)
   {
