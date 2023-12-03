@@ -11,7 +11,6 @@ Release/
 **/EntitiesMP/Release/
 **/GameMP/Debug/
 **/GameMP/Release/
-**/GameMP/*.cpp
 **/GameGUIMP/*.cpp
 GameMP/GameMP.plg
 Sources.ncb
