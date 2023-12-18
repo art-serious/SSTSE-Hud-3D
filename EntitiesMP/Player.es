@@ -367,6 +367,9 @@ extern FLOAT hud_tmLatencySnapshot = 1.0f;
 extern INDEX hud_bShowMatchInfo = TRUE;
 extern INDEX _colHUD = 0x4C80BB00;
 
+extern INDEX hud_bShowPlayerList = FALSE;
+extern INDEX hud_bShowNickname = FALSE;
+
 extern FLOAT plr_fBreathingStrength = 0.0f;
 extern FLOAT plr_tmSnoopingTime;
 extern INDEX cht_bKillFinalBoss = FALSE;
@@ -444,6 +447,17 @@ static FLOAT h3d_fZ                    = (FLOAT)0.05;
 static FLOAT h3d_fFOV                  = (FLOAT)75;
 static FLOAT h3d_fClip                 = (FLOAT)1;
 static INDEX h3d_iColor                = (INDEX)0x6CA0DB00;
+
+static INDEX h3d_bLowAmmoBorder        = 1;
+static INDEX h3d_iColorScheme          = 0;
+static INDEX h3d_iCustomColorMax       = (INDEX)0x6CA0DB00;
+static INDEX h3d_iCustomColorTop       = (INDEX)0x6CA0DB00;
+static INDEX h3d_iCustomColorMid       = (INDEX)0x6CA0DB00;
+static INDEX h3d_iCustomColorLow       = (INDEX)0x6CA0DB00;
+static INDEX h3d_iCustomColorLowArmor  = (INDEX)0x6CA0DB00;
+static INDEX h3d_iCustomColorShield    = (INDEX)0x6CA0DB00;
+static INDEX h3d_iCustomColorHUD       = (INDEX)0x6CA0DB00;
+
 static FLOAT h3d_fWpnInertFactor       = 0.05f;
 static FLOAT h3d_fHUDInertFactor       = 0.035f;
 static BOOL  h3d_bHudInertia           = TRUE;
@@ -771,6 +785,15 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fFOV;",                  &h3d_fFOV);
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fClip;",                 &h3d_fClip);
   _pShell->DeclareSymbol("persistent user INDEX h3d_iColor;",                &h3d_iColor);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iColorScheme;",          &h3d_iColorScheme);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_bLowAmmoBorder;",        &h3d_bLowAmmoBorder);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorMax;",       &h3d_iCustomColorMax);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorTop;",       &h3d_iCustomColorTop);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorMid;",       &h3d_iCustomColorMid);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorLow;",       &h3d_iCustomColorLow);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorLowArmor;",  &h3d_iCustomColorLowArmor);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorShield;",    &h3d_iCustomColorShield);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorHUD;",       &h3d_iCustomColorHUD);
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fWpnInertFactor;",       &h3d_fWpnInertFactor);
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fHUDInertFactor;",       &h3d_fHUDInertFactor);
   _pShell->DeclareSymbol("persistent user INDEX h3d_bHudInertia;",           &h3d_bHudInertia);
@@ -858,6 +881,8 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("INDEX cht_bDumpPlayerShading;", &cht_bDumpPlayerShading);
   _pShell->DeclareSymbol("persistent user INDEX hud_bShowMatchInfo;", &hud_bShowMatchInfo);
 
+  _pShell->DeclareSymbol("persistent user FLOAT hud_bShowPlayerList;",    &hud_bShowPlayerList);
+
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilSpeed[17];",   &wpn_fRecoilSpeed);
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilLimit[17];",   &wpn_fRecoilLimit);
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilDampUp[17];",  &wpn_fRecoilDampUp);
@@ -917,6 +942,8 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("INDEX SetPlayerAppearance(INDEX, INDEX, INDEX, INDEX);", &SetPlayerAppearance);
   _pShell->DeclareSymbol("user INDEX dbg_strEnemySpawnerInfo;", &dbg_strEnemySpawnerInfo);
   _pShell->DeclareSymbol("user INDEX dbg_strEnemyBaseInfo;", &dbg_strEnemyBaseInfo);
+
+  _pShell->DeclareSymbol("user INDEX hud_bShowNickname;", &hud_bShowNickname);
 
   // call player weapons persistant variable initialization
   extern void CPlayerWeapons_Init(void);
@@ -1533,12 +1560,12 @@ functions:
 	 // Hud 3D - Check for Shop (need for Tab table)
 		{FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
 		CEntity *pen = iten;
-	if(IsOfClass(pen, "Shop")) {
-        m_bShopInTheWorld = TRUE;
-        break;
-	}
-	}
-	}
+	    if(IsOfClass(pen, "Shop")) {
+            m_bShopInTheWorld = TRUE;
+            break;
+      }
+    }
+    }
  }
 
   // drop money
@@ -1568,6 +1595,7 @@ functions:
 
 	do {
       m_iSpectatorPlayerIndex++;
+      hud_bShowNickname=1;
 	  if (m_iSpectatorPlayerIndex>=GetMaxPlayers()) {
 		  m_iSpectatorPlayerIndex=0;
 	  }
@@ -1578,6 +1606,7 @@ functions:
       m_penSpectatorPlayer=penPlayer;
 	  if (m_penSpectatorPlayer==this) {
         m_penSpectatorPlayer=NULL;
+        hud_bShowNickname=0;
       }
       break;
     } while (true);
@@ -2220,116 +2249,116 @@ void InitAniNum() {
   void SetHUD() {
 
 	SetComponents		    (this, m_moH3D,                                                         MODEL_H3D_BASE,  TEXTURE_H3D_BASE, 0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_000_ICO_HEALTH,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_001_DGT_HEALTH_100,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_002_DGT_HEALTH_010,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_003_DGT_HEALTH_001,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_004_ICO_ARMOR,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_005_DGT_ARMOR_100,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_006_DGT_ARMOR_010,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_007_DGT_ARMOR_001,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_008_ICO_SHIELD,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_012_ICO_SCORE,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_015_DGT_SCORE_001000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_016_DGT_SCORE_000100,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_017_DGT_SCORE_000010,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_018_DGT_SCORE_000001,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_019_DOT_SCORE,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_020_ICO_SKULL,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_023_DGT_DEATH_001000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_024_DGT_DEATH_000100,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_025_DGT_DEATH_000010,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_026_DGT_DEATH_000001,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_027_ICO_EXTRALIFE,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_028_DGT_EXTRALIFE_10,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_029_DGT_EXTRALIFE_01,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_030_ICO_SERIOUSDAMAGE,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_031_BAR_SERIOUSDAMAGE,              MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_032_ICO_INVULNERABILITY,            MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_033_BAR_INVULNERABILITY,            MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_034_ICO_SERIOUSSPEED,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_035_BAR_SERIOUSSPEED,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_036_ICO_INVISIBILITY,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_037_BAR_INVISIBILITY,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_038_DGT_CURRENTAMMO_100,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_039_DGT_CURRENTAMMO_010,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_040_DGT_CURRENTAMMO_001,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_041_ICO_MESSAGE,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_045_ICO_BOSSHEALTH,                 MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_100,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_010,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_001,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_049_ICO_OXYGEN,                     MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_050_DGT_OXYGEN_10,                  MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01,                  MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_052_ICO_SHELLS,                     MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_053_BAR_SHELLS,                     MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_054_BRD_SHELLS,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_055_ICO_BULLETS,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_056_BAR_BULLETS,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_057_BRD_BULLETS,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_058_ICO_ROCKETS,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_059_BAR_ROCKETS,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_060_BRD_ROCKETS,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_061_ICO_GRENADES,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_062_BAR_GRENADES,                   MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_063_BRD_GRENADES,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_064_ICO_FUEL,                       MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_065_BAR_FUEL,                       MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_066_BRD_FUEL,                       MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_067_ICO_SNIPERBULLETS,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_068_BAR_SNIPERBULLETS,              MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_069_BRD_SNIPERBULLETS,              MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_070_ICO_ELECTRICITY,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_071_BAR_ELECTRICITY,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_072_BRD_ELECTRICITY,                MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_073_ICO_IRONBALL,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_074_BAR_IRONBALL,                   MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_075_BRD_IRONBALL,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_076_ICO_SERIOUSBOMB,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_077_BAR_SERIOUSBOMB,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_078_ICO_KNIFE,                      MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_079_BRD_KNIFE,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_080_ICO_CHAINSAW,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_081_BRD_CHAINSAW,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_082_ICO_COLT,                       MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_083_BRD_COLT,                       MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_084_ICO_DOUBLECOLT,                 MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_085_BRD_DOUBLECOLT,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_086_ICO_SHOTGUN,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_087_BRD_SHOTGUN,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_088_ICO_DOUBLESHOTGUN,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_089_BRD_DOUBLESHOTGUN,              MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_090_ICO_TOMMYGUN,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_091_BRD_TOMMYGUN,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_092_ICO_MINIGUN,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_093_BRD_MINIGUN,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_094_ICO_ROCKETLAUNCHER,             MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_095_BRD_ROCKETLAUNCHER,             MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_096_ICO_GRENADELAUNCHER,            MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_097_BRD_GRENADELAUNCHER,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_098_ICO_FLAMETHROWER,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_099_BRD_FLAMETHROWER,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_100_ICO_SNIPERRIFLE,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_101_BRD_SNIPERRIFLE,                MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_102_ICO_LASER,                      MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_103_BRD_LASER,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_104_ICO_CANNON,                     MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_105_BRD_CANNON,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_106_BORDER_HEALTH,                  MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_107_BORDER_ARMOR,                   MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_108_BORDER_SHIELD,                  MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_109_BORDER_AMMO,                    MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0);
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_000_ICO_HEALTH,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   0
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_001_DGT_HEALTH_100,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   1
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_002_DGT_HEALTH_010,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   2
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_003_DGT_HEALTH_001,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   3
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_004_ICO_ARMOR,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   4
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_005_DGT_ARMOR_100,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   5
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_006_DGT_ARMOR_010,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   6
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_007_DGT_ARMOR_001,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   7
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_008_ICO_SHIELD,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   8
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   9
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  10
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  11
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_012_ICO_SCORE,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  12
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  13
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  14
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_015_DGT_SCORE_001000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  15
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_016_DGT_SCORE_000100,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  16
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_017_DGT_SCORE_000010,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  17
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_018_DGT_SCORE_000001,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  18
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_019_DOT_SCORE,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  19
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_020_ICO_SKULL,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  20
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  21
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  22
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_023_DGT_DEATH_001000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  23
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_024_DGT_DEATH_000100,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  24
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_025_DGT_DEATH_000010,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  25
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_026_DGT_DEATH_000001,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  26
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_027_ICO_EXTRALIFE,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  27
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_028_DGT_EXTRALIFE_10,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  28
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_029_DGT_EXTRALIFE_01,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  29
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_030_ICO_SERIOUSDAMAGE,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  30
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_031_BAR_SERIOUSDAMAGE,              MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  31
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_032_ICO_INVULNERABILITY,            MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  32
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_033_BAR_INVULNERABILITY,            MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  33
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_034_ICO_SERIOUSSPEED,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  34
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_035_BAR_SERIOUSSPEED,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  35
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_036_ICO_INVISIBILITY,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  36
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_037_BAR_INVISIBILITY,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  37
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_038_DGT_CURRENTAMMO_100,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  38
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_039_DGT_CURRENTAMMO_010,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  39
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_040_DGT_CURRENTAMMO_001,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  40
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_041_ICO_MESSAGE,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  41
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  42
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  43
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  44
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_045_ICO_BOSSHEALTH,                 MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  45
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_100,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  46
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_010,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  47
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_001,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  48
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_049_ICO_OXYGEN,                     MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  49
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_050_DGT_OXYGEN_10,                  MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  50
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01,                  MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  51
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_052_ICO_SHELLS,                     MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  52
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_053_BAR_SHELLS,                     MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  53
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_054_BRD_SHELLS,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  54
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_055_ICO_BULLETS,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  55
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_056_BAR_BULLETS,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  56
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_057_BRD_BULLETS,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  57
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_058_ICO_ROCKETS,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  58
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_059_BAR_ROCKETS,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  59
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_060_BRD_ROCKETS,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  60
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_061_ICO_GRENADES,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  61
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_062_BAR_GRENADES,                   MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  62
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_063_BRD_GRENADES,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  63
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_064_ICO_FUEL,                       MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  64
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_065_BAR_FUEL,                       MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  65
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_066_BRD_FUEL,                       MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  66
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_067_ICO_SNIPERBULLETS,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  67
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_068_BAR_SNIPERBULLETS,              MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  68
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_069_BRD_SNIPERBULLETS,              MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  69
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_070_ICO_ELECTRICITY,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  70
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_071_BAR_ELECTRICITY,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  71
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_072_BRD_ELECTRICITY,                MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  72
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_073_ICO_IRONBALL,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  73
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_074_BAR_IRONBALL,                   MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  74
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_075_BRD_IRONBALL,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  75
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_076_ICO_SERIOUSBOMB,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  76
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_077_BAR_SERIOUSBOMB,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  77
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_078_ICO_KNIFE,                      MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  78
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_079_BRD_KNIFE,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  79
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_080_ICO_CHAINSAW,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  80
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_081_BRD_CHAINSAW,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  81
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_082_ICO_COLT,                       MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  82
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_083_BRD_COLT,                       MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  83
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_084_ICO_DOUBLECOLT,                 MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  84
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_085_BRD_DOUBLECOLT,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  85
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_086_ICO_SHOTGUN,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  86
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_087_BRD_SHOTGUN,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  87
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_088_ICO_DOUBLESHOTGUN,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  88
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_089_BRD_DOUBLESHOTGUN,              MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  89
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_090_ICO_TOMMYGUN,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  90
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_091_BRD_TOMMYGUN,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  91
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_092_ICO_MINIGUN,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  92
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_093_BRD_MINIGUN,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  93
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_094_ICO_ROCKETLAUNCHER,             MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  94
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_095_BRD_ROCKETLAUNCHER,             MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  95
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_096_ICO_GRENADELAUNCHER,            MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  96
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_097_BRD_GRENADELAUNCHER,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  97
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_098_ICO_FLAMETHROWER,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  98
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_099_BRD_FLAMETHROWER,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  99
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_100_ICO_SNIPERRIFLE,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); // 100
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_101_BRD_SNIPERRIFLE,                MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); // 101
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_102_ICO_LASER,                      MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); // 102
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_103_BRD_LASER,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); // 103
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_104_ICO_CANNON,                     MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); // 104
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_105_BRD_CANNON,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); // 105
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_106_BORDER_HEALTH,                  MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 106
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_107_BORDER_ARMOR,                   MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 107
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_108_BORDER_SHIELD,                  MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 108
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_109_BORDER_AMMO,                    MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 109
         
 
   SetGUIShop();
@@ -2397,27 +2426,82 @@ void InitAniNum() {
     int i = 0;
     // position for wide screen
     for (i = 0;   i <= 11; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    }
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //health, armor, shields
 
     for (i = 30;  i <= 40; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    }
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //powerups, current ammo
 
     for (i = 52;  i <= 77; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    }
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //ammo info
 
     for (i = 106; i <= 109; i++) {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    }
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //borders of health, armor, shields
 
     for (i = 12;  i <= 26; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    }
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //score/frags and money/mana/deaths
 
     for (i = 41;  i <= 51; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    }
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //messages, boss health, oxygen
 
-		  INDEX H3DC_DIS   = 0x33333300;
-		  INDEX H3DC_WHITE = 0xFFFFFF00;
+		  INDEX H3DC_DIS   = 0x33333300; //empty weapon
+		  INDEX H3DC_WHITE = 0xFFFFFF00; //score
+
 		  INDEX H3DC_GREEN = 0x00FF0000;
-		  INDEX H3DC_RED   = 0xFF000000;
+
+      COLOR colMax      = h3d_iColor;
+      COLOR colTop      = h3d_iColor;
+      COLOR colMid      = h3d_iColor;
+      COLOR colLow      = h3d_iColor;
+      COLOR colLowArmor = h3d_iColor;
+      COLOR colShield   = h3d_iColor;
+      COLOR colHUD      = h3d_iColor;
+      FLOAT fFE         = 0; //for increase condition for FE scheme
+
+      // ************************
+      // ***** COLOR SCHEME *****
+      // ************************
+      
+      if (h3d_iColorScheme==1) { // FE hud color scheme
+        colMax      = (INDEX)0x00FF0000;
+        colTop      = (INDEX)0x00FF0000;
+        colMid      = (INDEX)0x00FF0000;
+        colLow      = (INDEX)0xFF000000;
+        colLowArmor = (INDEX)0xBFBFBF00;
+        colShield   = (INDEX)0x64B4FF00;
+        colHUD      = (INDEX)0x00FF0000;
+        fFE         = 0.1f;
+      } else if (h3d_iColorScheme==2) { // SE hud color scheme
+        colMax      = SE_COL_BLUEGREEN_LT;
+        colTop      = SE_COL_ORANGE_LIGHT;
+        colMid      = LerpColor(colTop, C_RED, 0.5f);
+        colLow      = (INDEX)0xFF000000;
+        colLowArmor = (INDEX)0xBFBFBF00;
+        colShield   = (INDEX)0x64B4FF00;
+        colHUD      = (INDEX)0x6CA0DB00;
+        fFE         = 0;
+      } else if (h3d_iColorScheme==3) { // Custom hud color scheme
+        colMax      = h3d_iCustomColorMax;
+        colTop      = h3d_iCustomColorTop;
+        colMid      = h3d_iCustomColorMid;
+        colLow      = h3d_iCustomColorLow;
+        colLowArmor = h3d_iCustomColorLowArmor;
+        colShield   = h3d_iCustomColorShield;
+        colHUD      = h3d_iCustomColorHUD;
+        fFE         = 0;
+      } else { // h3d_iColorScheme=0 for Custom color
+        colMax      = h3d_iColor;
+        colTop      = h3d_iColor;
+        colMid      = h3d_iColor;
+        colLow      = h3d_iColor;
+        colLowArmor = h3d_iColor;
+        colShield   = h3d_iColor;
+        colHUD      = h3d_iColor;
+        fFE         = 0;
+      }
+
+      INDEX iColHealth, iColArmor, iColAmmo, iColBossHealth, iColOxygen,
+        iColBarShells, iColBarBullets, iColBarRockets, iColBarGrenades, iColBarFuel, iColBarSniperBullets, iColBarElectricity, iColBarIronball, iColBarSeriousBomb;
+
 
 	    //FLOAT iGetCount  = 0;
 		  //FLOAT iMaxCount  = 0;
@@ -2508,16 +2592,16 @@ void InitAniNum() {
       anCurrentDeaths.iCurrent = anCurrentDeaths.iTo;
       
       if (GetSP()->sp_bSinglePlayer) {    //change digits show style
-        UpdateAniNum(anCurrentHealth);    //one digit in SP
+        UpdateAniNum(anCurrentHealth);    //counter style in Single player
         UpdateAniNum(anCurrentArmor);
 
-		UpdateAniNum(anCurrentShield);
+		    UpdateAniNum(anCurrentShield);
 
       } else {
-        UpdateAniDigits(anCurrentHealth); //all digits in MP
+        UpdateAniDigits(anCurrentHealth); //change all digits in one time in Multiplayer
         UpdateAniDigits(anCurrentArmor);
 
-		UpdateAniDigits(anCurrentShield);
+		    UpdateAniDigits(anCurrentShield);
 
         UpdateAniDigits(anCurrentFrags);
         UpdateAniDigits(anCurrentDeaths);
@@ -2526,33 +2610,26 @@ void InitAniNum() {
 
       UpdateAniDigits(anCurrentAmmo);
       UpdateAniDigits(anCurrentScore);
-	  UpdateAniNum(anCurrentMoney);
-
-	  // TODO: change variable names
-
-	  // naimenovaniya s bolshoou bukvi - eto naimenovaniya classov, naprimer EnemyBase
-	  // local variable: iPlayerHealth
-	  // global variable: m_iPlayerHealth
-	  // a tut prosto PlayerHealth. K kakoi oblasti ona prinadlezhit - skazat nevozmojno
+	    UpdateAniNum(anCurrentMoney);
       
-    INDEX PlayerHealth    = ceil(anCurrentHealth.iCurrent);
-    INDEX PlayerArmor     = ceil(anCurrentArmor.iCurrent);
+    INDEX iPlayerHealth   = ceil(anCurrentHealth.iCurrent);
+    INDEX iPlayerArmor    = ceil(anCurrentArmor.iCurrent);
 
-    INDEX PlayerShield    = ceil(anCurrentShield.iCurrent);
+    INDEX iPlayerShield   = ceil(anCurrentShield.iCurrent);
 
-    INDEX PlayerScore     = anCurrentScore.iCurrent;
+    INDEX iPlayerScore    = anCurrentScore.iCurrent;
     INDEX iAbsPlayerScore = abs(anCurrentScore.iCurrent);
-    INDEX PlayerMana      = anCurrentMana.iCurrent;
+    INDEX iPlayerMana     = anCurrentMana.iCurrent;
     INDEX iAbsPlayerFrags = abs(anCurrentFrags.iCurrent);
-    INDEX PlayerFrags     = anCurrentFrags.iCurrent;
-    INDEX PlayerDeaths    = anCurrentDeaths.iCurrent;
+    INDEX iPlayerFrags     = anCurrentFrags.iCurrent;
+    INDEX iPlayerDeaths    = anCurrentDeaths.iCurrent;
     INDEX iCurAmm         = anCurrentAmmo.iCurrent;
     INDEX iMoney          = anCurrentMoney.iCurrent;
 
-    INDEX PlayerPwUpSD = ceil(m_tmSeriousDamage   - _pTimer->CurrentTick());
-    INDEX PlayerPwUpIU = ceil(m_tmInvulnerability - _pTimer->CurrentTick());
-    INDEX PlayerPwUpSS = ceil(m_tmSeriousSpeed    - _pTimer->CurrentTick());
-    INDEX PlayerPwUpIS = ceil(m_tmInvisibility    - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpSD = ceil(m_tmSeriousDamage   - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpIU = ceil(m_tmInvulnerability - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpSS = ceil(m_tmSeriousSpeed    - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpIS = ceil(m_tmInvisibility    - _pTimer->CurrentTick());
 
     INDEX iCurAmmBrd       = GetCurrentAmmo;
     INDEX iWntWep          = GetWantedWeapon;
@@ -2575,9 +2652,9 @@ void InitAniNum() {
 
     INDEX iAvbWep      = GetPlayerWeapons()->m_iAvailableWeapons;
 		  
-    INDEX iNumHl1      = (PlayerHealth%1000)/100;
-    INDEX iNumHl2      = (PlayerHealth%100)/10;
-    INDEX iNumHl3      = PlayerHealth%10;
+    INDEX iNumHl1      = (iPlayerHealth%1000)/100;
+    INDEX iNumHl2      = (iPlayerHealth%100)/10;
+    INDEX iNumHl3      = iPlayerHealth%10;
     INDEX iIcoHlt      = 13;
     FLOAT m_fBrdHlth   = 0.0f;
 
@@ -2586,18 +2663,18 @@ void InitAniNum() {
     FLOAT fHudAppearDiff = m_fBorderHealth - _tmNow;
     if (m_fBorderHealth > _tmNow) { iHealthBorderAlpha = 255/(m_h3dAppearTime/fHudAppearDiff); } else { m_h3dAppearTime = 0; }
 
-    INDEX iNumAr1      = (PlayerArmor%1000)/100;
-    INDEX iNumAr2      = (PlayerArmor%100)/10;
-    INDEX iNumAr3      = PlayerArmor%10;
+    INDEX iNumAr1      = (iPlayerArmor%1000)/100;
+    INDEX iNumAr2      = (iPlayerArmor%100)/10;
+    INDEX iNumAr3      = iPlayerArmor%10;
     INDEX iIcoArr      = 16;
     INDEX iBrdArmr     = 0;
 
     FLOAT fHudAppearDiffArmor = m_fBorderArmor - _tmNow;
     if (m_fBorderArmor > _tmNow) { iBrdArmr = 255/(m_h3dAppearTimeArmor/fHudAppearDiffArmor); } else { m_h3dAppearTimeArmor = 0; }
 
-    INDEX iNumShield1  = (PlayerShield%1000)/100;
-    INDEX iNumShield2  = (PlayerShield%100)/10;
-    INDEX iNumShield3  = PlayerShield%10;
+    INDEX iNumShield1  = (iPlayerShield%1000)/100;
+    INDEX iNumShield2  = (iPlayerShield%100)/10;
+    INDEX iNumShield3  = iPlayerShield%10;
     INDEX iIcoShield   = 126;
     INDEX iShieldBorderAlpha = 0;
 
@@ -2612,21 +2689,21 @@ void InitAniNum() {
       INDEX iNumSc6;
       INDEX iDotScr;
   
-      if (PlayerScore<999999) {
-      iNumSc1 = (PlayerScore%1000000)/100000;
-      iNumSc2 = (PlayerScore%100000)/10000;
-      iNumSc3 = (PlayerScore%10000)/1000;
-      iNumSc4 = (PlayerScore%1000)/100;
-      iNumSc5 = (PlayerScore%100)/10;
-      iNumSc6 = PlayerScore%10;
+      if (iPlayerScore<999999) {
+      iNumSc1 = (iPlayerScore%1000000)/100000;
+      iNumSc2 = (iPlayerScore%100000)/10000;
+      iNumSc3 = (iPlayerScore%10000)/1000;
+      iNumSc4 = (iPlayerScore%1000)/100;
+      iNumSc5 = (iPlayerScore%100)/10;
+      iNumSc6 = iPlayerScore%10;
       iDotScr = 129;
       } else {
-      iNumSc1 = (PlayerScore%100000000)/10000000;
-      iNumSc2 = (PlayerScore%10000000)/1000000;
-      iNumSc3 = (PlayerScore%1000000)/100000;
-      iNumSc4 = (PlayerScore%100000)/10000;
-      iNumSc5 = (PlayerScore%10000)/1000;
-      iNumSc6 = (PlayerScore%1000)/100;
+      iNumSc1 = (iPlayerScore%100000000)/10000000;
+      iNumSc2 = (iPlayerScore%10000000)/1000000;
+      iNumSc3 = (iPlayerScore%1000000)/100000;
+      iNumSc4 = (iPlayerScore%100000)/10000;
+      iNumSc5 = (iPlayerScore%10000)/1000;
+      iNumSc6 = (iPlayerScore%1000)/100;
       iDotScr = 130;
       }
 
@@ -2639,30 +2716,30 @@ void InitAniNum() {
     INDEX iNumDmSc5    = (iAbsPlayerScore%100)/10;
     INDEX iNumDmSc6    =  iAbsPlayerScore%10;
 
-    INDEX iNumFr1      = ((abs(PlayerFrags))%1000000)/100000;
-    INDEX iNumFr2      = ((abs(PlayerFrags))%100000)/10000;
-    INDEX iNumFr3      = ((abs(PlayerFrags))%10000)/1000;
-    INDEX iNumFr4      = ((abs(PlayerFrags))%1000)/100;
-    INDEX iNumFr5      = ((abs(PlayerFrags))%100)/10;
-    INDEX iNumFr6      =  (abs(PlayerFrags))%10;
+    INDEX iNumFr1      = ((abs(iPlayerFrags))%1000000)/100000;
+    INDEX iNumFr2      = ((abs(iPlayerFrags))%100000)/10000;
+    INDEX iNumFr3      = ((abs(iPlayerFrags))%10000)/1000;
+    INDEX iNumFr4      = ((abs(iPlayerFrags))%1000)/100;
+    INDEX iNumFr5      = ((abs(iPlayerFrags))%100)/10;
+    INDEX iNumFr6      =  (abs(iPlayerFrags))%10;
 
     INDEX iIcoFrg      = 100;
 
-    INDEX iNumDt1      = (PlayerDeaths%1000000)/100000;
-    INDEX iNumDt2      = (PlayerDeaths%100000)/10000;
-    INDEX iNumDt3      = (PlayerDeaths%10000)/1000;
-    INDEX iNumDt4      = (PlayerDeaths%1000)/100;
-    INDEX iNumDt5      = (PlayerDeaths%100)/10;
-    INDEX iNumDt6      =  PlayerDeaths%10;
+    INDEX iNumDt1      = (iPlayerDeaths%1000000)/100000;
+    INDEX iNumDt2      = (iPlayerDeaths%100000)/10000;
+    INDEX iNumDt3      = (iPlayerDeaths%10000)/1000;
+    INDEX iNumDt4      = (iPlayerDeaths%1000)/100;
+    INDEX iNumDt5      = (iPlayerDeaths%100)/10;
+    INDEX iNumDt6      =  iPlayerDeaths%10;
 
     INDEX iIcoDth      = 24;
 
-    INDEX iNumMn1      = (PlayerMana%1000000)/100000;
-    INDEX iNumMn2      = (PlayerMana%100000)/10000;
-    INDEX iNumMn3      = (PlayerMana%10000)/1000;
-    INDEX iNumMn4      = (PlayerMana%1000)/100;
-    INDEX iNumMn5      = (PlayerMana%100)/10;
-    INDEX iNumMn6      =  PlayerMana%10;
+    INDEX iNumMn1      = (iPlayerMana%1000000)/100000;
+    INDEX iNumMn2      = (iPlayerMana%100000)/10000;
+    INDEX iNumMn3      = (iPlayerMana%10000)/1000;
+    INDEX iNumMn4      = (iPlayerMana%1000)/100;
+    INDEX iNumMn5      = (iPlayerMana%100)/10;
+    INDEX iNumMn6      =  iPlayerMana%10;
 
     INDEX iIcoMan      = 24;
 
@@ -2741,48 +2818,66 @@ void InitAniNum() {
 	  INDEX iAvbWepFlm   = 89; INDEX iAvbWepSnp   = 91;
 	  INDEX iAvbWepLsr   = 93; INDEX iAvbWepCnn   = 95;
 
-		  // = Render Player health info ========================================================== 
-    if (PlayerHealth < 100)  {iNumHl1 = 11;} //digits
-    if (PlayerHealth < 10)   {iNumHl2 = 11;}
-	  if (PlayerHealth < 1)    {iNumHl3 = 11;}
-	  if (PlayerHealth > 999)  {iNumHl1 = iNumHl2 = iNumHl3 =  9;}
+	  // = Render Player health info ========================================================== 
+    if (iPlayerHealth < 100)  {iNumHl1 = 11;} //digits
+    if (iPlayerHealth < 10)   {iNumHl2 = 11;}
+	  if (iPlayerHealth < 1)    {iNumHl3 = 11;}
+	  if (iPlayerHealth > 999)  {iNumHl1 = iNumHl2 = iNumHl3 =  9;}
 		    
-	  if (PlayerHealth <= 0)   {iIcoHlt = 13;} //icon health
-	  if (PlayerHealth >  0)   {iIcoHlt = 14;}
-	  if (PlayerHealth >= 25)  {iIcoHlt = 15;}
+	  if (iPlayerHealth <= 0)   {iIcoHlt = 13;} //icon health
+	  if (iPlayerHealth >  0)   {iIcoHlt = 14;}
+	  if (iPlayerHealth >= 25)  {iIcoHlt = 15;}
 
-	  CModelObject &icohlt  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_000_ICO_HEALTH    )->amo_moModelObject;
-	  icohlt.mo_toTexture.PlayAnim(iIcoHlt, AOF_LOOPING|AOF_NORESTART);
-	  icohlt.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-	  /*if (PlayerHealth <= 25)  {icohlt.mo_colBlendColor  = 0xFF000000|255;} else {icohlt.mo_colBlendColor  = h3d_iColor|255;}*/
-	
-    CModelObject &dgthlt1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_001_DGT_HEALTH_100)->amo_moModelObject; dgthlt1.mo_toTexture.PlayAnim(iNumHl1+101, 0); dgthlt1.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-    CModelObject &dgthlt2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_002_DGT_HEALTH_010)->amo_moModelObject; dgthlt2.mo_toTexture.PlayAnim(iNumHl2+101, 0); dgthlt2.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-    CModelObject &dgthlt3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_003_DGT_HEALTH_001)->amo_moModelObject; dgthlt3.mo_toTexture.PlayAnim(iNumHl3+101, 0); dgthlt3.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+    // Color Scheme
+    if (iPlayerHealth > 100) {
+      iColHealth = colMax;
+    } else if (iPlayerHealth >= 50) {
+      iColHealth = colTop;
+    } else if (iPlayerHealth >= 25) {
+      iColHealth = colMid;
+    } else {
+      iColHealth = colLow;
+    }
+
+	  CModelObject &icohlt  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_000_ICO_HEALTH    )->amo_moModelObject;  icohlt.mo_toTexture.PlayAnim(iIcoHlt, AOF_LOOPING|AOF_NORESTART); icohlt.mo_colBlendColor  = colHUD|iCurrentAlpha;
+    
+    CModelObject &dgthlt1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_001_DGT_HEALTH_100)->amo_moModelObject; dgthlt1.mo_toTexture.PlayAnim(iNumHl1+101, 0); dgthlt1.mo_colBlendColor  = iColHealth|iCurrentAlpha;
+    CModelObject &dgthlt2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_002_DGT_HEALTH_010)->amo_moModelObject; dgthlt2.mo_toTexture.PlayAnim(iNumHl2+101, 0); dgthlt2.mo_colBlendColor  = iColHealth|iCurrentAlpha;
+    CModelObject &dgthlt3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_003_DGT_HEALTH_001)->amo_moModelObject; dgthlt3.mo_toTexture.PlayAnim(iNumHl3+101, 0); dgthlt3.mo_colBlendColor  = iColHealth|iCurrentAlpha;
     CModelObject &brdhlth = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_106_BORDER_HEALTH )->amo_moModelObject; brdhlth.mo_toTexture.PlayAnim(99, 0);          brdhlth.mo_colBlendColor  = 0xFF000000|INDEX(iHealthBorderAlpha*fHudAppear);
 
-		  // = Render Player armor info ===========================================================
-    if (PlayerArmor > 999 ) {iNumAr1 = iNumAr2 = iNumAr3 = 9;}
-    if (PlayerArmor < 0   ) {iNumAr1 = iNumAr2 = iNumAr3 = 12;}
-    if (PlayerArmor < 100 ) {iNumAr1 = 11;}
-    if (PlayerArmor < 10  ) {iNumAr2 = 11;}
-    if (PlayerArmor < 1   ) {iNumAr3 = 11;}
+		// = Render Player armor info ===========================================================
+    if (iPlayerArmor > 999 ) {iNumAr1 = iNumAr2 = iNumAr3 = 9;}
+    if (iPlayerArmor < 0   ) {iNumAr1 = iNumAr2 = iNumAr3 = 12;}
+    if (iPlayerArmor < 100 ) {iNumAr1 = 11;}
+    if (iPlayerArmor < 10  ) {iNumAr2 = 11;}
+    if (iPlayerArmor < 1   ) {iNumAr3 = 11;}
 
-    if (PlayerArmor <= 0  ) {iIcoArr = 16;}  //icon armor
-	  if (PlayerArmor >  0  ) {iIcoArr = 17;}
-	  if (PlayerArmor >  5  ) {iIcoArr = 18;}
-	  if (PlayerArmor >  33 ) {iIcoArr = 19;}
-	  if (PlayerArmor >  66 ) {iIcoArr = 20;}
-	  if (PlayerArmor >  100) {iIcoArr = 21;}
-	  if (PlayerArmor >  133) {iIcoArr = 22;}
-	  if (PlayerArmor >  166) {iIcoArr = 23;}
+    if (iPlayerArmor <= 0  ) {iIcoArr = 16;}  //icon armor
+	  if (iPlayerArmor >  0  ) {iIcoArr = 17;}
+	  if (iPlayerArmor >  5  ) {iIcoArr = 18;}
+	  if (iPlayerArmor >  33 ) {iIcoArr = 19;}
+	  if (iPlayerArmor >  66 ) {iIcoArr = 20;}
+	  if (iPlayerArmor >  100) {iIcoArr = 21;}
+	  if (iPlayerArmor >  133) {iIcoArr = 22;}
+	  if (iPlayerArmor >  166) {iIcoArr = 23;}
 
-	  CModelObject &icoarr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_004_ICO_ARMOR    )->amo_moModelObject;
-	  icoarr.mo_toTexture.PlayAnim(iIcoArr, AOF_LOOPING|AOF_NORESTART); icoarr.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+    // Color Scheme
+    if (iPlayerArmor > 100) {
+      iColArmor = colMax;
+    } else if (iPlayerArmor >= 50) {
+      iColArmor = colTop;
+    } else if (iPlayerArmor >= 25) {
+      iColArmor = colMid;
+    } else {
+      iColArmor = colLowArmor;
+    }
 
-    CModelObject &dgtarr1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_005_DGT_ARMOR_100)->amo_moModelObject; dgtarr1.mo_toTexture.PlayAnim(iNumAr1+101, 0); dgtarr1.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-    CModelObject &dgtarr2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_006_DGT_ARMOR_010)->amo_moModelObject; dgtarr2.mo_toTexture.PlayAnim(iNumAr2+101, 0); dgtarr2.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-    CModelObject &dgtarr3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_007_DGT_ARMOR_001)->amo_moModelObject; dgtarr3.mo_toTexture.PlayAnim(iNumAr3+101, 0); dgtarr3.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+	  CModelObject &icoarr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_004_ICO_ARMOR    )->amo_moModelObject;  icoarr.mo_toTexture.PlayAnim(iIcoArr, AOF_LOOPING|AOF_NORESTART); icoarr.mo_colBlendColor  = colHUD|iCurrentAlpha;
+
+    CModelObject &dgtarr1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_005_DGT_ARMOR_100)->amo_moModelObject; dgtarr1.mo_toTexture.PlayAnim(iNumAr1+101, 0); dgtarr1.mo_colBlendColor  = iColArmor|iCurrentAlpha;
+    CModelObject &dgtarr2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_006_DGT_ARMOR_010)->amo_moModelObject; dgtarr2.mo_toTexture.PlayAnim(iNumAr2+101, 0); dgtarr2.mo_colBlendColor  = iColArmor|iCurrentAlpha;
+    CModelObject &dgtarr3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_007_DGT_ARMOR_001)->amo_moModelObject; dgtarr3.mo_toTexture.PlayAnim(iNumAr3+101, 0); dgtarr3.mo_colBlendColor  = iColArmor|iCurrentAlpha;
 	  CModelObject &brdarmr = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_107_BORDER_ARMOR )->amo_moModelObject; brdarmr.mo_toTexture.PlayAnim(99, 0);          brdarmr.mo_colBlendColor  = 0xFF000000|INDEX(iBrdArmr*fHudAppear);
 
 		// = Render Player shield info ==========================================================
@@ -2795,53 +2890,50 @@ void InitAniNum() {
 
     if (m_fMaxShield>0) {
       if (GetFlags()&ENF_ALIVE) {
-        if (PlayerShield < 100)  {iNumShield1 = 11;} //digits
-        if (PlayerShield < 10)   {iNumShield2 = 11;}
-	      //if (PlayerShield < 1)    {iNumShield3 = 11;}
-	      if (PlayerShield > 999)  {iNumShield1 = iNumShield2 = iNumShield3 = 9;}
-	      if (PlayerShield < 0)    {iNumShield1 = iNumShield2 = iNumShield3 = 11;}
+        if (iPlayerShield < 100)  {iNumShield1 = 11;} //digits
+        if (iPlayerShield < 10)   {iNumShield2 = 11;}
+	      //if (iPlayerShield < 1)    {iNumShield3 = 11;}
+	      if (iPlayerShield > 999)  {iNumShield1 = iNumShield2 = iNumShield3 = 9;}
+	      if (iPlayerShield < 0)    {iNumShield1 = iNumShield2 = iNumShield3 = 11;}
 		        
-	      if (PlayerShield <  0)   {iIcoShield = 126;} //icon shield
-	      if (PlayerShield >= 0)   {iIcoShield = 127;}
-	      if (PlayerShield >= 1)   {iIcoShield = 128;}
+	      if (iPlayerShield <  0)   {iIcoShield = 126;} //icon shield
+	      if (iPlayerShield >= 0)   {iIcoShield = 127;}
+	      if (iPlayerShield >= 1)   {iIcoShield = 128;}
       } else {
-        if (PlayerShield <  100) {iNumShield1 = 11;} //digits
-        if (PlayerShield <  10)  {iNumShield2 = 11;}
-	      if (PlayerShield <  1)   {iNumShield3 = 11;}
-        if (PlayerShield <  1)   {iIcoShield = 126;}
+        if (iPlayerShield <  100) {iNumShield1 = 11;} //digits
+        if (iPlayerShield <  10)  {iNumShield2 = 11;}
+	      if (iPlayerShield <  1)   {iNumShield3 = 11;}
+        if (iPlayerShield <  1)   {iIcoShield = 126;}
 
-        if (PlayerShield <= 0)   {iIcoShield = 126;} //icon shield
-	      if (PlayerShield >= 1)   {iIcoShield = 128;}
+        if (iPlayerShield <= 0)   {iIcoShield = 126;} //icon shield
+	      if (iPlayerShield >= 1)   {iIcoShield = 128;}
       }
-
-    
-	  CModelObject &icoshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_008_ICO_SHIELD    )->amo_moModelObject;
-	  icoshield.mo_toTexture.PlayAnim(iIcoShield, AOF_LOOPING|AOF_NORESTART);
-	  icoshield.mo_colBlendColor = h3d_iColor|iCurrentAlpha;
+  
+	  CModelObject &icoshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_008_ICO_SHIELD    )->amo_moModelObject;  icoshield.mo_toTexture.PlayAnim(iIcoShield, AOF_LOOPING|AOF_NORESTART); icoshield.mo_colBlendColor = colShield|iCurrentAlpha;
 	
-    CModelObject &dgtshield1   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100)->amo_moModelObject; dgtshield1.mo_toTexture.PlayAnim(iNumShield1+101, 0); dgtshield1.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-    CModelObject &dgtshield2   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010)->amo_moModelObject; dgtshield2.mo_toTexture.PlayAnim(iNumShield2+101, 0); dgtshield2.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-    CModelObject &dgtshield3   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001)->amo_moModelObject; dgtshield3.mo_toTexture.PlayAnim(iNumShield3+101, 0); dgtshield3.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+    CModelObject &dgtshield1   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100)->amo_moModelObject; dgtshield1.mo_toTexture.PlayAnim(iNumShield1+101, 0); dgtshield1.mo_colBlendColor  = colShield|iCurrentAlpha;
+    CModelObject &dgtshield2   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010)->amo_moModelObject; dgtshield2.mo_toTexture.PlayAnim(iNumShield2+101, 0); dgtshield2.mo_colBlendColor  = colShield|iCurrentAlpha;
+    CModelObject &dgtshield3   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001)->amo_moModelObject; dgtshield3.mo_toTexture.PlayAnim(iNumShield3+101, 0); dgtshield3.mo_colBlendColor  = colShield|iCurrentAlpha;
     CModelObject &brdshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_108_BORDER_SHIELD )->amo_moModelObject;  brdshield.mo_toTexture.PlayAnim(99, 0);               brdshield.mo_colBlendColor  = 0xFF000000|INDEX(iShieldBorderAlpha*fHudAppear);
 	  }
 
 		// = Render Player score/frags info =====================================================
     if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-    if (PlayerScore > 99999900) {iNumSc1 = iNumSc2 = iNumSc3 = iNumSc4 = iNumSc5 = iNumSc6 = 10;}
-    if (PlayerScore<999999) {
-      if (PlayerScore < 100000)   {iNumSc1 = 11;}
-      if (PlayerScore < 10000)    {iNumSc2 = 11;}
-      if (PlayerScore < 1000)     {iNumSc3 = 11;}
-      if (PlayerScore < 100)      {iNumSc4 = 11;}
-      if (PlayerScore < 10)       {iNumSc5 = 11;}
-      if (PlayerScore < 0)        {iNumSc6 = 11;}
+    if (iPlayerScore > 99999900) {iNumSc1 = iNumSc2 = iNumSc3 = iNumSc4 = iNumSc5 = iNumSc6 = 10;}
+    if (iPlayerScore<999999) {
+      if (iPlayerScore < 100000)   {iNumSc1 = 11;}
+      if (iPlayerScore < 10000)    {iNumSc2 = 11;}
+      if (iPlayerScore < 1000)     {iNumSc3 = 11;}
+      if (iPlayerScore < 100)      {iNumSc4 = 11;}
+      if (iPlayerScore < 10)       {iNumSc5 = 11;}
+      if (iPlayerScore < 0)        {iNumSc6 = 11;}
     } else {
-      if (PlayerScore < 10000000) {iNumSc1 = 11;}
-      //if (PlayerScore < 1000000)  {iNumSc2 = 11;}
-      //if (PlayerScore < 100000)   {iNumSc3 = 11;}
-      //if (PlayerScore < 10000)    {iNumSc4 = 11;}
-      //if (PlayerScore < 1000)     {iNumSc5 = 11;}
-      //if (PlayerScore < 0)        {iNumSc6 = 11;}
+      if (iPlayerScore < 10000000) {iNumSc1 = 11;}
+      //if (iPlayerScore < 1000000)  {iNumSc2 = 11;}
+      //if (iPlayerScore < 100000)   {iNumSc3 = 11;}
+      //if (iPlayerScore < 10000)    {iNumSc4 = 11;}
+      //if (iPlayerScore < 1000)     {iNumSc5 = 11;}
+      //if (iPlayerScore < 0)        {iNumSc6 = 11;}
     }
 
     if (iMoney > 999999) {iNumMoney1 = iNumMoney2 = iNumMoney3 = iNumMoney4 = iNumMoney5 = iNumMoney6 = 10;}
@@ -2862,7 +2954,7 @@ void InitAniNum() {
     if (iAbsPlayerFrags < 10)     {iNumFr5 = 11;}
     if (iAbsPlayerFrags < 0)      {iNumFr6 = 11;}
 
-      if (PlayerFrags < 0) {
+      if (iPlayerFrags < 0) {
         BOOL placed = FALSE;
         for (INDEX i = 1; i <= 5; i++) {
           switch (i) {
@@ -2871,10 +2963,10 @@ void InitAniNum() {
           case 3: if (iNumFr3 == 11) { iNumFr3 = 10; placed = TRUE; } break;
           case 4: if (iNumFr2 == 11) { iNumFr2 = 10; placed = TRUE; } break;
           case 5: // if last digit is zero or lower than maximum
-            if (iNumFr1 == 11 || PlayerFrags < -99999) { 
+            if (iNumFr1 == 11 || iPlayerFrags < -99999) { 
               iNumFr1 = 10;
               //set -99999 if number was huge
-              if (PlayerFrags < -99999) {iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 10;}
+              if (iPlayerFrags < -99999) {iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 10;}
               }
               break;
             }
@@ -2891,7 +2983,7 @@ void InitAniNum() {
       if (iAbsPlayerScore < 10)       {iNumDmSc5 = 11;}
       if (iAbsPlayerScore < 0)        {iNumDmSc6 = 11;}
 
-      if (PlayerScore < 0) {
+      if (iPlayerScore < 0) {
         BOOL placed = FALSE;
         for (INDEX i = 1; i <= 5; i++) {
           switch (i) {
@@ -2900,10 +2992,10 @@ void InitAniNum() {
           case 3: if (iNumDmSc3 == 11) { iNumDmSc3 = 10; placed = TRUE; } break;
           case 4: if (iNumDmSc2 == 11) { iNumDmSc2 = 10; placed = TRUE; } break;
           case 5: // if last digit is zero or lower than maximum
-            if (iNumDmSc1 == 11 || PlayerScore < -99999) { 
+            if (iNumDmSc1 == 11 || iPlayerScore < -99999) { 
               iNumDmSc1 = 11;
               //set -99999 if number was huge
-              if (PlayerScore < -99999) {iNumDmSc2 = iNumDmSc3 = iNumDmSc4 = iNumDmSc5 = iNumDmSc6 = 10;}
+              if (iPlayerScore < -99999) {iNumDmSc2 = iNumDmSc3 = iNumDmSc4 = iNumDmSc5 = iNumDmSc6 = 10;}
             }
             break;
           }
@@ -2914,7 +3006,7 @@ void InitAniNum() {
 
       // render standard score if playing single/coop
       if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-        CModelObject &icoscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_012_ICO_SCORE       )->amo_moModelObject;  icoscr.mo_toTexture.PlayAnim(iIcoFrg, 0); icoscr.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+        CModelObject &icoscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_012_ICO_SCORE       )->amo_moModelObject;  icoscr.mo_toTexture.PlayAnim(iIcoFrg, 0); icoscr.mo_colBlendColor  = colHUD|iCurrentAlpha;
 
         CModelObject &dgtscr1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000)->amo_moModelObject; dgtscr1.mo_toTexture.PlayAnim(iNumSc1+101, 0); dgtscr1.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
         CModelObject &dgtscr2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000)->amo_moModelObject; dgtscr2.mo_toTexture.PlayAnim(iNumSc2+101, 0); dgtscr2.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
@@ -2925,7 +3017,7 @@ void InitAniNum() {
         CModelObject &dotscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_019_DOT_SCORE       )->amo_moModelObject;  dotscr.mo_toTexture.PlayAnim(iDotScr    , 0);  dotscr.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
       }
       if (GetSP()->sp_gmGameMode == CSessionProperties::GM_FRAGMATCH) {
-        CModelObject &icoscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_012_ICO_SCORE       )->amo_moModelObject; icoscr.mo_toTexture.PlayAnim(iIcoFrg, 0); icoscr.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+        CModelObject &icoscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_012_ICO_SCORE       )->amo_moModelObject; icoscr.mo_toTexture.PlayAnim(iIcoFrg, 0); icoscr.mo_colBlendColor  = colHUD|iCurrentAlpha;
 
         CModelObject &dgtscr1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000)->amo_moModelObject; dgtscr1.mo_toTexture.PlayAnim(iNumFr1+101, 0); dgtscr1.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
         CModelObject &dgtscr2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000)->amo_moModelObject; dgtscr2.mo_toTexture.PlayAnim(iNumFr2+101, 0); dgtscr2.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
@@ -2935,7 +3027,7 @@ void InitAniNum() {
         CModelObject &dgtscr6 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_018_DGT_SCORE_000001)->amo_moModelObject; dgtscr6.mo_toTexture.PlayAnim(iNumFr6+101, 0); dgtscr6.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
       }
       if (GetSP()->sp_gmGameMode == CSessionProperties::GM_SCOREMATCH) {
-        CModelObject &icoscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_012_ICO_SCORE       )->amo_moModelObject;  icoscr.mo_toTexture.PlayAnim(iIcoScr, 0); icoscr.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+        CModelObject &icoscr  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_012_ICO_SCORE       )->amo_moModelObject;  icoscr.mo_toTexture.PlayAnim(iIcoScr, 0); icoscr.mo_colBlendColor  = colHUD|iCurrentAlpha;
 
         CModelObject &dgtscr1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000)->amo_moModelObject; dgtscr1.mo_toTexture.PlayAnim(iNumDmSc1+101, 0); dgtscr1.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
         CModelObject &dgtscr2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000)->amo_moModelObject; dgtscr2.mo_toTexture.PlayAnim(iNumDmSc2+101, 0); dgtscr2.mo_colBlendColor  = C_WHITE|iCurrentAlpha;
@@ -2946,24 +3038,24 @@ void InitAniNum() {
       }
 
       // = Render Player death info ===============================================================
-      if (PlayerDeaths > 999999)  {iNumDt1 = iNumDt2 = iNumDt3 = iNumDt4 = iNumDt5 = iNumDt6 = 9;}
-      if (PlayerDeaths < 100000)  {iNumDt1 = 11;}
-      if (PlayerDeaths < 10000)   {iNumDt2 = 11;}
-      if (PlayerDeaths < 1000)    {iNumDt3 = 11;}
-      if (PlayerDeaths < 100)     {iNumDt4 = 11;}
-      if (PlayerDeaths < 10)      {iNumDt5 = 11;}
-      if (PlayerDeaths < 0)       {iNumDt6 = 11;}
+      if (iPlayerDeaths > 999999)  {iNumDt1 = iNumDt2 = iNumDt3 = iNumDt4 = iNumDt5 = iNumDt6 = 9;}
+      if (iPlayerDeaths < 100000)  {iNumDt1 = 11;}
+      if (iPlayerDeaths < 10000)   {iNumDt2 = 11;}
+      if (iPlayerDeaths < 1000)    {iNumDt3 = 11;}
+      if (iPlayerDeaths < 100)     {iNumDt4 = 11;}
+      if (iPlayerDeaths < 10)      {iNumDt5 = 11;}
+      if (iPlayerDeaths < 0)       {iNumDt6 = 11;}
 
-      if (PlayerMana > 999999)    {iNumMn1 = iNumMn2 = iNumMn3 = iNumMn4 = iNumMn5 = iNumMn6 = 9;}
-      if (PlayerMana < 100000)    {iNumMn1 = 11;}
-      if (PlayerMana < 10000)     {iNumMn2 = 11;}
-      if (PlayerMana < 1000)      {iNumMn3 = 11;}
-      if (PlayerMana < 100)       {iNumMn4 = 11;}
-      if (PlayerMana < 10)        {iNumMn5 = 11;}
-      if (PlayerMana < 0)         {iNumMn6 = 11;}
+      if (iPlayerMana > 999999)    {iNumMn1 = iNumMn2 = iNumMn3 = iNumMn4 = iNumMn5 = iNumMn6 = 9;}
+      if (iPlayerMana < 100000)    {iNumMn1 = 11;}
+      if (iPlayerMana < 10000)     {iNumMn2 = 11;}
+      if (iPlayerMana < 1000)      {iNumMn3 = 11;}
+      if (iPlayerMana < 100)       {iNumMn4 = 11;}
+      if (iPlayerMana < 10)        {iNumMn5 = 11;}
+      if (iPlayerMana < 0)         {iNumMn6 = 11;}
       
       if (GetSP()->sp_gmGameMode == CSessionProperties::GM_FRAGMATCH) {
-        CModelObject &icoskl  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoDth, 0); icoskl.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+        CModelObject &icoskl  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoDth, 0); icoskl.mo_colBlendColor  = colHUD|iCurrentAlpha;
 
         CModelObject &dgtdth1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000)->amo_moModelObject; dgtdth1.mo_toTexture.PlayAnim(iNumDt1+101, 0); dgtdth1.mo_colBlendColor  = H3DC_WHITE|iCurrentAlpha;
         CModelObject &dgtdth2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000)->amo_moModelObject; dgtdth2.mo_toTexture.PlayAnim(iNumDt2+101, 0); dgtdth2.mo_colBlendColor  = H3DC_WHITE|iCurrentAlpha;
@@ -2972,7 +3064,7 @@ void InitAniNum() {
         CModelObject &dgtdth5 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_025_DGT_DEATH_000010)->amo_moModelObject; dgtdth5.mo_toTexture.PlayAnim(iNumDt5+101, 0); dgtdth5.mo_colBlendColor  = H3DC_WHITE|iCurrentAlpha;
         CModelObject &dgtdth6 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_026_DGT_DEATH_000001)->amo_moModelObject; dgtdth6.mo_toTexture.PlayAnim(iNumDt6+101, 0); dgtdth6.mo_colBlendColor  = H3DC_WHITE|iCurrentAlpha;
       } else if (GetSP()->sp_gmGameMode == CSessionProperties::GM_SCOREMATCH) {
-        CModelObject &icoskl  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoDth, 0); icoskl.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+        CModelObject &icoskl  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoDth, 0); icoskl.mo_colBlendColor  = colHUD|iCurrentAlpha;
 
         CModelObject &dgtdth1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000)->amo_moModelObject; dgtdth1.mo_toTexture.PlayAnim(iNumMn1+101, 0); dgtdth1.mo_colBlendColor  = H3DC_WHITE|iCurrentAlpha;
         CModelObject &dgtdth2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000)->amo_moModelObject; dgtdth2.mo_toTexture.PlayAnim(iNumMn2+101, 0); dgtdth2.mo_colBlendColor  = H3DC_WHITE|iCurrentAlpha;
@@ -2985,7 +3077,7 @@ void InitAniNum() {
       // = Render money info ======================================================================
       
       if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-        CModelObject &icoskl    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoScr, 0); icoskl.mo_colBlendColor  = m_iMoney > 0 ? h3d_iColor|iCurrentAlpha : h3d_iColor|0; //I don't know what is it, but it works
+        CModelObject &icoskl    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoScr, 0); icoskl.mo_colBlendColor  = m_iMoney > 0 ? h3d_iColor|iCurrentAlpha : colHUD|0; //I don't know what is it, but it works
 
         CModelObject &dgtmoney1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000)->amo_moModelObject; dgtmoney1.mo_toTexture.PlayAnim(iNumMoney1+101, 0); dgtmoney1.mo_colBlendColor  = m_iMoney > 0 ? H3DC_WHITE|iCurrentAlpha : H3DC_WHITE|0;
         CModelObject &dgtmoney2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000)->amo_moModelObject; dgtmoney2.mo_toTexture.PlayAnim(iNumMoney2+101, 0); dgtmoney2.mo_colBlendColor  = m_iMoney > 0 ? H3DC_WHITE|iCurrentAlpha : H3DC_WHITE|0;
@@ -3004,6 +3096,7 @@ void InitAniNum() {
     if (!GetSP()->sp_bSinglePlayer && GetSP()->sp_bCooperative && GetSP()->sp_ctCredits!=-1) {
 		
 		  if (iNumExtra < 10  ) {iNumExtra1 = 11;}
+      if (iNumExtra > 99  ) {iNumExtra1 = iNumExtra2 = 9;}
 
 		  //if (iNumExtra <= 0  ) {iIcoExtra = 29;}
 
@@ -3013,9 +3106,9 @@ void InitAniNum() {
 	  }
 
       // = Render PowerUp Serious Damage info =====================================================
-	  if (PlayerPwUpSD <= 0) {iIcoPUSD  = 26;}
-	  if (PlayerPwUpSD >  0) {iIcoPUSD  = 27;}
-	  if (PlayerPwUpSD >  7) {iIcoPUSD  = 28;}
+	  if (iPlayerPwUpSD <= 0) {iIcoPUSD  = 26;}
+	  if (iPlayerPwUpSD >  0) {iIcoPUSD  = 27;}
+	  if (iPlayerPwUpSD >  7) {iIcoPUSD  = 28;}
 
 	  if (fTimerSeriousDamage <= 0   ) {iBarSeriousDamage = 62;}
 	  if (fTimerSeriousDamage >  0.1 ) {iBarSeriousDamage = 63;}
@@ -3027,9 +3120,9 @@ void InitAniNum() {
       CModelObject &barpusd = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_031_BAR_SERIOUSDAMAGE)->amo_moModelObject;  barpusd.mo_toTexture.PlayAnim(iBarSeriousDamage, 0); barpusd.mo_colBlendColor  = 0xFF520000|iCurrentAlpha;
       
 		  // = Render PowerUp Invulnerability info ================================================
-	  if (PlayerPwUpIU <= 0) {iIcoPUIU  = 29;}
-	  if (PlayerPwUpIU >  0) {iIcoPUIU  = 30;}
-	  if (PlayerPwUpIU >  5) {iIcoPUIU  = 31;}
+	  if (iPlayerPwUpIU <= 0) {iIcoPUIU  = 29;}
+	  if (iPlayerPwUpIU >  0) {iIcoPUIU  = 30;}
+	  if (iPlayerPwUpIU >  5) {iIcoPUIU  = 31;}
 
 	  if (fTimerInvulnerability <= 0   ) {iBarInvulnerability = 62;}
 	  if (fTimerInvulnerability >  0.1 ) {iBarInvulnerability = 63;}
@@ -3041,9 +3134,9 @@ void InitAniNum() {
       CModelObject &barpuiu = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_033_BAR_INVULNERABILITY)->amo_moModelObject; barpuiu.mo_toTexture.PlayAnim(iBarInvulnerability, 0); barpuiu.mo_colBlendColor  = 0x40D0FF00|iCurrentAlpha;
 
 		  // = Render Serious Speed info ==========================================================
-	  if (PlayerPwUpSS <= 0) {iIcoPUSS  = 32;}
-	  if (PlayerPwUpSS >  0) {iIcoPUSS  = 33;}
-	  if (PlayerPwUpSS >  3) {iIcoPUSS  = 34;}
+	  if (iPlayerPwUpSS <= 0) {iIcoPUSS  = 32;}
+	  if (iPlayerPwUpSS >  0) {iIcoPUSS  = 33;}
+	  if (iPlayerPwUpSS >  3) {iIcoPUSS  = 34;}
 	  
 	  if (fTimerSeriousSpeed <= 0   ) {iBarSeriousSpeed = 62;}
 	  if (fTimerSeriousSpeed >  0.1 ) {iBarSeriousSpeed = 63;}
@@ -3055,9 +3148,9 @@ void InitAniNum() {
       CModelObject &barpuss = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_035_BAR_SERIOUSSPEED)->amo_moModelObject; barpuss.mo_toTexture.PlayAnim(iBarSeriousSpeed, 0); barpuss.mo_colBlendColor  = 0xFFB20000|iCurrentAlpha;
 
 		  // = Render Invisible info ==============================================================
-	  if (PlayerPwUpIS <= 0) {iIcoPUIS  = 35;}
-	  if (PlayerPwUpIS >  0) {iIcoPUIS  = 36;}
-	  if (PlayerPwUpIS >  5) {iIcoPUIS  = 37;}
+	  if (iPlayerPwUpIS <= 0) {iIcoPUIS  = 35;}
+	  if (iPlayerPwUpIS >  0) {iIcoPUIS  = 36;}
+	  if (iPlayerPwUpIS >  5) {iIcoPUIS  = 37;}
 
 	  if (fTimerInvisibility <= 0   ) {iBarInvisibility = 62;}
 	  if (fTimerInvisibility >  0.1 ) {iBarInvisibility = 63;}
@@ -3069,25 +3162,36 @@ void InitAniNum() {
     CModelObject &barpuis = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_037_BAR_INVISIBILITY)->amo_moModelObject; barpuis.mo_toTexture.PlayAnim(iBarInvisibility, 0); barpuis.mo_colBlendColor  = 0xCCCCCC00|iCurrentAlpha;
       
 		  // = Render Current ammo info ===========================================================
-	  if (iCurAmm < 100)     {iNumAm1 = 11;}
-    if (iCurAmm < 10)      {iNumAm2 = 11;}
-	  if (iCurAmm < 0)       {iNumAm3 = 11;}
-
-	  CModelObject &idgtamm1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_038_DGT_CURRENTAMMO_100)->amo_moModelObject; idgtamm1.mo_toTexture.PlayAnim(iNumAm1+113, 0); idgtamm1.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-	  CModelObject &idgtamm2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_039_DGT_CURRENTAMMO_010)->amo_moModelObject; idgtamm2.mo_toTexture.PlayAnim(iNumAm2+113, 0); idgtamm2.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-	  CModelObject &idgtamm3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_040_DGT_CURRENTAMMO_001)->amo_moModelObject; idgtamm3.mo_toTexture.PlayAnim(iNumAm3+113, 0); idgtamm3.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		 
 	  FLOAT fMaxAmmoValue    = GetPlayerWeapons()->GetMaxAmmo();
 	  FLOAT fAmmoValue       = 0;
 	  FLOAT fNormAmmoValue   = 0;
-      fAmmoValue = GetPlayerWeapons()->GetAmmo();
-      fNormAmmoValue = (fAmmoValue / fMaxAmmoValue);
-		  
-      if (!GetSP()->sp_bInfiniteAmmo) {
+    fAmmoValue = GetPlayerWeapons()->GetAmmo();
+    fNormAmmoValue = (fAmmoValue / fMaxAmmoValue);
+    
+    if (iCurAmm < 100)     {iNumAm1 = 11;}
+    if (iCurAmm < 10)      {iNumAm2 = 11;}
+	  if (iCurAmm < 0)       {iNumAm3 = 11;}
+
+    // Color Scheme
+    if (fNormAmmoValue > 1.0f) {
+      iColAmmo = colMax;
+    } else if (fNormAmmoValue >= 0.305f) {
+      iColAmmo = colTop;
+    } else if (fNormAmmoValue > 0.155f+fFE) {
+      iColAmmo = colMid;
+    } else {
+      iColAmmo = colLow;
+    }
+
+	  CModelObject &idgtamm1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_038_DGT_CURRENTAMMO_100)->amo_moModelObject; idgtamm1.mo_toTexture.PlayAnim(iNumAm1+113, 0); idgtamm1.mo_colBlendColor  = iColAmmo|iIAAlpha;
+	  CModelObject &idgtamm2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_039_DGT_CURRENTAMMO_010)->amo_moModelObject; idgtamm2.mo_toTexture.PlayAnim(iNumAm2+113, 0); idgtamm2.mo_colBlendColor  = iColAmmo|iIAAlpha;
+	  CModelObject &idgtamm3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_040_DGT_CURRENTAMMO_001)->amo_moModelObject; idgtamm3.mo_toTexture.PlayAnim(iNumAm3+113, 0); idgtamm3.mo_colBlendColor  = iColAmmo|iIAAlpha;
+		
+    if (!GetSP()->sp_bInfiniteAmmo && h3d_bLowAmmoBorder) {
 	    if (fNormAmmoValue <= 0.1f) {iBrdAmmo = Abs(Sin(_pTimer->CurrentTick()*150))*255; }
 	    if (fNormAmmoValue <= 0.0f) {iBrdAmmo = 0;}
-      }
-		  CModelObject &brdammo  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_109_BORDER_AMMO)->amo_moModelObject; brdammo.mo_toTexture.PlayAnim(99, /*AOF_LOOPING|AOF_NORESTART*/ 0);  brdammo.mo_colBlendColor  = 0xFF000000|INDEX(iBrdAmmo*fHudAppear);
+    }
+		CModelObject &brdammo  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_109_BORDER_AMMO)->amo_moModelObject; brdammo.mo_toTexture.PlayAnim(99, /*AOF_LOOPING|AOF_NORESTART*/ 0);  brdammo.mo_colBlendColor  = 0xFF000000|INDEX(iBrdAmmo*fHudAppear);
 
 		  // = Render unread message info =========================================================
       INDEX iLowTimer = 255;
@@ -3135,10 +3239,10 @@ void InitAniNum() {
         }
       }
 
-		  CModelObject &icomsg  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_041_ICO_MESSAGE    )->amo_moModelObject;  icomsg.mo_toTexture.PlayAnim(iIcoMsg, AOF_LOOPING|AOF_NORESTART); icomsg.mo_colBlendColor  = h3d_iColor|INDEX(iLowTimer*fHudAppear);
-		  CModelObject &dgtmsg1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100)->amo_moModelObject; dgtmsg1.mo_toTexture.PlayAnim(iNumMsg1, 0); dgtmsg1.mo_colBlendColor = h3d_iColor|INDEX(iLowTimer*fHudAppear);
-		  CModelObject &dgtmsg2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010)->amo_moModelObject; dgtmsg2.mo_toTexture.PlayAnim(iNumMsg2, 0); dgtmsg2.mo_colBlendColor = h3d_iColor|INDEX(iLowTimer*fHudAppear);
-		  CModelObject &dgtmsg3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001)->amo_moModelObject; dgtmsg3.mo_toTexture.PlayAnim(iNumMsg3, 0); dgtmsg3.mo_colBlendColor = h3d_iColor|INDEX(iLowTimer*fHudAppear);
+		  CModelObject &icomsg  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_041_ICO_MESSAGE    )->amo_moModelObject;  icomsg.mo_toTexture.PlayAnim(iIcoMsg, AOF_LOOPING|AOF_NORESTART); icomsg.mo_colBlendColor  = colHUD|INDEX(iLowTimer*fHudAppear);
+		  CModelObject &dgtmsg1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100)->amo_moModelObject; dgtmsg1.mo_toTexture.PlayAnim(iNumMsg1, 0); dgtmsg1.mo_colBlendColor = colHUD|INDEX(iLowTimer*fHudAppear);
+		  CModelObject &dgtmsg2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010)->amo_moModelObject; dgtmsg2.mo_toTexture.PlayAnim(iNumMsg2, 0); dgtmsg2.mo_colBlendColor = colHUD|INDEX(iLowTimer*fHudAppear);
+		  CModelObject &dgtmsg3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001)->amo_moModelObject; dgtmsg3.mo_toTexture.PlayAnim(iNumMsg3, 0); dgtmsg3.mo_colBlendColor = colHUD|INDEX(iLowTimer*fHudAppear);
 
           // = Render boss/counter info ===========================================================
      
@@ -3146,12 +3250,21 @@ void InitAniNum() {
 		  if (iCount   <  10 )  {iNumCnt2 = 12;}
 		  if (iCount   <= 0  )  {iNumCnt3 = 12;}
 
-          if (iCountType == 1)  {iIcoCnt  = 125;} else {iIcoCnt  = 13;}
+          // Color Scheme
+      if (iCount >= 50) {
+        iColBossHealth = colTop;
+      } else if (iCount > 25) {
+        iColBossHealth = colMid;
+      } else {
+        iColBossHealth = colLow;
+      }
 
-		  CModelObject &icocnt  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_045_ICO_BOSSHEALTH    )->amo_moModelObject;  icocnt.mo_toTexture.PlayAnim(iIcoCnt,      0); icocnt.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-		  CModelObject &numcnt1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_100)->amo_moModelObject; numcnt1.mo_toTexture.PlayAnim(iNumCnt1+112, 0); numcnt1.mo_colBlendColor = h3d_iColor|iCurrentAlpha;
-		  CModelObject &numcnt2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_010)->amo_moModelObject; numcnt2.mo_toTexture.PlayAnim(iNumCnt2+112, 0); numcnt2.mo_colBlendColor = h3d_iColor|iCurrentAlpha;
-		  CModelObject &numcnt3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_001)->amo_moModelObject; numcnt3.mo_toTexture.PlayAnim(iNumCnt3+112, 0); numcnt3.mo_colBlendColor = h3d_iColor|iCurrentAlpha;
+      if (iCountType == 1)  {iIcoCnt  = 125;} else {iIcoCnt  = 13;}
+
+		  CModelObject &icocnt  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_045_ICO_BOSSHEALTH    )->amo_moModelObject;  icocnt.mo_toTexture.PlayAnim(iIcoCnt,      0); icocnt.mo_colBlendColor  = colHUD|iCurrentAlpha;
+		  CModelObject &numcnt1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_100)->amo_moModelObject; numcnt1.mo_toTexture.PlayAnim(iNumCnt1+112, 0); numcnt1.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+		  CModelObject &numcnt2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_010)->amo_moModelObject; numcnt2.mo_toTexture.PlayAnim(iNumCnt2+112, 0); numcnt2.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+		  CModelObject &numcnt3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_001)->amo_moModelObject; numcnt3.mo_toTexture.PlayAnim(iNumCnt3+112, 0); numcnt3.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
 
 		  // = Render oxygen info =================================================================
       if (!(GetFlags()&ENF_ALIVE)) {
@@ -3166,9 +3279,18 @@ void InitAniNum() {
 		  if (iOxygen >  9) {iIcoOxy  = 43;}
 		  if (iOxygen >=30) {iIcoOxy  = 41;}
 
-		  CModelObject &icooxy  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_049_ICO_OXYGEN   )->amo_moModelObject;  icooxy.mo_toTexture.PlayAnim(iIcoOxy, AOF_LOOPING|AOF_NORESTART); icooxy.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-		  CModelObject &dgtoxy1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_050_DGT_OXYGEN_10)->amo_moModelObject; dgtoxy1.mo_toTexture.PlayAnim(iNumOxy1+112, 0); dgtoxy1.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-		  CModelObject &dgtoxy2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01)->amo_moModelObject; dgtoxy2.mo_toTexture.PlayAnim(iNumOxy2+112, 0); dgtoxy2.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+          // Color Scheme
+      if (iOxygen > 15) {
+        iColOxygen = colTop;
+      } else if (iOxygen > 7) {
+        iColOxygen = colMid;
+      } else {
+        iColOxygen = colLow;
+      }
+
+		  CModelObject &icooxy  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_049_ICO_OXYGEN   )->amo_moModelObject;  icooxy.mo_toTexture.PlayAnim(iIcoOxy, AOF_LOOPING|AOF_NORESTART); icooxy.mo_colBlendColor  = colHUD|iCurrentAlpha;
+		  CModelObject &dgtoxy1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_050_DGT_OXYGEN_10)->amo_moModelObject; dgtoxy1.mo_toTexture.PlayAnim(iNumOxy1+112, 0); dgtoxy1.mo_colBlendColor  = iColOxygen|iCurrentAlpha;
+		  CModelObject &dgtoxy2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01)->amo_moModelObject; dgtoxy2.mo_toTexture.PlayAnim(iNumOxy2+112, 0); dgtoxy2.mo_colBlendColor  = iColOxygen|iCurrentAlpha;
 
 		  // = Render ammo info ===================================================================
 		  if (iShls      <= 0   ) {iIcoShl  = 44;}
@@ -3180,10 +3302,21 @@ void InitAniNum() {
 		  if (fGetAmmShl >  0.53) {iBarShl  = 65;}
 		  if (fGetAmmShl >  0.79) {iBarShl  = 66;}
 
+      // Color Scheme
+      if (fGetAmmShl > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmShl >= 0.5f) {
+        iColBarShells = colTop;
+      } else if (fGetAmmShl > 0.25) {
+        iColBarShells = colMid;
+      } else {
+        iColBarShells = colLow;
+      }
+
 		  if (iCurAmmBrd == 1   ) {iBrdShl  = 68;} else {iBrdShl = 67;}
 		  		  
-		  CModelObject &icoshl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_052_ICO_SHELLS)->amo_moModelObject; icoshl.mo_toTexture.PlayAnim(iIcoShl, 0); icoshl.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barshl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_053_BAR_SHELLS)->amo_moModelObject; barshl.mo_toTexture.PlayAnim(iBarShl, 0); barshl.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icoshl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_052_ICO_SHELLS)->amo_moModelObject; icoshl.mo_toTexture.PlayAnim(iIcoShl, 0); icoshl.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barshl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_053_BAR_SHELLS)->amo_moModelObject; barshl.mo_toTexture.PlayAnim(iBarShl, 0); barshl.mo_colBlendColor  = iColBarShells|iIAAlpha;
 		  CModelObject &brdshl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_054_BRD_SHELLS)->amo_moModelObject; brdshl.mo_toTexture.PlayAnim(iBrdShl, 0); brdshl.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iBlts      <= 0   ) {iIcoBlt  = 46;}
@@ -3195,10 +3328,21 @@ void InitAniNum() {
 		  if (fGetAmmBlt >  0.53) {iBarBlt  = 65;}
 		  if (fGetAmmBlt >  0.79) {iBarBlt  = 66;}
 
+      // Color Scheme
+      if (fGetAmmBlt > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmBlt >= 0.5f) {
+        iColBarBullets = colTop;
+      } else if (fGetAmmBlt > 0.25) {
+        iColBarBullets = colMid;
+      } else {
+        iColBarBullets = colLow;
+      }
+
 		  if (iCurAmmBrd == 2   ) {iBrdBlt  = 68;} else {iBrdBlt = 67;}
 
-		  CModelObject &icoblt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_055_ICO_BULLETS)->amo_moModelObject; icoblt.mo_toTexture.PlayAnim(iIcoBlt, 0); icoblt.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barblt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_056_BAR_BULLETS)->amo_moModelObject; barblt.mo_toTexture.PlayAnim(iBarBlt, 0); barblt.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icoblt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_055_ICO_BULLETS)->amo_moModelObject; icoblt.mo_toTexture.PlayAnim(iIcoBlt, 0); icoblt.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barblt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_056_BAR_BULLETS)->amo_moModelObject; barblt.mo_toTexture.PlayAnim(iBarBlt, 0); barblt.mo_colBlendColor  = iColBarBullets|iIAAlpha;
 		  CModelObject &brdblt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_057_BRD_BULLETS)->amo_moModelObject; brdblt.mo_toTexture.PlayAnim(iBrdBlt, 0); brdblt.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iRckt      <= 0   ) {iIcoRkt  = 48;}
@@ -3210,10 +3354,21 @@ void InitAniNum() {
 		  if (fGetAmmRkt >  0.53) {iBarRkt  = 65;}
 		  if (fGetAmmRkt >  0.79) {iBarRkt  = 66;}
 
+      // Color Scheme
+      if (fGetAmmRkt > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmRkt >= 0.5f) {
+        iColBarRockets = colTop;
+      } else if (fGetAmmRkt > 0.25) {
+        iColBarRockets = colMid;
+      } else {
+        iColBarRockets = colLow;
+      }
+
 		  if (iCurAmmBrd == 3   ) {iBrdRkt  = 68;} else {iBrdRkt = 67;}
 
-		  CModelObject &icorkt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_058_ICO_ROCKETS)->amo_moModelObject; icorkt.mo_toTexture.PlayAnim(iIcoRkt, 0); icorkt.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barrkt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_059_BAR_ROCKETS)->amo_moModelObject; barrkt.mo_toTexture.PlayAnim(iBarRkt, 0); barrkt.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icorkt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_058_ICO_ROCKETS)->amo_moModelObject; icorkt.mo_toTexture.PlayAnim(iIcoRkt, 0); icorkt.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barrkt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_059_BAR_ROCKETS)->amo_moModelObject; barrkt.mo_toTexture.PlayAnim(iBarRkt, 0); barrkt.mo_colBlendColor  = iColBarRockets|iIAAlpha;
 		  CModelObject &brdrkt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_060_BRD_ROCKETS)->amo_moModelObject; brdrkt.mo_toTexture.PlayAnim(iBrdRkt, 0); brdrkt.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iGrnd      <= 0   ) {iIcoGrd  = 50;}
@@ -3225,10 +3380,21 @@ void InitAniNum() {
 		  if (fGetAmmGrd >  0.53) {iBarGrd  = 65;}
 		  if (fGetAmmGrd >  0.79) {iBarGrd  = 66;}
 
+      // Color Scheme
+      if (fGetAmmGrd > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmGrd >= 0.5f) {
+        iColBarGrenades = colTop;
+      } else if (fGetAmmGrd > 0.25) {
+        iColBarGrenades = colMid;
+      } else {
+        iColBarGrenades = colLow;
+      }
+
 		  if (iCurAmmBrd == 4   ) {iBrdGrd  = 68;} else {iBrdGrd = 67;}
 
-		  CModelObject &icogrd = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_061_ICO_GRENADES)->amo_moModelObject; icogrd.mo_toTexture.PlayAnim(iIcoGrd, 0); icogrd.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &bargrd = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_062_BAR_GRENADES)->amo_moModelObject; bargrd.mo_toTexture.PlayAnim(iBarGrd, 0); bargrd.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icogrd = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_061_ICO_GRENADES)->amo_moModelObject; icogrd.mo_toTexture.PlayAnim(iIcoGrd, 0); icogrd.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &bargrd = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_062_BAR_GRENADES)->amo_moModelObject; bargrd.mo_toTexture.PlayAnim(iBarGrd, 0); bargrd.mo_colBlendColor  = iColBarGrenades|iIAAlpha;
 		  CModelObject &brdgrd = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_063_BRD_GRENADES)->amo_moModelObject; brdgrd.mo_toTexture.PlayAnim(iBrdGrd, 0); brdgrd.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iNplm      <= 0   ) {iIcoNpl  = 52;}
@@ -3240,10 +3406,21 @@ void InitAniNum() {
 		  if (fGetAmmNpl >  0.53) {iBarNpl  = 65;}
 		  if (fGetAmmNpl >  0.79) {iBarNpl  = 66;}
 
+      // Color Scheme
+      if (fGetAmmNpl > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmNpl >= 0.5f) {
+        iColBarFuel = colTop;
+      } else if (fGetAmmNpl > 0.25) {
+        iColBarFuel = colMid;
+      } else {
+        iColBarFuel = colLow;
+      }
+
 		  if (iCurAmmBrd == 5   ) {iBrdNpl  = 68;} else {iBrdNpl = 67;}
 
-		  CModelObject &iconpl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_064_ICO_FUEL)->amo_moModelObject; iconpl.mo_toTexture.PlayAnim(iIcoNpl, 0); iconpl.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barnpl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_065_BAR_FUEL)->amo_moModelObject; barnpl.mo_toTexture.PlayAnim(iBarNpl, 0); barnpl.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &iconpl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_064_ICO_FUEL)->amo_moModelObject; iconpl.mo_toTexture.PlayAnim(iIcoNpl, 0); iconpl.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barnpl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_065_BAR_FUEL)->amo_moModelObject; barnpl.mo_toTexture.PlayAnim(iBarNpl, 0); barnpl.mo_colBlendColor  = iColBarFuel|iIAAlpha;
 		  CModelObject &brdnpl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_066_BRD_FUEL)->amo_moModelObject; brdnpl.mo_toTexture.PlayAnim(iBrdNpl, 0); brdnpl.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iSnbl      <= 0   ) {iIcoSbl  = 54;}
@@ -3255,10 +3432,21 @@ void InitAniNum() {
 		  if (fGetAmmSbl >  0.53) {iBarSbl  = 65;}
 		  if (fGetAmmSbl >  0.79) {iBarSbl  = 66;}
 
+      // Color Scheme
+      if (fGetAmmSbl > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmSbl >= 0.5f) {
+        iColBarSniperBullets = colTop;
+      } else if (fGetAmmSbl > 0.25) {
+        iColBarSniperBullets = colMid;
+      } else {
+        iColBarSniperBullets = colLow;
+      }
+
 		  if (iCurAmmBrd == 6   ) {iBrdSbl  = 68;} else {iBrdSbl = 67;}
 										  
-		  CModelObject &icosbl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_067_ICO_SNIPERBULLETS)->amo_moModelObject; icosbl.mo_toTexture.PlayAnim(iIcoSbl, 0); icosbl.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barsbl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_068_BAR_SNIPERBULLETS)->amo_moModelObject; barsbl.mo_toTexture.PlayAnim(iBarSbl, 0); barsbl.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icosbl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_067_ICO_SNIPERBULLETS)->amo_moModelObject; icosbl.mo_toTexture.PlayAnim(iIcoSbl, 0); icosbl.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barsbl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_068_BAR_SNIPERBULLETS)->amo_moModelObject; barsbl.mo_toTexture.PlayAnim(iBarSbl, 0); barsbl.mo_colBlendColor  = iColBarSniperBullets|iIAAlpha;
 		  CModelObject &brdsbl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_069_BRD_SNIPERBULLETS)->amo_moModelObject; brdsbl.mo_toTexture.PlayAnim(iBrdSbl, 0); brdsbl.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iElec      <= 0   ) {iIcoElc  = 56;}
@@ -3270,10 +3458,21 @@ void InitAniNum() {
 		  if (fGetAmmElc >  0.53) {iBarElc  = 65;}
 		  if (fGetAmmElc >  0.79) {iBarElc  = 66;}
 
+      // Color Scheme
+      if (fGetAmmElc > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmElc >= 0.5f) {
+        iColBarElectricity = colTop;
+      } else if (fGetAmmElc > 0.25) {
+        iColBarElectricity = colMid;
+      } else {
+        iColBarElectricity = colLow;
+      }
+
 		  if (iCurAmmBrd == 7   ) {iBrdElc  = 68;} else {iBrdElc = 67;}
 
-		  CModelObject &icoelc = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_070_ICO_ELECTRICITY)->amo_moModelObject; icoelc.mo_toTexture.PlayAnim(iIcoElc, 0); icoelc.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barelc = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_071_BAR_ELECTRICITY)->amo_moModelObject; barelc.mo_toTexture.PlayAnim(iBarElc, 0); barelc.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icoelc = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_070_ICO_ELECTRICITY)->amo_moModelObject; icoelc.mo_toTexture.PlayAnim(iIcoElc, 0); icoelc.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barelc = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_071_BAR_ELECTRICITY)->amo_moModelObject; barelc.mo_toTexture.PlayAnim(iBarElc, 0); barelc.mo_colBlendColor  = iColBarElectricity|iIAAlpha;
 		  CModelObject &brdelc = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_072_BRD_ELECTRICITY)->amo_moModelObject; brdelc.mo_toTexture.PlayAnim(iBrdElc, 0); brdelc.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 
 		  if (iIrbl      <= 0   ) {iIcoIrb  = 58;}
@@ -3285,29 +3484,40 @@ void InitAniNum() {
 		  if (fGetAmmIrb >  0.53) {iBarIrb  = 65;}
 		  if (fGetAmmIrb >  0.79) {iBarIrb  = 66;}
 
+      // Color Scheme
+      if (fGetAmmIrb > 1.0f) {
+        iColAmmo = colMax;
+      } else if (fGetAmmIrb >= 0.5f) {
+        iColBarIronball = colTop;
+      } else if (fGetAmmIrb > 0.25) {
+        iColBarIronball = colMid;
+      } else {
+        iColBarIronball = colLow;
+      }
+
 		  if (iCurAmmBrd == 8   ) {iBrdIrb  = 68;} else {iBrdIrb = 67;}
 
-		  CModelObject &icoirb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_073_ICO_IRONBALL)->amo_moModelObject; icoirb.mo_toTexture.PlayAnim(iIcoIrb, 0); icoirb.mo_colBlendColor  = h3d_iColor|iIAAlpha;
-		  CModelObject &barirb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_074_BAR_IRONBALL)->amo_moModelObject; barirb.mo_toTexture.PlayAnim(iBarIrb, 0); barirb.mo_colBlendColor  = h3d_iColor|iIAAlpha;
+		  CModelObject &icoirb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_073_ICO_IRONBALL)->amo_moModelObject; icoirb.mo_toTexture.PlayAnim(iIcoIrb, 0); icoirb.mo_colBlendColor  = colHUD|iIAAlpha;
+		  CModelObject &barirb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_074_BAR_IRONBALL)->amo_moModelObject; barirb.mo_toTexture.PlayAnim(iBarIrb, 0); barirb.mo_colBlendColor  = iColBarIronball|iIAAlpha;
 		  CModelObject &brdirb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_075_BRD_IRONBALL)->amo_moModelObject; brdirb.mo_toTexture.PlayAnim(iBrdIrb, 0); brdirb.mo_colBlendColor  = H3DC_WHITE|iIAAlpha;
 		  
 		  if (iSrbm == 0) {iIcoSrb = 60; iBarSrb = 62;}
-		  if (iSrbm == 1) {iIcoSrb = 61; iBarSrb = 63;}
-		  if (iSrbm == 2) {iIcoSrb = 61; iBarSrb = 64;}
-		  if (iSrbm == 3) {iIcoSrb = 61; iBarSrb = 65;}
+		  if (iSrbm == 1) {iIcoSrb = 61; iBarSrb = 63; iColBarSeriousBomb = colLow;}
+		  if (iSrbm == 2) {iIcoSrb = 61; iBarSrb = 64; iColBarSeriousBomb = colTop;}
+		  if (iSrbm == 3) {iIcoSrb = 61; iBarSrb = 65; iColBarSeriousBomb = colTop;}
 		  
-		  CModelObject &icosrb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_076_ICO_SERIOUSBOMB)->amo_moModelObject; icosrb.mo_toTexture.PlayAnim(iIcoSrb, 0); icosrb.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
-		  CModelObject &barsrb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_077_BAR_SERIOUSBOMB)->amo_moModelObject; barsrb.mo_toTexture.PlayAnim(iBarSrb, 0); barsrb.mo_colBlendColor  = h3d_iColor|iCurrentAlpha;
+		  CModelObject &icosrb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_076_ICO_SERIOUSBOMB)->amo_moModelObject; icosrb.mo_toTexture.PlayAnim(iIcoSrb, 0); icosrb.mo_colBlendColor  = colHUD|iCurrentAlpha;
+		  CModelObject &barsrb = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_077_BAR_SERIOUSBOMB)->amo_moModelObject; barsrb.mo_toTexture.PlayAnim(iBarSrb, 0); barsrb.mo_colBlendColor  = iColBarSeriousBomb|iCurrentAlpha;
 
 		  // = Render weapon info =================================================================
 		  INDEX iDisWep = 255;
 		  CPlayerWeapons *_penWeapons = GetPlayerWeapons();
 		  hud_tmWeaponsOnScreen = Clamp( hud_tmWeaponsOnScreen, 0.0f, 10.0f);
       INDEX DisWep = ((_tmNow - _penWeapons->m_tmWeaponChangeRequired) < hud_tmWeaponsOnScreen)?255:0;
-          if (iAvbWep & (1<<(WEAPON_KNIFE-1)))           {iAvbWepKnf = 70;} else {iAvbWepKnf = 69;} if (iWntWep ==  1) {iWntWepKnf = 98;} else {iWntWepKnf = 97;}
+      if (iAvbWep & (1<<(WEAPON_KNIFE-1)))           {iAvbWepKnf = 70;} else {iAvbWepKnf = 69;} if (iWntWep ==  1) {iWntWepKnf = 98;} else {iWntWepKnf = 97;}
 		  if (iAvbWep & (1<<(WEAPON_CHAINSAW-1)))        {iAvbWepChs = 72;} else {iAvbWepChs = 71;} if (iWntWep ==  2) {iWntWepChs = 98;} else {iWntWepChs = 97;}
 		  if (iAvbWep & (1<<(WEAPON_COLT-1)))            {iAvbWepClt = 74;} else {iAvbWepClt = 73;} if (iWntWep ==  3) {iWntWepClt = 98;} else {iWntWepClt = 97;}
-		  if (iAvbWep & (1<<(WEAPON_DOUBLECOLT-1)))      {iAvbWepDcl = 74;} else {iAvbWepDcl = 73;} if (iWntWep ==  4) {iWntWepDcl = 98; iWntWepClt = 98; } else {iWntWepDcl = 97;}
+		  if (iAvbWep & (1<<(WEAPON_DOUBLECOLT-1)))      {iAvbWepDcl = 74;} else {iAvbWepDcl = 73;} if (iWntWep ==  4) {iWntWepDcl = iWntWepClt = 98; } else {iWntWepDcl = 97;}
 		  if (iAvbWep & (1<<(WEAPON_SINGLESHOTGUN-1)))   {iAvbWepSht = 76;} else {iAvbWepSht = 75;} if (iWntWep ==  5) {iWntWepSht = 98;} else {iWntWepSht = 97;}
 		  if (iAvbWep & (1<<(WEAPON_DOUBLESHOTGUN-1)))   {iAvbWepDsh = 78;} else {iAvbWepDsh = 77;} if (iWntWep ==  6) {iWntWepDsh = 98;} else {iWntWepDsh = 97;}
 		  if (iAvbWep & (1<<(WEAPON_TOMMYGUN-1)))        {iAvbWepTmg = 80;} else {iAvbWepTmg = 79;} if (iWntWep ==  7) {iWntWepTmg = 98;} else {iWntWepTmg = 97;}
@@ -3318,50 +3528,50 @@ void InitAniNum() {
 		  if (iAvbWep & (1<<(WEAPON_SNIPER-1)))          {iAvbWepSnp = 90;} else {iAvbWepSnp = 89;} if (iWntWep == 12) {iWntWepSnp = 98;} else {iWntWepSnp = 97;}
 		  if (iAvbWep & (1<<(WEAPON_LASER-1)))           {iAvbWepLsr = 92;} else {iAvbWepLsr = 91;} if (iWntWep == 13) {iWntWepLsr = 98;} else {iWntWepLsr = 97;}
 		  if (iAvbWep & (1<<(WEAPON_IRONCANNON-1)))      {iAvbWepCnn = 94;} else {iAvbWepCnn = 93;} if (iWntWep == 14) {iWntWepCnn = 98;} else {iWntWepCnn = 97;}
-		  CModelObject &icoknf = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_078_ICO_KNIFE          )->amo_moModelObject; icoknf.mo_toTexture.PlayAnim(iAvbWepKnf, 0); icoknf.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icoknf = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_078_ICO_KNIFE          )->amo_moModelObject; icoknf.mo_toTexture.PlayAnim(iAvbWepKnf, 0); icoknf.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdknf = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_079_BRD_KNIFE          )->amo_moModelObject; brdknf.mo_toTexture.PlayAnim(iWntWepKnf, 0); brdknf.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icochs = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_080_ICO_CHAINSAW       )->amo_moModelObject; icochs.mo_toTexture.PlayAnim(iAvbWepChs, 0); icochs.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icochs = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_080_ICO_CHAINSAW       )->amo_moModelObject; icochs.mo_toTexture.PlayAnim(iAvbWepChs, 0); icochs.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdchs = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_081_BRD_CHAINSAW       )->amo_moModelObject; brdchs.mo_toTexture.PlayAnim(iWntWepChs, 0); brdchs.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icoclt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_082_ICO_COLT           )->amo_moModelObject; icoclt.mo_toTexture.PlayAnim(iAvbWepClt, 0); icoclt.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icoclt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_082_ICO_COLT           )->amo_moModelObject; icoclt.mo_toTexture.PlayAnim(iAvbWepClt, 0); icoclt.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdclt = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_083_BRD_COLT           )->amo_moModelObject; brdclt.mo_toTexture.PlayAnim(iWntWepClt, 0); brdclt.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icodcl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_084_ICO_DOUBLECOLT     )->amo_moModelObject; icodcl.mo_toTexture.PlayAnim(iAvbWepDcl, 0); icodcl.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icodcl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_084_ICO_DOUBLECOLT     )->amo_moModelObject; icodcl.mo_toTexture.PlayAnim(iAvbWepDcl, 0); icodcl.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brddcl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_085_BRD_DOUBLECOLT     )->amo_moModelObject; brddcl.mo_toTexture.PlayAnim(iWntWepDcl, 0); brddcl.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icosht = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_086_ICO_SHOTGUN        )->amo_moModelObject; icosht.mo_toTexture.PlayAnim(iAvbWepSht, 0); icosht.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icosht = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_086_ICO_SHOTGUN        )->amo_moModelObject; icosht.mo_toTexture.PlayAnim(iAvbWepSht, 0); icosht.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdsht = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_087_BRD_SHOTGUN        )->amo_moModelObject; brdsht.mo_toTexture.PlayAnim(iWntWepSht, 0); brdsht.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icodsh = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_088_ICO_DOUBLESHOTGUN  )->amo_moModelObject; icodsh.mo_toTexture.PlayAnim(iAvbWepDsh, 0); icodsh.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icodsh = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_088_ICO_DOUBLESHOTGUN  )->amo_moModelObject; icodsh.mo_toTexture.PlayAnim(iAvbWepDsh, 0); icodsh.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brddsh = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_089_BRD_DOUBLESHOTGUN  )->amo_moModelObject; brddsh.mo_toTexture.PlayAnim(iWntWepDsh, 0); brddsh.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icotmg = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_090_ICO_TOMMYGUN       )->amo_moModelObject; icotmg.mo_toTexture.PlayAnim(iAvbWepTmg, 0); icotmg.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icotmg = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_090_ICO_TOMMYGUN       )->amo_moModelObject; icotmg.mo_toTexture.PlayAnim(iAvbWepTmg, 0); icotmg.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdtmg = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_091_BRD_TOMMYGUN       )->amo_moModelObject; brdtmg.mo_toTexture.PlayAnim(iWntWepTmg, 0); brdtmg.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);        
-		  CModelObject &icomgn = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_092_ICO_MINIGUN        )->amo_moModelObject; icomgn.mo_toTexture.PlayAnim(iAvbWepMgn, 0); icomgn.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icomgn = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_092_ICO_MINIGUN        )->amo_moModelObject; icomgn.mo_toTexture.PlayAnim(iAvbWepMgn, 0); icomgn.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdmgn = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_093_BRD_MINIGUN        )->amo_moModelObject; brdmgn.mo_toTexture.PlayAnim(iWntWepMgn, 0); brdmgn.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
-		  CModelObject &icorkl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_094_ICO_ROCKETLAUNCHER )->amo_moModelObject; icorkl.mo_toTexture.PlayAnim(iAvbWepRkl, 0); icorkl.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icorkl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_094_ICO_ROCKETLAUNCHER )->amo_moModelObject; icorkl.mo_toTexture.PlayAnim(iAvbWepRkl, 0); icorkl.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdrkl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_095_BRD_ROCKETLAUNCHER )->amo_moModelObject; brdrkl.mo_toTexture.PlayAnim(iWntWepRkl, 0); brdrkl.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
-		  CModelObject &icogrl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_096_ICO_GRENADELAUNCHER)->amo_moModelObject; icogrl.mo_toTexture.PlayAnim(iAvbWepGrl, 0); icogrl.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icogrl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_096_ICO_GRENADELAUNCHER)->amo_moModelObject; icogrl.mo_toTexture.PlayAnim(iAvbWepGrl, 0); icogrl.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdgrl = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_097_BRD_GRENADELAUNCHER)->amo_moModelObject; brdgrl.mo_toTexture.PlayAnim(iWntWepGrl, 0); brdgrl.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
-		  CModelObject &icoflm = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_098_ICO_FLAMETHROWER   )->amo_moModelObject; icoflm.mo_toTexture.PlayAnim(iAvbWepFlm, 0); icoflm.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icoflm = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_098_ICO_FLAMETHROWER   )->amo_moModelObject; icoflm.mo_toTexture.PlayAnim(iAvbWepFlm, 0); icoflm.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdflm = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_099_BRD_FLAMETHROWER   )->amo_moModelObject; brdflm.mo_toTexture.PlayAnim(iWntWepFlm, 0); brdflm.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
-		  CModelObject &icosnp = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_100_ICO_SNIPERRIFLE    )->amo_moModelObject; icosnp.mo_toTexture.PlayAnim(iAvbWepSnp, 0); icosnp.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icosnp = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_100_ICO_SNIPERRIFLE    )->amo_moModelObject; icosnp.mo_toTexture.PlayAnim(iAvbWepSnp, 0); icosnp.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdsnp = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_101_BRD_SNIPERRIFLE    )->amo_moModelObject; brdsnp.mo_toTexture.PlayAnim(iWntWepSnp, 0); brdsnp.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
-		  CModelObject &icolsr = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_102_ICO_LASER          )->amo_moModelObject; icolsr.mo_toTexture.PlayAnim(iAvbWepLsr, 0); icolsr.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icolsr = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_102_ICO_LASER          )->amo_moModelObject; icolsr.mo_toTexture.PlayAnim(iAvbWepLsr, 0); icolsr.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdlsr = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_103_BRD_LASER          )->amo_moModelObject; brdlsr.mo_toTexture.PlayAnim(iWntWepLsr, 0); brdlsr.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
-		  CModelObject &icocnn = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_104_ICO_CANNON         )->amo_moModelObject; icocnn.mo_toTexture.PlayAnim(iAvbWepCnn, 0); icocnn.mo_colBlendColor  = h3d_iColor|INDEX(DisWep*fHudAppear);
+		  CModelObject &icocnn = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_104_ICO_CANNON         )->amo_moModelObject; icocnn.mo_toTexture.PlayAnim(iAvbWepCnn, 0); icocnn.mo_colBlendColor  = colHUD|INDEX(DisWep*fHudAppear);
 		  CModelObject &brdcnn = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_105_BRD_CANNON         )->amo_moModelObject; brdcnn.mo_toTexture.PlayAnim(iWntWepCnn, 0); brdcnn.mo_colBlendColor  = H3DC_WHITE|INDEX(DisWep*fHudAppear);
 		  if (iShls <= 0) {icosht.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear); icodsh.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iShls >  0) {icosht.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear); icodsh.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iShls >  0) {icosht.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear); icodsh.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iBlts <= 0) {icotmg.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear); icomgn.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iBlts >  0) {icotmg.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear); icomgn.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iBlts >  0) {icotmg.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear); icomgn.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iRckt <= 0) {icorkl.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iRckt >  0) {icorkl.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iRckt >  0) {icorkl.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iGrnd <= 0) {icogrl.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iGrnd >  0) {icogrl.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iGrnd >  0) {icogrl.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iNplm <= 0) {icoflm.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iNplm >  0) {icoflm.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iNplm >  0) {icoflm.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iSnbl <= 0) {icosnp.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iSnbl >  0) {icosnp.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iSnbl >  0) {icosnp.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iElec <= 0) {icolsr.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iElec >  0) {icolsr.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iElec >  0) {icolsr.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 		  if (iIrbl <= 0) {icocnn.mo_colBlendColor = H3DC_DIS|INDEX(DisWep*fHudAppear);}
-		  if (iIrbl >  0) {icocnn.mo_colBlendColor = h3d_iColor|INDEX(DisWep*fHudAppear);}
+		  if (iIrbl >  0) {icocnn.mo_colBlendColor = colHUD|INDEX(DisWep*fHudAppear);}
 
       if (m_penShop != NULL) {
         UpdateGUIShop();
@@ -4760,11 +4970,11 @@ void InitAniNum() {
 	  INDEX iGameOptionPosX= pixDPWidth*0.05f;
 	  INDEX iPlayerListPosX= pixDPWidth*0.75f;
 	  const INDEX iHeightSpacing=  20;
-      pdp->SetFont( _pfdDisplayFont);
-      pdp->SetTextScaling( fScale);
-      pdp->SetTextAspect( 1.0f);
+    pdp->SetFont( _pfdDisplayFont);
+    pdp->SetTextScaling( fScale);
+    pdp->SetTextAspect( 1.0f);
 	  pdp->PutTextCXY(TranslateConst(en_pwoWorld->GetName(), 0), pixDPWidth*0.5f, pixDPHeight*0.05f, SE_COL_WHITE|CT_OPAQUE);
-      pdp->PutTextCXY(TRANS("Players"), iPlayerListPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
+    pdp->PutTextC(TRANS("Players"),   iPlayerListPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
 	  pdp->PutText(TRANS("Game options"), iGameOptionPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
 	  INDEX iDisplayedOption=0;
 	  
@@ -4901,7 +5111,7 @@ void InitAniNum() {
       for (INDEX iPlayer=0, iDisplayedPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
 		CPlayer *penPlayer = (CPlayer*)GetPlayerEntity(iPlayer);
 		if (penPlayer != NULL) {
-			pdp->PutTextCXY( penPlayer->GetPlayerName(), iPlayerListPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedPlayer*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+			pdp->PutTextC( penPlayer->GetPlayerName(), iPlayerListPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedPlayer*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 			iDisplayedPlayer++;
 		}
 	  }
@@ -5557,7 +5767,7 @@ void InitAniNum() {
     }
 	
 	// Shield H3D
-	if (dmtType != DMT_DROWNING && dmtType != DMT_ABYSS && dmtType != DMT_SPIKESTAB && dmtType != DMT_TELEPORT && m_fShield > 0) {
+	if (dmtType != DMT_DROWNING && dmtType != DMT_ABYSS && dmtType != DMT_SPIKESTAB && dmtType != DMT_TELEPORT && dmtType != DMT_HEAT && m_fShield > 0) {
 	FLOAT fDamage=m_fShield-fDamageAmmount;
 	FLOAT fShield=m_fShield;
 	  m_fShield = Max(0.0f, fDamage);
@@ -6452,7 +6662,7 @@ void InitAniNum() {
   void AliveActions(const CPlayerAction &pa) 
   {
     CPlayerAction paAction = pa;
-
+    
     // if camera is active
     if (m_penCamera!=NULL) {
       // ignore keyboard/mouse/joystick commands
@@ -7740,6 +7950,8 @@ void InitAniNum() {
     m_tmSeriousDamage   = 0.0f;//, 
     m_tmSeriousSpeed    = 0.0f;//,
 
+    hud_bShowNickname=0;
+
     // initialize animator
     ((CPlayerAnimator&)*m_penAnimator).Initialize();
     // restart weapons if needed
@@ -8518,7 +8730,6 @@ procedures:
 		SetHealth(0);
 		m_fArmor = 0.0f;
 		m_fShield = 0.0f;
-    m_fMaxShield = 0.0f;
 		SwitchToEditorModel();
 		SwitchSpectatorPlayer();
 		m_bSpectatorDeath = FALSE;
@@ -8679,7 +8890,7 @@ procedures:
     }
 	FLOAT fTime = GetSP()->sp_fForceSpectateCD;
 	CMusicHolder *pmh = (CMusicHolder *)m_penMainMusicHolder.ep_pen;
-	if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
+	if (/*GetSP()->sp_bCooperative*/GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP/* && !GetSP()->sp_bSinglePlayer*/) {
 		if (_pTimer->CurrentTick()>pmh->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft>0) {
 			((CSessionProperties*)GetSP())->sp_ctCreditsLeft--;
 		} else if (_pTimer->CurrentTick()>pmh->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft==0) {
@@ -9513,7 +9724,7 @@ procedures:
       on (EReceiveScore eScore) : {
         m_psLevelStats.ps_iScore += eScore.iPoints;
         m_psGameStats.ps_iScore += eScore.iPoints;
-        m_iMana  += eScore.iPoints*GetSP()->sp_fManaTransferFactor;
+        m_iMana  += eScore.iPoints*GetSP()->sp_fManaTransferFactor; 
         // m_iMoney += eScore.iPoints;
         CheckHighScore();
 		if (m_penMainMusicHolder!=NULL && GetSP()->sp_ctCredits!=-1) {
@@ -9524,11 +9735,13 @@ procedures:
       on (EKilledEnemy) : {
         m_psLevelStats.ps_iKills += 1;
         m_psGameStats.ps_iKills += 1;
+        if (m_penMainMusicHolder != NULL) { m_penMainMusicHolder->SendEvent(EKilledEnemy());}
         resume;
       }
       on (ESecretFound) : {
         m_psLevelStats.ps_iSecrets += 1;
         m_psGameStats.ps_iSecrets += 1;
+        if (m_penMainMusicHolder != NULL) { m_penMainMusicHolder->SendEvent(ESecretFound());}
         resume;
       }
       on (EWeaponChanged) : {

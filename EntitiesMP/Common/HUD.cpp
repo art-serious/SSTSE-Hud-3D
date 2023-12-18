@@ -38,6 +38,9 @@ extern FLOAT hud_tmWeaponsOnScreen;
 extern INDEX hud_bShowMatchInfo;
 extern INDEX hud_iHUDColor;
 
+extern INDEX hud_bShowPlayerList;
+extern INDEX hud_bShowNickname;
+
 // player statistics sorting keys
 enum SortKeys {
   PSK_NAME    = 1,
@@ -999,20 +1002,20 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
   _penPlayer  = penPlayerCurrent;
   _penWeapons = (CPlayerWeapons*)&*_penPlayer->m_penWeapons;
   
-  _pDP        = pdpCurrent;
-  _pixDPWidth   = _pDP->GetWidth();
-  _pixDPHeight  = _pDP->GetHeight();
+  _pDP                = pdpCurrent;
+  _pixDPWidth         = _pDP->GetWidth();
+  _pixDPHeight        = _pDP->GetHeight();
   _fCustomScaling     = hud_fScaling;
   _fResolutionScaling = (FLOAT)_pixDPWidth /640.0f;
-  _colHUD     = hud_iHUDColor;
-  _colHUDText = SE_COL_ORANGE_LIGHT;
-  _ulAlphaHUD = NormFloatToByte(hud_fOpacity);
-  _tmNow = _pTimer->CurrentTick();
+  _colHUD             = hud_iHUDColor;
+  _colHUDText         = SE_COL_ORANGE_LIGHT;
+  _ulAlphaHUD         = NormFloatToByte(hud_fOpacity);
+  _tmNow              = _pTimer->CurrentTick();
 
   _dioHUDScaling = _pixDPHeight / 1080.0f;
 
   // determine hud colorization;
-  COLOR colMax = _colHUD;
+  COLOR colMax = SE_COL_BLUEGREEN_LT;
   COLOR colTop = SE_COL_ORANGE_LIGHT;
   COLOR colMid = LerpColor(colTop, C_RED, 0.5f);
 
@@ -1386,7 +1389,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
 	case  0: strGameMode = TRANS("Cooperative"); break;
 	case  1: strGameMode = TRANS("Scorematch");  break;
 	case  2: strGameMode = TRANS("Fragmatch");   break;
-  case  3: strGameMode = TRANS("Survival cooperation");   break;
+  case  3: strGameMode = TRANS("Survival co-op");   break;
   }
 
   switch (GetSP()->sp_gdGameDifficulty) {
@@ -1453,8 +1456,8 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
     }
 
 	  CTString strSecrets, strKills, strSessionTime, strDeaths, strCredits, strMaxCredits, strEnemyStrength, strCoopRespawnCDLeft, strLevelScore, strScoreNextCredit;
-	  strKills.PrintF(  "%i / %i", psSquadLevel.ps_iKills,   _penPlayer->m_psLevelTotal.ps_iKills);
-	  strSecrets.PrintF("%i / %i", psSquadLevel.ps_iSecrets, _penPlayer->m_psLevelTotal.ps_iSecrets);
+	  strKills.PrintF(  "%i / %i", mh.m_iEnemyCount /*psSquadLevel.ps_iKills*/,   _penPlayer->m_psLevelTotal.ps_iKills);
+	  strSecrets.PrintF("%i / %i", mh.m_iSecretCount/*psSquadLevel.ps_iSecrets*/, _penPlayer->m_psLevelTotal.ps_iSecrets);
 	  strDeaths.PrintF( "%d",  iDeaths);
 
     if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
@@ -1505,7 +1508,9 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
 				  } else {
 				  DIO_DrawText(ESP_Middle,  150,        ESP_Middle, -315, TRANS("Money"),       2, ESP_Middle, _colHUD);
 			  }
-	  	    DIO_DrawText(ESP_Middle,  iAmmoXPosition, ESP_Middle, -315, TRANS("Ammo"),    2, ESP_Middle, _colHUD);
+	  	    if (!GetSP()->sp_bInfiniteAmmo) {
+            DIO_DrawText(ESP_Middle,  iAmmoXPosition, ESP_Middle, -315, TRANS("Ammo"),    2, ESP_Middle, _colHUD);
+          }
 			    if (bCooperative) {
             DIO_DrawText(ESP_Middle,  555,        ESP_Middle, -315, TRANS("Distance"),    2, ESP_Middle, _colHUD);
           }
@@ -1540,7 +1545,7 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
 				  DIO_DrawText(ESP_Middle,  450,        ESP_Middle,  440, strCredits, 2, ESP_Middle, C_WHITE);
 				  }
 			  }
-			  if (GetSP()->sp_ctCredits!=-1 && bCooperative && iHUDTimerCD>0) {
+			  if (GetSP()->sp_ctCredits!=-1 && /*bCooperative*/GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP && iHUDTimerCD>0) {
 				  DIO_DrawText(ESP_Middle,  570,        ESP_Middle, -400, strCoopRespawnCDLeft, 2, ESP_Middle, C_WHITE);  //Timer of free respawn in the co-op without credits
 			  }
 			  /*if (GetSP()->sp_ctCredits!=-1 && bCooperative) {
@@ -1618,9 +1623,9 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
 
         if( bCooperative || bSinglePlay) {
 
-			//Render table score
+			// * Render table score **********************************************************************
 		
-			    if (!GetSP()->sp_bInfiniteAmmo) {                                                                               //Render Ammo info for each player
+			    if (!GetSP()->sp_bInfiniteAmmo) { //Render Ammo info for each player
 				  const INDEX iAmmoTypesTotal = 7;
 				  INDEX iCurrentAmmoTypesCount = 0;
 
@@ -1758,6 +1763,182 @@ extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, B
     bMaxFrags  ? colFrags  = C_WHITE : colFrags  = C_lGRAY;
     bMaxDeaths ? colDeaths = C_WHITE : colDeaths = C_lGRAY;
   }
+
+  // * Classic player table ******************************************************
+    // determine scaling of normal text and play mode
+/*  const FLOAT fTextScale  = (_fResolutionScaling+1) *0.5f;
+  const BOOL bSinglePlay  =  GetSP()->sp_bSinglePlayer;
+  const BOOL bCooperative =  GetSP()->sp_bCooperative && !bSinglePlay;
+  const BOOL bScoreMatch  = !GetSP()->sp_bCooperative && !GetSP()->sp_bUseFrags;
+  const BOOL bFragMatch   = !GetSP()->sp_bCooperative &&  GetSP()->sp_bUseFrags;
+  COLOR colMana, colFrags, colDeaths, colHealth, colArmor;
+  COLOR colScore  = _colHUD;
+  INDEX iScoreSum = 0;*/
+  
+  if (hud_bShowNickname) {
+    CTString strPlayerName = ((CPlayer*)&*_penPlayer)->GetPlayerName();
+    strPlayerName.PrintF("%s", strPlayerName);
+
+    _pfdDisplayFont->SetFixedWidth();
+    _pDP->SetFont( _pfdDisplayFont);
+    _pDP->SetTextScaling( fTextScale*1.0f );
+    _pDP->SetTextCharSpacing( -5.0f*fTextScale);
+    _pDP->PutTextC( TRANS("Spectating:"), 320.0f*_pixDPWidth/640.0f, 8.0f*_pixDPHeight/480.0f, C_WHITE|CT_OPAQUE);
+    _pDP->PutTextC( strPlayerName, 320.0f*_pixDPWidth/640.0f, 24.0f*_pixDPHeight/480.0f, C_WHITE|CT_OPAQUE);
+    if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+      CTString strScoreNextCredit;
+      strScoreNextCredit.PrintF("%i", iScoreNextCredit);
+      _pDP->PutTextC( TRANS("Score left to respawn:"), 320.0f*_pixDPWidth/640.0f, 48.0f*_pixDPHeight/480.0f, C_WHITE|CT_OPAQUE);
+      _pDP->PutTextC( strScoreNextCredit, 320.0f*_pixDPWidth/640.0f, 64.0f*_pixDPHeight/480.0f, C_WHITE|CT_OPAQUE);
+    }
+  }
+
+  // if not in single player mode, we'll have to calc (and maybe printout) other players' info
+  if( !bSinglePlay && hud_bShowPlayerList && !_penPlayer->m_bShowingTabInfo)
+  {
+    // set font and prepare font parameters
+    _pfdDisplayFont->SetVariableWidth();
+    _pDP->SetFont( _pfdDisplayFont);
+    _pDP->SetTextScaling( fTextScale);
+    FLOAT fCharHeight = (_pfdDisplayFont->GetHeight()-2)*fTextScale;
+    // generate and sort by mana list of active players
+    BOOL bMaxScore=TRUE, bMaxMana=TRUE, bMaxFrags=TRUE, bMaxDeaths=TRUE;
+    hud_iSortPlayers = Clamp( hud_iSortPlayers, -1L, 6L);
+    SortKeys eKey = (SortKeys)hud_iSortPlayers;
+    if (hud_iSortPlayers==-1) {
+           if (bCooperative) eKey = PSK_HEALTH;
+      else if (bScoreMatch)  eKey = PSK_SCORE;
+      else if (bFragMatch)   eKey = PSK_FRAGS;
+      else { ASSERT(FALSE);  eKey = PSK_NAME; }
+    }
+    if( bCooperative) eKey = (SortKeys)Clamp( (INDEX)eKey, 0L, 3L);
+    if( eKey==PSK_HEALTH && (bScoreMatch || bFragMatch)) { eKey = PSK_NAME; }; // prevent health snooping in deathmatch
+    INDEX iPlayers = SetAllPlayersStats(eKey);
+    // loop thru players 
+    for( INDEX i=0; i<iPlayers; i++)
+    { // get player name and mana
+      CPlayer *penPlayer = _apenPlayers[i];
+      const CTString strName = penPlayer->GetPlayerName();
+      const INDEX iScore  = penPlayer->m_psGameStats.ps_iScore;
+      const INDEX iMana   = penPlayer->m_iMana;
+      const INDEX iFrags  = penPlayer->m_psGameStats.ps_iKills;
+      const INDEX iDeaths = penPlayer->m_psGameStats.ps_iDeaths;
+      const INDEX iHealth = ClampDn( (INDEX)ceil( penPlayer->GetHealth()), 0L);
+      const INDEX iArmor  = ClampDn( (INDEX)ceil( penPlayer->m_fArmor),    0L);
+      const FLOAT fTotalAmmo = 0.0f;
+      const INDEX iAmmoTypesTotal = 7;
+
+      INDEX iAmmoIndex = 0;
+      FLOAT fNormValue = 0;
+      FLOAT fTotalValue = 0;
+      
+      CPlayerWeapons* pWeapons = penPlayer->GetPlayerWeapons();
+      if(pWeapons == NULL) continue;
+      FillWeaponAmmoTables(pWeapons);
+
+      for( INDEX ii=iAmmoTypesTotal; ii>=0; ii--) {
+	      INDEX iAmmoType = aiAmmoRemap[ii];
+	      // if no ammo and hasn't got that weapon - just skip this ammo
+	      AmmoInfo &ai = _aaiAmmo[iAmmoType];
+	      ASSERT( ai.ai_iAmmoAmmount>=0);
+	      if( !ai.ai_bHasWeapon) continue;
+		      // display ammo info
+		      fNormValue = (FLOAT)ai.ai_iAmmoAmmount / ai.ai_iMaxAmmoAmmount;
+		      fTotalValue+=fNormValue;
+	      iAmmoIndex++;
+	    }
+      fTotalValue=fTotalValue / iAmmoIndex+0.001;
+
+      CTString strScore, strMana, strFrags, strDeaths, strHealth, strArmor, strAmmo;
+      strScore.PrintF(  "%d", iScore);
+      strMana.PrintF(   "%d", iMana);
+      strFrags.PrintF(  "%d", iFrags);
+      strDeaths.PrintF( "%d", iDeaths);
+      strHealth.PrintF( "%d", iHealth);
+      strArmor.PrintF(  "%d", iArmor);
+      strAmmo.PrintF(   "%d", (INDEX)(fTotalValue*100));
+      // detemine corresponding colors
+      colHealth = C_mlRED;
+      colMana = colScore = colFrags = colDeaths = colArmor = C_lGRAY;
+      PrepareColorTransitions( colMax, colTop, colMid, C_lGRAY, 0.5f, 0.25f, FALSE);
+      if( iMana   > _penPlayer->m_iMana)                      { bMaxMana   = FALSE; colMana   = C_WHITE; }
+      if( iScore  > _penPlayer->m_psGameStats.ps_iScore)      { bMaxScore  = FALSE; colScore  = C_WHITE; }
+      if( iFrags  > _penPlayer->m_psGameStats.ps_iKills)      { bMaxFrags  = FALSE; colFrags  = C_WHITE; }
+      if( iDeaths > _penPlayer->m_psGameStats.ps_iDeaths)     { bMaxDeaths = FALSE; colDeaths = C_WHITE; }
+      if( penPlayer==_penPlayer) colScore = colMana = colFrags = colDeaths = _colHUD; // current player
+      if( iHealth>25) colHealth = _colHUD;
+      if( iArmor >25) colArmor  = _colHUD;
+      // eventually print it out
+
+      if( hud_iShowPlayers==1 || hud_iShowPlayers==-1 && !bSinglePlay) {
+        FLOAT fRow = 96;
+        // printout location and info aren't the same for deathmatch and coop play
+        const FLOAT fCharWidth = (PIX)((_pfdDisplayFont->GetWidth()-2) *fTextScale);
+        if( bCooperative) { 
+          _pDP->PutTextR( strName+":", _pixDPWidth-12*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colScore |_ulAlphaHUD);
+          _pDP->PutTextC( strHealth,   _pixDPWidth-10*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colHealth|_ulAlphaHUD);
+          _pDP->PutTextC(  "/",        _pixDPWidth- 8*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, _colHUD  |_ulAlphaHUD);
+          _pDP->PutTextC( strArmor,    _pixDPWidth- 6*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colArmor |_ulAlphaHUD);
+          if (!GetSP()->sp_bInfiniteAmmo) {
+            _pDP->PutTextC(  "/",        _pixDPWidth- 4*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, _colHUD  |_ulAlphaHUD);
+            _pDP->PutTextC( strAmmo+"%", _pixDPWidth- 2*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, GetCurrentColor(fTotalValue)|_ulAlphaHUD);
+          }
+        } else if( bScoreMatch) { 
+          _pDP->PutTextR( strName+":", _pixDPWidth-12*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, _colHUD |_ulAlphaHUD);
+          _pDP->PutTextC(  "/",        _pixDPWidth- 5*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, _colHUD |_ulAlphaHUD);
+          _pDP->PutTextC( strScore,    _pixDPWidth- 8*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colScore|_ulAlphaHUD);
+          _pDP->PutTextC( strMana,     _pixDPWidth- 2*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colMana |_ulAlphaHUD);
+        } else { // fragmatch!
+          _pDP->PutTextR( strName+":", _pixDPWidth-8*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, _colHUD  |_ulAlphaHUD);
+          _pDP->PutTextC(  "/",        _pixDPWidth-4*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, _colHUD  |_ulAlphaHUD);
+          _pDP->PutTextC( strFrags,    _pixDPWidth-6*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colFrags |_ulAlphaHUD);
+          _pDP->PutTextC( strDeaths,   _pixDPWidth-2*fCharWidth, fCharHeight*i+fRow/*fOneUnit*4*/, colDeaths|_ulAlphaHUD);
+        }
+      }
+      // calculate summ of scores (for coop mode)
+      iScoreSum += iScore;  
+    }
+    // draw remaining time if time based death- or scorematch
+    if ((bScoreMatch || bFragMatch) && hud_bShowMatchInfo){
+      CTString strLimitsInfo="";  
+      if (GetSP()->sp_iTimeLimit>0) {
+        FLOAT fTimeLeft = ClampDn(GetSP()->sp_iTimeLimit*60.0f - _pNetwork->GetGameTime(), 0.0f);
+        strLimitsInfo.PrintF("%s^cFFFFFF%s: %s\n", strLimitsInfo, TRANS("TIME LEFT"), TimeToString(fTimeLeft));
+      }
+      extern INDEX SetAllPlayersStats( INDEX iSortKey);
+      // fill players table
+      const INDEX ctPlayers = SetAllPlayersStats(bFragMatch?5:3); // sort by frags or by score
+      // find maximum frags/score that one player has
+      INDEX iMaxFrags = LowerLimit(INDEX(0));
+      INDEX iMaxScore = LowerLimit(INDEX(0));
+      {for(INDEX iPlayer=0; iPlayer<ctPlayers; iPlayer++) {
+        CPlayer *penPlayer = _apenPlayers[iPlayer];
+        iMaxFrags = Max(iMaxFrags, penPlayer->m_psLevelStats.ps_iKills);
+        iMaxScore = Max(iMaxScore, penPlayer->m_psLevelStats.ps_iScore);
+      }}
+      if (GetSP()->sp_iFragLimit>0) {
+        INDEX iFragsLeft = ClampDn(GetSP()->sp_iFragLimit-iMaxFrags, INDEX(0));
+        strLimitsInfo.PrintF("%s^cFFFFFF%s: %d\n", strLimitsInfo, TRANS("FRAGS LEFT"), iFragsLeft);
+      }
+      if (GetSP()->sp_iScoreLimit>0) {
+        INDEX iScoreLeft = ClampDn(GetSP()->sp_iScoreLimit-iMaxScore, INDEX(0));
+        strLimitsInfo.PrintF("%s^cFFFFFF%s: %d\n", strLimitsInfo, TRANS("SCORE LEFT"), iScoreLeft);
+      }
+      _pfdDisplayFont->SetFixedWidth();
+      _pDP->SetFont( _pfdDisplayFont);
+      _pDP->SetTextScaling( fTextScale*0.8f );
+      _pDP->SetTextCharSpacing( -2.0f*fTextScale);
+      _pDP->PutText( strLimitsInfo, 5.0f*_pixDPWidth/640.0f, 96.0f*_pixDPWidth/640.0f, C_WHITE|CT_OPAQUE);
+    }
+        
+
+    // prepare color for local player printouts
+    bMaxScore  ? colScore  = C_WHITE : colScore  = C_lGRAY;
+    bMaxMana   ? colMana   = C_WHITE : colMana   = C_lGRAY;
+    bMaxFrags  ? colFrags  = C_WHITE : colFrags  = C_lGRAY;
+    bMaxDeaths ? colDeaths = C_WHITE : colDeaths = C_lGRAY;
+  }
+  //* End classic player table ******************************************************************************
 
   // printout player latency if needed
   if( hud_bShowLatency) {

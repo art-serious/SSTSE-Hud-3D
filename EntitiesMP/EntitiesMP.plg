@@ -6,184 +6,21 @@
 --------------------Configuration: EntitiesMP - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPB793.bat" with contents
-[
-@echo off
-cd                                                                                                                    ..\
-ecc EntitiesMP/WorldLink.es
-]
-Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSPB793.bat""
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPB794.bat" with contents
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP1455.bat" with contents
 [
 @echo off
 cd                                                                                                                    ..\
 ecc EntitiesMP/Player.es
 ]
-Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSPB794.bat""
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPB795.tmp" with contents
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP1455.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP1456.tmp" with contents
 [
 /nologo /G5 /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Fp"Debug/EntitiesMP.pch" /Yu"StdH.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
-"C:\MyMod\Sources\EntitiesMP\Common\Common.cpp"
-"C:\MyMod\Sources\EntitiesMP\Common\EmanatingParticles.cpp"
-"C:\MyMod\Sources\EntitiesMP\Common\HUD.cpp"
-"C:\MyMod\Sources\EntitiesMP\Common\Particles.cpp"
-"C:\MyMod\Sources\EntitiesMP\Common\PathFinding.cpp"
-"C:\MyMod\Sources\EntitiesMP\AirElemental.cpp"
-"C:\MyMod\Sources\EntitiesMP\AirShockwave.cpp"
-"C:\MyMod\Sources\EntitiesMP\AmmoItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\AmmoPack.cpp"
-"C:\MyMod\Sources\EntitiesMP\AnimationChanger.cpp"
-"C:\MyMod\Sources\EntitiesMP\AnimationHub.cpp"
-"C:\MyMod\Sources\EntitiesMP\AreaMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\ArmorItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\BackgroundViewer.cpp"
-"C:\MyMod\Sources\EntitiesMP\BasicEffects.cpp"
-"C:\MyMod\Sources\EntitiesMP\Beast.cpp"
-"C:\MyMod\Sources\EntitiesMP\BigHead.cpp"
-"C:\MyMod\Sources\EntitiesMP\BlendController.cpp"
-"C:\MyMod\Sources\EntitiesMP\BloodSpray.cpp"
-"C:\MyMod\Sources\EntitiesMP\Boneman.cpp"
-"C:\MyMod\Sources\EntitiesMP\Bouncer.cpp"
-"C:\MyMod\Sources\EntitiesMP\Bullet.cpp"
-"C:\MyMod\Sources\EntitiesMP\Camera.cpp"
-"C:\MyMod\Sources\EntitiesMP\CameraMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\CannonBall.cpp"
-"C:\MyMod\Sources\EntitiesMP\CannonRotating.cpp"
-"C:\MyMod\Sources\EntitiesMP\CannonStatic.cpp"
-"C:\MyMod\Sources\EntitiesMP\ChainsawFreak.cpp"
-"C:\MyMod\Sources\EntitiesMP\Copier.cpp"
-"C:\MyMod\Sources\EntitiesMP\Counter.cpp"
-"C:\MyMod\Sources\EntitiesMP\CrateBus.cpp"
-"C:\MyMod\Sources\EntitiesMP\CrateRider.cpp"
-"C:\MyMod\Sources\EntitiesMP\CreditsHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\Damager.cpp"
-"C:\MyMod\Sources\EntitiesMP\Debris.cpp"
-"C:\MyMod\Sources\EntitiesMP\DebugEntityStatesDisplay.cpp"
-"C:\MyMod\Sources\EntitiesMP\Demon.cpp"
-"C:\MyMod\Sources\EntitiesMP\DestroyableArchitecture.cpp"
-"C:\MyMod\Sources\EntitiesMP\Devil.cpp"
-"C:\MyMod\Sources\EntitiesMP\DevilMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\DevilProjectile.cpp"
-"C:\MyMod\Sources\EntitiesMP\DoorController.cpp"
-"C:\MyMod\Sources\EntitiesMP\EffectMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Effector.cpp"
-"C:\MyMod\Sources\EntitiesMP\Elemental.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemyBase.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemyCounter.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemyDive.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemyFly.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemyMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemyRunInto.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnemySpawner.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnvironmentBase.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnvironmentMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\EnvironmentParticlesHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\Eruptor.cpp"
-"C:\MyMod\Sources\EntitiesMP\ExotechLarva.cpp"
-"C:\MyMod\Sources\EntitiesMP\ExotechLarvaBattery.cpp"
-"C:\MyMod\Sources\EntitiesMP\ExotechLarvaCharger.cpp"
-"C:\MyMod\Sources\EntitiesMP\Eyeman.cpp"
-"C:\MyMod\Sources\EntitiesMP\Fireworks.cpp"
-"C:\MyMod\Sources\EntitiesMP\Fish.cpp"
-"C:\MyMod\Sources\EntitiesMP\Flame.cpp"
-"C:\MyMod\Sources\EntitiesMP\FogMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Gizmo.cpp"
-"C:\MyMod\Sources\EntitiesMP\Global.cpp"
-"C:\MyMod\Sources\EntitiesMP\GradientMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\GravityMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\GravityRouter.cpp"
-"C:\MyMod\Sources\EntitiesMP\Grunt.cpp"
-"C:\MyMod\Sources\EntitiesMP\GruntSka.cpp"
-"C:\MyMod\Sources\EntitiesMP\Guffy.cpp"
-"C:\MyMod\Sources\EntitiesMP\HazeMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Headman.cpp"
-"C:\MyMod\Sources\EntitiesMP\HealthItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\HudPicHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\Item.cpp"
-"C:\MyMod\Sources\EntitiesMP\KeyItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\LarvaOffspring.cpp"
-"C:\MyMod\Sources\EntitiesMP\Light.cpp"
-"C:\MyMod\Sources\EntitiesMP\Lightning.cpp"
-"C:\MyMod\Sources\EntitiesMP\Marker.cpp"
-"C:\MyMod\Sources\EntitiesMP\MessageHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\MessageItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\MeteorShower.cpp"
-"C:\MyMod\Sources\EntitiesMP\MirrorMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\ModelDestruction.cpp"
-"C:\MyMod\Sources\EntitiesMP\ModelHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\ModelHolder2.cpp"
-"C:\MyMod\Sources\EntitiesMP\ModelHolder3.cpp"
-"C:\MyMod\Sources\EntitiesMP\MoneyItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\ShieldItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\WorldLinkController.cpp"
-"C:\MyMod\Sources\EntitiesMP\MovingBrush.cpp"
-"C:\MyMod\Sources\EntitiesMP\MovingBrushMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\MusicChanger.cpp"
-"C:\MyMod\Sources\EntitiesMP\MusicHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\NavigationMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\ParticlesHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\Pendulum.cpp"
-"C:\MyMod\Sources\EntitiesMP\PhotoAlbum.cpp"
 "C:\MyMod\Sources\EntitiesMP\Player.cpp"
-"C:\MyMod\Sources\EntitiesMP\PlayerActionMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\PlayerAnimator.cpp"
-"C:\MyMod\Sources\EntitiesMP\PlayerMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\PlayerView.cpp"
-"C:\MyMod\Sources\EntitiesMP\PlayerWeapons.cpp"
-"C:\MyMod\Sources\EntitiesMP\PlayerWeaponsEffects.cpp"
-"C:\MyMod\Sources\EntitiesMP\PowerUpItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\Projectile.cpp"
-"C:\MyMod\Sources\EntitiesMP\PyramidSpaceShip.cpp"
-"C:\MyMod\Sources\EntitiesMP\PyramidSpaceShipMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Reminder.cpp"
-"C:\MyMod\Sources\EntitiesMP\RollingStone.cpp"
-"C:\MyMod\Sources\EntitiesMP\Santa.cpp"
-"C:\MyMod\Sources\EntitiesMP\Scorpman.cpp"
-"C:\MyMod\Sources\EntitiesMP\ScrollHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\SeriousBomb.cpp"
-"C:\MyMod\Sources\EntitiesMP\Ship.cpp"
-"C:\MyMod\Sources\EntitiesMP\ShipMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Shooter.cpp"
-"C:\MyMod\Sources\EntitiesMP\Shop.cpp"
-"C:\MyMod\Sources\EntitiesMP\SoundHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\SpawnerProjectile.cpp"
-"C:\MyMod\Sources\EntitiesMP\Spinner.cpp"
-"C:\MyMod\Sources\EntitiesMP\StormController.cpp"
-"C:\MyMod\Sources\EntitiesMP\Summoner.cpp"
-"C:\MyMod\Sources\EntitiesMP\SummonerMarker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Switch.cpp"
-"C:\MyMod\Sources\EntitiesMP\TacticsChanger.cpp"
-"C:\MyMod\Sources\EntitiesMP\TacticsHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\Teleport.cpp"
-"C:\MyMod\Sources\EntitiesMP\TextFXHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\TimeController.cpp"
-"C:\MyMod\Sources\EntitiesMP\TouchField.cpp"
-"C:\MyMod\Sources\EntitiesMP\Trigger.cpp"
-"C:\MyMod\Sources\EntitiesMP\Twister.cpp"
-"C:\MyMod\Sources\EntitiesMP\VisualCounter.cpp"
-"C:\MyMod\Sources\EntitiesMP\VisualTimer.cpp"
-"C:\MyMod\Sources\EntitiesMP\VoiceHolder.cpp"
-"C:\MyMod\Sources\EntitiesMP\Walker.cpp"
-"C:\MyMod\Sources\EntitiesMP\Watcher.cpp"
-"C:\MyMod\Sources\EntitiesMP\WatchPlayers.cpp"
-"C:\MyMod\Sources\EntitiesMP\Water.cpp"
-"C:\MyMod\Sources\EntitiesMP\WeaponItem.cpp"
-"C:\MyMod\Sources\EntitiesMP\Werebull.cpp"
-"C:\MyMod\Sources\EntitiesMP\Woman.cpp"
-"C:\MyMod\Sources\EntitiesMP\WorldBase.cpp"
-"C:\MyMod\Sources\EntitiesMP\WorldLink.cpp"
-"C:\MyMod\Sources\EntitiesMP\WorldSettingsController.cpp"
 ]
-Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPB795.tmp"" 
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPB796.tmp" with contents
-[
-/nologo /G5 /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Fp"Debug/EntitiesMP.pch" /Yc"StdH.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
-"C:\MyMod\Sources\EntitiesMP\StdH\StdH.cpp"
-]
-Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPB796.tmp"" 
-EntitiesMP/WorldLink.es
+Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP1456.tmp"" 
 EntitiesMP/Player.es
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPBA08.tmp" with contents
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B8.tmp" with contents
 [
 /nologo /subsystem:windows /dll /incremental:yes /pdb:"Debug/EntitiesMPD.pdb" /map:"Debug/EntitiesMPD.map" /debug /machine:I386 /out:"Debug/EntitiesMPD.dll" /implib:"Debug/EntitiesMPD.lib" /pdbtype:sept 
 .\Debug\Common.obj
@@ -338,184 +175,17 @@ Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPBA08.tmp" with 
 .\Debug\WorldLink.obj
 .\Debug\WorldSettingsController.obj
 ]
-Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPBA08.tmp""
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPBA18.bat" with contents
+Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B8.tmp""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B9.bat" with contents
 [
 @echo off
 copy Debug\EntitiesMPD.dll C:\MyMod\Bin\Debug >nul
 ]
-Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSPBA18.bat""
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B9.bat""
 Compiling...
-StdH.cpp
-Compiling...
-Common.cpp
-EmanatingParticles.cpp
-HUD.cpp
-Particles.cpp
-PathFinding.cpp
-AirElemental.cpp
-AirShockwave.cpp
-AmmoItem.cpp
-AmmoPack.cpp
-AnimationChanger.cpp
-AnimationHub.cpp
-AreaMarker.cpp
-ArmorItem.cpp
-BackgroundViewer.cpp
-BasicEffects.cpp
-Beast.cpp
-BigHead.cpp
-BlendController.cpp
-BloodSpray.cpp
-Boneman.cpp
-Generating Code...
-Compiling...
-Bouncer.cpp
-Bullet.cpp
-Camera.cpp
-CameraMarker.cpp
-CannonBall.cpp
-CannonRotating.cpp
-CannonStatic.cpp
-ChainsawFreak.cpp
-Copier.cpp
-Counter.cpp
-CrateBus.cpp
-CrateRider.cpp
-CreditsHolder.cpp
-Damager.cpp
-Debris.cpp
-DebugEntityStatesDisplay.cpp
-Demon.cpp
-DestroyableArchitecture.cpp
-Devil.cpp
-DevilMarker.cpp
-Generating Code...
-Compiling...
-DevilProjectile.cpp
-DoorController.cpp
-EffectMarker.cpp
-Effector.cpp
-Elemental.cpp
-EnemyBase.cpp
-EnemyCounter.cpp
-EnemyDive.cpp
-EnemyFly.cpp
-EnemyMarker.cpp
-EnemyRunInto.cpp
-EnemySpawner.cpp
-EnvironmentBase.cpp
-EnvironmentMarker.cpp
-EnvironmentParticlesHolder.cpp
-Eruptor.cpp
-ExotechLarva.cpp
-ExotechLarvaBattery.cpp
-ExotechLarvaCharger.cpp
-Eyeman.cpp
-Generating Code...
-Compiling...
-Fireworks.cpp
-Fish.cpp
-Flame.cpp
-FogMarker.cpp
-Gizmo.cpp
-Global.cpp
-GradientMarker.cpp
-GravityMarker.cpp
-GravityRouter.cpp
-Grunt.cpp
-GruntSka.cpp
-Guffy.cpp
-HazeMarker.cpp
-Headman.cpp
-HealthItem.cpp
-HudPicHolder.cpp
-Item.cpp
-KeyItem.cpp
-LarvaOffspring.cpp
-Light.cpp
-Generating Code...
-Compiling...
-Lightning.cpp
-Marker.cpp
-MessageHolder.cpp
-MessageItem.cpp
-MeteorShower.cpp
-MirrorMarker.cpp
-ModelDestruction.cpp
-ModelHolder.cpp
-ModelHolder2.cpp
-ModelHolder3.cpp
-MoneyItem.cpp
-ShieldItem.cpp
-WorldLinkController.cpp
-MovingBrush.cpp
-MovingBrushMarker.cpp
-MusicChanger.cpp
-MusicHolder.cpp
-NavigationMarker.cpp
-ParticlesHolder.cpp
-Pendulum.cpp
-Generating Code...
-Compiling...
-PhotoAlbum.cpp
 Player.cpp
 C:/MyMod/Sources/EntitiesMP/Player.es(4751) : warning C4101: 'strError' : unreferenced local variable
-PlayerActionMarker.cpp
-PlayerAnimator.cpp
-PlayerMarker.cpp
-PlayerView.cpp
-PlayerWeapons.cpp
-PlayerWeaponsEffects.cpp
-PowerUpItem.cpp
-Projectile.cpp
-PyramidSpaceShip.cpp
-PyramidSpaceShipMarker.cpp
-Reminder.cpp
-RollingStone.cpp
-Santa.cpp
-Scorpman.cpp
-ScrollHolder.cpp
-SeriousBomb.cpp
-Ship.cpp
-ShipMarker.cpp
-Generating Code...
-Compiling...
-Shooter.cpp
-Shop.cpp
-SoundHolder.cpp
-SpawnerProjectile.cpp
-Spinner.cpp
-StormController.cpp
-Summoner.cpp
-SummonerMarker.cpp
-Switch.cpp
-TacticsChanger.cpp
-TacticsHolder.cpp
-Teleport.cpp
-TextFXHolder.cpp
-TimeController.cpp
-TouchField.cpp
-Trigger.cpp
-Twister.cpp
-VisualCounter.cpp
-VisualTimer.cpp
-VoiceHolder.cpp
-Generating Code...
-Compiling...
-Walker.cpp
-Watcher.cpp
-WatchPlayers.cpp
-Water.cpp
-WeaponItem.cpp
-Werebull.cpp
-Woman.cpp
-WorldBase.cpp
-WorldLink.cpp
-WorldSettingsController.cpp
-Generating Code...
 Linking...
-   Creating library Debug/EntitiesMPD.lib and object Debug/EntitiesMPD.exp
 <h3>Output Window</h3>
 Copying EntitiesMPD binaries to C:\MyMod\Bin\Debug
 

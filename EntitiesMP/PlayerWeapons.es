@@ -3848,72 +3848,92 @@ procedures:
         break;
       // knife have different stands
       case WEAPON_KNIFE:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_KNIFE_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+        if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_KNIFE_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+        }
         if (m_iKnifeStand==1) {
           m_iAnim = KNIFE_ANIM_PULLOUT;
         } else if (m_iKnifeStand==3) {
           m_iAnim = KNIFE_ANIM_PULLOUT;
         }
-        break;
+        break;}
       case WEAPON_DOUBLECOLT: case WEAPON_COLT:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);
-        PlaySound(pl.m_soWeaponAmbient, SOUND_COLT_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);
+          PlaySound(pl.m_soWeaponAmbient, SOUND_COLT_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = COLT_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_SINGLESHOTGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_SINGLESHOTGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_SINGLESHOTGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = SINGLESHOTGUN_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_DOUBLESHOTGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_DOUBLESHOTGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_DOUBLESHOTGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = DOUBLESHOTGUN_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_TOMMYGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_TOMMYGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_TOMMYGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = TOMMYGUN_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_SNIPER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_SNIPER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_SNIPER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = SNIPER_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_MINIGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_MINIGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_MINIGUN_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = MINIGUN_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_ROCKETLAUNCHER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_ROCKETLAUNCHER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_ROCKETLAUNCHER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = ROCKETLAUNCHER_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_GRENADELAUNCHER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_GRENADELAUNCHER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_GRENADELAUNCHER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = GRENADELAUNCHER_ANIM_DEACTIVATE;
-        break;
+        break;}
 /*      case WEAPON_PIPEBOMB:
         m_iAnim = HANDWITHBOMB_ANIM_DEACTIVATE;
         break;*/
       case WEAPON_FLAMER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_FL_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_FL_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = FLAMER_ANIM_DEACTIVATE;
-        break;
+        break;}
       case WEAPON_CHAINSAW: {
         CPlayer &pl = (CPlayer&)*m_penPlayer;
         PlaySound(pl.m_soWeaponAmbient, SOUND_CS_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);                
@@ -3921,23 +3941,27 @@ procedures:
         m_iAnim = CHAINSAW_ANIM_DEACTIVATE;
         break; }
       case WEAPON_LASER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_LASER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_LASER_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); 
+         }
         m_iAnim = LASER_ANIM_DEACTIVATE;
-        break;
+        break;}
 /*
       case WEAPON_GHOSTBUSTER:
         m_iAnim = GHOSTBUSTER_ANIM_DEACTIVATE;
         break;
         */
       case WEAPON_IRONCANNON:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_CANNON_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_CANNON_BRINGDOWN, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
 //      case WEAPON_NUKECANNON:
         m_iAnim = CANNON_ANIM_DEACTIVATE;
-        break;
+        break;}
       default: ASSERTALWAYS("Unknown weapon.");
     }
     // start animator
@@ -3994,78 +4018,98 @@ procedures:
     // start current weapon bring up animation
     switch (m_iCurrentWeapon) {
       case WEAPON_KNIFE:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_KNIFE_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_KNIFE_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = KNIFE_ANIM_PULL;
         m_iKnifeStand = 1;
-        break;
+        break;}
       case WEAPON_COLT: case WEAPON_DOUBLECOLT:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_COLT_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_COLT_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = COLT_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         SetFlare(1, FLARE_REMOVE);
-        break;
+        break;}
       case WEAPON_SINGLESHOTGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_SINGLESHOTGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_SINGLESHOTGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = SINGLESHOTGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
-        break;
+        break;}
       case WEAPON_DOUBLESHOTGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_DOUBLESHOTGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_DOUBLESHOTGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = DOUBLESHOTGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
-        break;
+        break;}
       case WEAPON_TOMMYGUN:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_TOMMYGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_TOMMYGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = TOMMYGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
-        break;
+        break;}
       case WEAPON_SNIPER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_SNIPER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_SNIPER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = SNIPER_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
-        break;
+        break;}
       case WEAPON_MINIGUN: {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_MINIGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_MINIGUN_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         CAttachmentModelObject *amo = m_moWeapon.GetAttachmentModel(MINIGUN_ATTACHMENT_BARRELS);
         m_aMiniGunLast = m_aMiniGun = amo->amo_plRelative.pl_OrientationAngle(3);
         m_iAnim = MINIGUN_ANIM_ACTIVATE;
         SetFlare(0, FLARE_REMOVE);
         break; }
       case WEAPON_ROCKETLAUNCHER: {
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_ROCKETLAUNCHER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_ROCKETLAUNCHER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = ROCKETLAUNCHER_ANIM_ACTIVATE;
-        break;
+        break;}
       case WEAPON_GRENADELAUNCHER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_GRENADELAUNCHER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_GRENADELAUNCHER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = GRENADELAUNCHER_ANIM_ACTIVATE;
-        break;
+        break;}
 /*    case WEAPON_PIPEBOMB:
         m_iAnim = HANDWITHBOMB_ANIM_ACTIVATE;
         break;*/
       case WEAPON_FLAMER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_FL_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_FL_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = FLAMER_ANIM_ACTIVATE;
-        break;
+        break;}
       case WEAPON_CHAINSAW: {
         m_iAnim = CHAINSAW_ANIM_ACTIVATE;
         CPlayer &pl = (CPlayer&)*m_penPlayer;
@@ -4073,22 +4117,26 @@ procedures:
         PlaySound(pl.m_soWeaponAmbient, SOUND_CS_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_LOOP);        
         break; }
       case WEAPON_LASER:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_LASER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);}
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_LASER_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
         m_iAnim = LASER_ANIM_ACTIVATE;
-        break;
+        break;}
 /*    case WEAPON_GHOSTBUSTER:
         m_iAnim = GHOSTBUSTER_ANIM_ACTIVATE;
         break;
         */
       case WEAPON_IRONCANNON:{
-        CPlayer &pl = (CPlayer&)*m_penPlayer;
-        pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
-        PlaySound(pl.m_soWeaponAmbient, SOUND_CANNON_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE); }
+         if (GetSP()->sp_bCooperative) {
+          CPlayer &pl = (CPlayer&)*m_penPlayer;
+          pl.m_soWeaponAmbient.Set3DParameters(30.0f, 3.0f, 1.0f, 1.0f);        
+          PlaySound(pl.m_soWeaponAmbient, SOUND_CANNON_BRINGUP, SOF_3D|SOF_VOLUMETRIC|SOF_SMOOTHCHANGE);
+         }
 //      case WEAPON_NUKECANNON:
         m_iAnim = CANNON_ANIM_ACTIVATE;
-        break;
+        break;}
       case WEAPON_NONE:
         break;
       default: ASSERTALWAYS("Unknown weapon.");

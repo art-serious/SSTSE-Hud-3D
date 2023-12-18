@@ -264,6 +264,7 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp)
     sp.sp_bAllowHealth = TRUE;
     sp.sp_bAllowArmor  = TRUE;
 	  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;
+    sp.sp_bGiveExtraShield = FALSE;
 
   } else {
     sp.sp_ctCredits     = -1;
@@ -274,6 +275,7 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp)
     sp.sp_bWeaponsStay = FALSE;
     sp.sp_bAmmoStays = FALSE;
     sp.sp_bHealthArmorStays = FALSE;
+    sp.sp_bGiveExtraShield = FALSE;
     if (sp.sp_bUseFrags) {
       sp.sp_iScoreLimit = 0;
     } else {
@@ -320,7 +322,7 @@ CTString GetGameTypeName(INDEX iMode)
     return TRANS("Fragmatch");
     break;
   case CSessionProperties::GM_SURVIVALCOOP:
-    return TRANS("Survival cooperative");
+    return TRANS("Survival co-op");
     break;
   }
 }
