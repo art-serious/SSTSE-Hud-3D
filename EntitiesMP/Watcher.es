@@ -102,7 +102,7 @@ functions:
       }
     }
 
-	if (IsDerivedFromClass(m_penOwner, "Enemy Base")) {
+	/*if (IsDerivedFromClass(m_penOwner, "Enemy Base")) {
 		CEnemyBase* penEnemyOwner = ((CEnemyBase*)&*m_penOwner);
 		if (penEnemyOwner->m_penAdditionalTarget01 != NULL) {
 			FLOAT fDistance = (penEnemyOwner->m_penAdditionalTarget01->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
@@ -112,7 +112,7 @@ functions:
 			  penClosestPlayer = penEnemyOwner->m_penAdditionalTarget01;
 			}
 		}
-	}
+	}*/
 
     // if no players found
     if (penClosestPlayer==NULL) {
@@ -278,7 +278,7 @@ functions:
       }
     }
 
-	CEntityPointer penTarget01 = GetOwner()->m_penAdditionalTarget01;
+	/*CEntityPointer penTarget01 = GetOwner()->m_penAdditionalTarget01;
 	if (penTarget01 != NULL && penTarget01 != penCurrentTarget && penTarget01->GetFlags()&ENF_ALIVE && penTarget01 != m_penOwner) {
 		FLOAT fDistance = (penTarget01->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
 		// update if closer
@@ -286,7 +286,7 @@ functions:
 		  fClosestPlayer = fDistance;
 		  penClosestPlayer = penTarget01;
 		}
-	}
+	}*/
 	
 
     return penClosestPlayer;

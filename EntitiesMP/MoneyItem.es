@@ -139,10 +139,11 @@ functions:
         m_strDescription.PrintF("Bag - M:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_BAG, TEXTURE_BAG, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
+        // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.4f,0), FLOAT3D(2,2,0.4f) );
         StretchItem(FLOAT3D(2.0f*0.75f, 2.0f*0.75f, 2.0f*0.75));
         m_iSoundComponent = SOUND_BAG;
-        break;                                                                 // add flare
+        break;
       case MIT_CHEST:
         StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
@@ -151,17 +152,19 @@ functions:
         m_strDescription.PrintF("Chest - M:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_CHEST, TEXTURE_CHEST, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
+        // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.6f,0), FLOAT3D(2.5f,2.5f,0.5f) );
         StretchItem(FLOAT3D(1.5f*0.75f, 1.5f*0.75f, 1.5f*0.75));
         m_iSoundComponent = SOUND_CHEST;
         break;
-	  case MIT_CUSTOM:
+	  case MIT_CUSTOM: // This case used by dropped money from players
         StartModelAnim(ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
         ForceCollisionBoxIndexChange(ITEMHOLDER_COLLISION_BOX_MEDIUM);
         m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 20.0f; 
         m_strDescription.PrintF("Custom - M:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
         AddItem(MODEL_BAG, TEXTURE_BAG, TEXTURE_REFLECTION_LIGHTMETAL01, TEXTURE_SPECULAR_MEDIUM, 0);
+        // add flare
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.6f,0), FLOAT3D(2.5f,2.5f,0.5f) );
         StretchItem(FLOAT3D(1.5f*0.75f, 1.5f*0.75f, 1.5f*0.75));
         m_iSoundComponent = SOUND_BAG;
@@ -184,9 +187,9 @@ procedures:
 
     // send money to entity
     EMoneyItem eMoney;
-	eMoney.bPredictor=IsPredictor();
+	  eMoney.bPredictor=IsPredictor();
     eMoney.iMoney = (INDEX)m_fValue;
-	eMoney.bDroppedByEnemy = m_bDroppedByEnemy;
+	  eMoney.bDroppedByEnemy = m_bDroppedByEnemy;
     // if money is received
     if (epass.penOther->ReceiveItem(eMoney)) {
 
@@ -214,7 +217,6 @@ procedures:
     SetProperties();  // set properties
 	SetCollisionFlags(ECF_ITEM_MONEY);
 
-    //jump CItem::ItemLoop();
 	if (!m_bDropped) {
       jump CItem::ItemLoop();
     } else if (TRUE) {

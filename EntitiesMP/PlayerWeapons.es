@@ -1423,6 +1423,7 @@ INDEX GetAmmoAmount(INDEX iHUDAmmoIndex) {
       }
     }
     COLOR colCrosshair = C_WHITE;
+
     TIME  tmNow = _pTimer->CurrentTick();
 
     // if hit anything
@@ -1440,11 +1441,13 @@ INDEX GetAmmoAmount(INDEX iHUDAmmoIndex) {
       prProjection.Prepare();
       prProjection.ProjectCoordinate( vRayHit, vOnScreen);
       // if required, show enemy health thru crosshair color
-      if( hud_bCrosshairColoring && m_fEnemyHealth>0) {
-             if( m_fEnemyHealth<0.25f) { colCrosshair = C_RED;    }
-        else if( m_fEnemyHealth<0.43f) { colCrosshair = C_ORANGE; }
-        else if( m_fEnemyHealth<0.60f) { colCrosshair = C_YELLOW; }
-        else                         { colCrosshair = C_GREEN;  }
+      if (hud_bCrosshairColoring && m_fEnemyHealth>0) {
+        if( m_fEnemyHealth<0.5f) { colCrosshair = LerpColor(C_RED, C_YELLOW, m_fEnemyHealth*2);
+        } else { colCrosshair = LerpColor(C_YELLOW, C_GREEN, m_fEnemyHealth*2-1); }
+
+      /*       if( m_fEnemyHealth<0.25f) { colCrosshair = C_RED;    }
+        else if( m_fEnemyHealth<0.50f) { colCrosshair = C_YELLOW; }
+        else                           { colCrosshair = C_GREEN;  }*/
       }
     }
     // if didn't hit anything

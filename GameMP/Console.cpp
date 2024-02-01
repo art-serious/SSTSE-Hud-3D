@@ -539,10 +539,77 @@ void CGame::ConsoleChar( MSG msg)
   if( msg.wParam!=VK_TAB && msg.wParam!=VK_SHIFT) strLastExpanded = "";
 
   // if key with letter pressed
-  if( isprint(chrKey) && chrKey!='`') {
+  if((isprint(chrKey) && chrKey!='`' && chrKey != '¸') || 
+    chrKey =='à' ||
+	  chrKey =='á' ||
+	  chrKey =='â' || 
+	  chrKey =='ã' ||
+	  chrKey =='ä' ||
+	  chrKey =='å' ||
+	  chrKey =='æ' ||
+	  chrKey =='ç' ||
+	  chrKey =='è' ||
+	  chrKey =='é' ||
+	  chrKey =='ê' ||
+	  chrKey =='ë' ||
+	  chrKey =='ì' ||
+	  chrKey =='í' ||
+	  chrKey =='î' ||
+	  chrKey =='ï' ||
+	  chrKey =='ð' ||
+	  chrKey =='ñ' ||
+	  chrKey =='ò' ||
+	  chrKey =='ó' ||
+	  chrKey =='ô' ||
+	  chrKey =='õ' ||
+	  chrKey =='ö' ||
+	  chrKey =='÷' ||
+	  chrKey =='ø' ||
+	  chrKey =='ù' ||
+	  chrKey =='ü' ||
+	  chrKey =='û' ||
+	  chrKey =='ú' ||
+	  chrKey =='ý' ||
+	  chrKey =='þ' ||
+	  chrKey =='ÿ' ||
+	  chrKey =='À' || 
+	  chrKey =='Á' ||
+	  chrKey =='Â' ||
+	  chrKey =='Ã' ||
+	  chrKey =='Ä' ||
+	  chrKey =='Å' ||
+	  chrKey =='¨' ||
+	  chrKey =='Æ' ||
+	  chrKey =='Ç' ||
+	  chrKey =='È' ||
+	  chrKey =='É' ||
+	  chrKey =='Ê' ||
+	  chrKey =='Ë' ||
+	  chrKey =='Ì' ||
+	  chrKey =='Í' ||
+	  chrKey =='Î' ||
+	  chrKey =='Ï' ||
+	  chrKey =='Ð' ||
+	  chrKey =='Ñ' ||
+	  chrKey =='Ò' ||
+	  chrKey =='Ó' ||
+	  chrKey =='Ô' ||
+	  chrKey =='Õ' ||
+	  chrKey =='Ö' ||
+	  chrKey =='×' ||
+	  chrKey =='Ø' ||
+	  chrKey =='Ù' ||
+	  chrKey =='Ü' ||
+	  chrKey =='Û' ||
+	  chrKey =='Ú' ||
+	  chrKey =='Ý' ||
+	  chrKey =='Þ' ||
+	  chrKey =='ß'){
     // insert it to editing line
     strEditingLine.InsertChar( iCursorPos, chrKey);
-    iCursorPos++;
+    if (chrKey!='`') {
+      iCursorPos++;
+    }
     // reset history line
     iHistoryLine = 0;
   }

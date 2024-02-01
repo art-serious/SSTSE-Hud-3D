@@ -162,10 +162,7 @@ void DrawSessionDetails(CDrawPort *pdp, CSessionProperties *psp)
 			str.PrintF(TRANS("Invulnerable after spawning (sec): %d"), (INDEX)psp->sp_tmSpawnInvulnerability);
 			pdp->PutText(str, iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 			iDisplayedOption++;
-		/*} else {
-			pdp->PutText(TRANS("No respawn"), iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
-			iDisplayedOption++;
-		*/}
+    }
 		if (psp->sp_bInfiniteAmmo) {
 			pdp->PutText(TRANS("Infinite ammo") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 			iDisplayedOption++;

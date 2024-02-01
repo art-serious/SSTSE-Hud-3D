@@ -103,13 +103,11 @@ properties:
 133 INDEX m_iSubChannel3 = 1,
 134 INDEX m_iSubChannel4 = 1,
 
-// HUD 3D - Survival co-op
-300 FLOAT m_fLevelTime = -1.0f,  //Time point when the level was started
-// HUD 3D - Score of current level, needed for giving extra credits in co-op mode
-301 INDEX m_iLevelScore  = 0,
-302 INDEX m_iCurrentMilestone = 0,
-303 INDEX m_iEnemyCount = 0,
-304 INDEX m_iSecretCount = 0,
+300 FLOAT m_fLevelTime = -1.0f,    // Time point when the level was started
+301 INDEX m_iLevelScore  = 0,      // Score of current level, needed for giving extra credits in co-op mode
+302 INDEX m_iCurrentMilestone = 0, // Case number of Milestone
+303 INDEX m_iEnemyCount = 0,       // Containes a count of killed enemies.  The player is not a reliable container of the "monsters killed" counter.
+304 INDEX m_iSecretCount = 0,      // Containes a count of founded secrets. The player is not a reliable container of the "secrets found" counter.
 
   {
     // array of enemies that make fuss
@@ -122,7 +120,7 @@ components:
   3 sound   SOUND_EXTRA_CREDIT "Sounds\\Misc\\ExtraLife.wav",
 
 functions:
-	  
+	  // !!!!! THE MODIFIED MUSICHOLDER IS NOW A REQUIRED ENTITY FOR THE LEVEL TO WORK !!!!!
   INDEX GetNextMilestonePoints() { //for Survival co-op
 		switch (m_iCurrentMilestone) {
 			case 0:  return 25000;
@@ -134,7 +132,7 @@ functions:
 			case 6:  return 2000000;  //  2m
 			case 7:  return 5000000;  //  5m
 			case 8:  return 10000000; // 10m
-			case 9:  return 25000000; // 20m
+			case 9:  return 25000000; // 25m
 			case 10: return 50000000; // 50m
 		}
       return MAX_SLONG;
@@ -157,7 +155,6 @@ functions:
       m_iLevelScore += eReceiveScore.iPoints;
       
       // increment credits
-
       if (GetSP()->sp_ctCredits!=-1 && GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
         while (TRUE) {
         if (GetNextMilestonePoints() <= m_iLevelScore) {

@@ -44,16 +44,18 @@
 #include "EntitiesMP/EnemySpawner.h"
 #include "EntitiesMP/EnemyBase.h"
 
+// HUD 3D *****************************************************************************************
 #include "EntitiesMP/Shop.h"
 #include "EntitiesMP/MoneyItem.h"
 #include "EntitiesMP/ShieldItem.h"
 
-// 3D HUD *****************************************************************************************
 #include "Models/Interface/H3D_Base.h"
 #include "Models/Interface/SHOP_BASE.h"
-// END 3D HUD *************************************************************************************
+// ************************************************************************************************
 
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
+
+extern void HUD_DrawSniperMask();
 // from game
 #define GRV_SHOWEXTRAS  (1L<<0)   // add extra stuff like console, weapon, pause
 
@@ -273,8 +275,8 @@ static void KillAllEnemies(CEntity *penKiller)
 #define PLACT_SNIPER_ZOOMOUT      (1L<<11)
 #define PLACT_SNIPER_USE          (1L<<12)
 #define PLACT_FIREBOMB            (1L<<13)
-#define PLACT_SHOW_TAB_INFO       (1L<<14)
-#define PLACT_DROP_MONEY          (1L<<15)
+#define PLACT_SHOW_TAB_INFO       (1L<<14)    // HUD 3D
+#define PLACT_DROP_MONEY          (1L<<15)    // HUD 3D
 #define PLACT_SELECT_WEAPON_SHIFT (16)
 #define PLACT_SELECT_WEAPON_MASK  (0x1FL<<PLACT_SELECT_WEAPON_SHIFT)
                                      
@@ -349,7 +351,7 @@ extern INDEX cht_bFly        = FALSE;
 extern INDEX cht_bGhost      = FALSE;
 extern INDEX cht_bInvisible  = FALSE;
 extern FLOAT cht_fTranslationMultiplier = 1.0f;
-extern FLOAT cht_fMaxShield  = 0.0f;
+extern FLOAT cht_fMaxShield  = 0.0f;  // HUD 3D
 extern INDEX cht_bEnable     = 0;   
 
 // interface control
@@ -437,13 +439,13 @@ static FLOAT ctl_fButtonRotationSpeedB = 150.0f;
 // modifier for axis strafing
 static FLOAT ctl_fAxisStrafingModifier = 1.0f;
 
-// *3D HUD*****************************************************************************************
+// HUD 3D *****************************************************************************************
 static FLOAT h3d_fH                    = (FLOAT)0;
 static FLOAT h3d_fP                    = (FLOAT)0;
 static FLOAT h3d_fB                    = (FLOAT)0;
-static FLOAT h3d_fX                    = (FLOAT)0.05;
-static FLOAT h3d_fY                    = (FLOAT)0.05;
-static FLOAT h3d_fZ                    = (FLOAT)0.05;
+static FLOAT h3d_fX                    = (FLOAT)0.05f;
+static FLOAT h3d_fY                    = (FLOAT)0.05f;
+static FLOAT h3d_fZ                    = (FLOAT)0.0f;
 static FLOAT h3d_fFOV                  = (FLOAT)75;
 static FLOAT h3d_fClip                 = (FLOAT)1;
 static INDEX h3d_iColor                = (INDEX)0x6CA0DB00;
@@ -459,7 +461,7 @@ static INDEX h3d_iCustomColorShield    = (INDEX)0x6CA0DB00;
 static INDEX h3d_iCustomColorHUD       = (INDEX)0x6CA0DB00;
 
 static FLOAT h3d_fWpnInertFactor       = 0.05f;
-static FLOAT h3d_fHUDInertFactor       = 0.035f;
+static FLOAT h3d_fHUDInertFactor       = 0.025f;
 static BOOL  h3d_bHudInertia           = TRUE;
 static BOOL  h3d_bHudBobbing           = TRUE;
 static BOOL  h3d_bShakingFromDamage    = TRUE;
@@ -470,7 +472,7 @@ static BOOL  h3d_bRenderSurfaceAdd     = FALSE;
 
 static INDEX dbg_strEnemySpawnerInfo   = 0;
 static INDEX dbg_strEnemyBaseInfo      = 0;
-// *END 3D HUD*************************************************************************************
+// ************************************************************************************************
 
 // !=NULL if some player wants to call computer
 DECL_DLL extern class CPlayer *cmp_ppenPlayer = NULL;
@@ -589,12 +591,12 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
     }
   }
   // set button pressed flags
-  if(pctlCurrent.bWeaponNext) paAction.pa_ulButtons |= PLACT_WEAPON_NEXT;
-  if(pctlCurrent.bWeaponPrev) paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
-  if(pctlCurrent.bWeaponFlip) paAction.pa_ulButtons |= PLACT_WEAPON_FLIP;
-  if(pctlCurrent.bFire)       paAction.pa_ulButtons |= PLACT_FIRE;
-  if(pctlCurrent.bReload)     paAction.pa_ulButtons |= PLACT_RELOAD;
-  if(pctlCurrent.bUse)        paAction.pa_ulButtons |= PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE;
+  if(pctlCurrent.bWeaponNext)    paAction.pa_ulButtons |= PLACT_WEAPON_NEXT;
+  if(pctlCurrent.bWeaponPrev)    paAction.pa_ulButtons |= PLACT_WEAPON_PREV;
+  if(pctlCurrent.bWeaponFlip)    paAction.pa_ulButtons |= PLACT_WEAPON_FLIP;
+  if(pctlCurrent.bFire)          paAction.pa_ulButtons |= PLACT_FIRE;
+  if(pctlCurrent.bReload)        paAction.pa_ulButtons |= PLACT_RELOAD;
+  if(pctlCurrent.bUse)           paAction.pa_ulButtons |= PLACT_USE|PLACT_USE_HELD|PLACT_SNIPER_USE;
   if(pctlCurrent.bComputer)      paAction.pa_ulButtons |= PLACT_COMPUTER;
   if(pctlCurrent.b3rdPersonView) paAction.pa_ulButtons |= PLACT_3RD_PERSON_VIEW;
   if(pctlCurrent.bCenterView)    paAction.pa_ulButtons |= PLACT_CENTER_VIEW;
@@ -603,8 +605,9 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   if(pctlCurrent.bSniperZoomIn)  paAction.pa_ulButtons |= PLACT_SNIPER_ZOOMIN;
   if(pctlCurrent.bSniperZoomOut) paAction.pa_ulButtons |= PLACT_SNIPER_ZOOMOUT;
   if(pctlCurrent.bFireBomb)      paAction.pa_ulButtons |= PLACT_FIREBOMB;
-  if(pctlCurrent.bShowTabInfo)   paAction.pa_ulButtons |= PLACT_SHOW_TAB_INFO;
-  if(pctlCurrent.bDropMoney)     paAction.pa_ulButtons |= PLACT_DROP_MONEY;
+
+  if(pctlCurrent.bShowTabInfo)   paAction.pa_ulButtons |= PLACT_SHOW_TAB_INFO; // HUD 3D
+  if(pctlCurrent.bDropMoney)     paAction.pa_ulButtons |= PLACT_DROP_MONEY;    // HUD 3D
 
   // if userorcomp just pressed
   if(pctlCurrent.bUseOrComputer && !pctlCurrent.bUseOrComputerLast) {
@@ -718,13 +721,13 @@ void CPlayer_Precache(void)
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_TELEPORT);
   pdec->PrecacheClass(CLASS_SERIOUSBOMB);
 
-  pdec->PrecacheModel(MODEL_H3D_BASE);
+  pdec->PrecacheModel(MODEL_H3D_BASE);                // HUD 3D
   pdec->PrecacheModel(MODEL_FLESH);
   pdec->PrecacheModel(MODEL_FLESH_APPLE);
   pdec->PrecacheModel(MODEL_FLESH_BANANA);
   pdec->PrecacheModel(MODEL_FLESH_BURGER);
 
-  pdec->PrecacheTexture(TEXTURE_H3D_ANI);
+  pdec->PrecacheTexture(TEXTURE_H3D_ANI);             // HUD 3D
   pdec->PrecacheTexture(TEXTURE_FLESH_RED);
   pdec->PrecacheTexture(TEXTURE_FLESH_GREEN);
   pdec->PrecacheTexture(TEXTURE_FLESH_APPLE); 
@@ -738,7 +741,7 @@ void CPlayer_Precache(void)
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODSTAINGROW);
   pdec->PrecacheClass(CLASS_BASIC_EFFECT, BET_BLOODEXPLODE);
 
-  // 3D HUD ***************************************************************************************
+  // HUD 3D ***************************************************************************************
   pdec->PrecacheModel(MODEL_H3D_BASE     );
   pdec->PrecacheModel(MODEL_H3D_4X4      );
   pdec->PrecacheModel(MODEL_H3D_1X1      );
@@ -769,13 +772,13 @@ void CPlayer_Precache(void)
   pdec->PrecacheSound(SOUND_SHIELD_CHARGE  );
   pdec->PrecacheSound(SOUND_SHIELD_BREAK   );
   pdec->PrecacheSound(SOUND_SHIELD_CHARGED );
-  // END 3D HUD ***********************************************************************************
+  // **********************************************************************************************
 }
 
 
 void CPlayer_OnInitClass(void)
 {
-// *3D HUD*****************************************************************************************
+// HUD 3D *****************************************************************************************
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fH;",                    &h3d_fH);
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fP;",                    &h3d_fP);
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fB;",                    &h3d_fB);
@@ -802,7 +805,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fEnemyShowMaxHealth;",   &h3d_fEnemyShowMaxHealth);
   _pShell->DeclareSymbol("persistent user FLOAT h3d_fVerticalPlacementHUD;", &h3d_fVerticalPlacementHUD);
   _pShell->DeclareSymbol("persistent user INDEX h3d_bRenderSurfaceAdd;",     &h3d_bRenderSurfaceAdd);
-// *END 3D HUD*************************************************************************************
+// ************************************************************************************************
 
   // clear current player controls
   memset(&pctlCurrent, 0, sizeof(pctlCurrent));
@@ -847,8 +850,8 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomIn;",         &pctlCurrent.bSniperZoomIn);
   _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomOut;",        &pctlCurrent.bSniperZoomOut);
   _pShell->DeclareSymbol("user INDEX ctl_bFireBomb;",             &pctlCurrent.bFireBomb);
-  _pShell->DeclareSymbol("user INDEX ctl_bShowTabInfo;",          &pctlCurrent.bShowTabInfo);
-  _pShell->DeclareSymbol("user INDEX ctl_bDropMoney;",            &pctlCurrent.bDropMoney);
+  _pShell->DeclareSymbol("user INDEX ctl_bShowTabInfo;",          &pctlCurrent.bShowTabInfo);       // HUD 3D
+  _pShell->DeclareSymbol("user INDEX ctl_bDropMoney;",            &pctlCurrent.bDropMoney);         // HUD 3D
 
   _pShell->DeclareSymbol("user FLOAT plr_fSwimSoundDelay;", &plr_fSwimSoundDelay);
   _pShell->DeclareSymbol("user FLOAT plr_fDiveSoundDelay;", &plr_fDiveSoundDelay);
@@ -881,7 +884,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("INDEX cht_bDumpPlayerShading;", &cht_bDumpPlayerShading);
   _pShell->DeclareSymbol("persistent user INDEX hud_bShowMatchInfo;", &hud_bShowMatchInfo);
 
-  _pShell->DeclareSymbol("persistent user FLOAT hud_bShowPlayerList;",    &hud_bShowPlayerList);
+  _pShell->DeclareSymbol("persistent user FLOAT hud_bShowPlayerList;",    &hud_bShowPlayerList);    // HUD 3D
 
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilSpeed[17];",   &wpn_fRecoilSpeed);
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilLimit[17];",   &wpn_fRecoilLimit);
@@ -901,7 +904,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("user INDEX cht_bOpen;",      &cht_bOpen);
   _pShell->DeclareSymbol("user INDEX cht_bAllMessages;", &cht_bAllMessages);
   _pShell->DeclareSymbol("user FLOAT cht_fTranslationMultiplier ;", &cht_fTranslationMultiplier);
-  _pShell->DeclareSymbol("user FLOAT cht_fMaxShield;", &cht_fMaxShield);
+  _pShell->DeclareSymbol("user FLOAT cht_fMaxShield;", &cht_fMaxShield);                            // HUD 3D
   _pShell->DeclareSymbol("user INDEX cht_bRefresh;", &cht_bRefresh);
   // this one is masqueraded cheat enable variable
   _pShell->DeclareSymbol("INDEX cht_bEnable;", &cht_bEnable);
@@ -1119,8 +1122,8 @@ void PrintPlayerDeathMessage(CPlayer *ppl, const EDeath &eDeath)
   }
 }
 
-// H3D **************************************
-static void UpdateAniDigits(H3D_AniNum& an)
+// HUD 3D ***********************************
+static void UpdateAniDigits(H3D_AniNum& an) // Update every digit
 {
 	if(_pTimer->GetHighPrecisionTimer().GetMilliseconds() - an.tmLastTick < an.tmTick) { return; }
 	if(an.iCurrent < an.iTo) {
@@ -1152,7 +1155,7 @@ static void UpdateAniDigits(H3D_AniNum& an)
 	an.tmLastTick = _pTimer->GetHighPrecisionTimer().GetMilliseconds();
 }
 
-static void UpdateAniNum(H3D_AniNum& an)
+static void UpdateAniNum(H3D_AniNum& an) // Counter-style update
 {
 	if(_pTimer->GetHighPrecisionTimer().GetMilliseconds() - an.tmLastTick < an.tmTick) { return; }
 	if(an.iCurrent < an.iTo) {
@@ -1164,7 +1167,7 @@ static void UpdateAniNum(H3D_AniNum& an)
 	an.tmLastTick = _pTimer->GetHighPrecisionTimer().GetMilliseconds();
 }
 
-// /H3D *************************************
+// ******************************************
 
 %}
 
@@ -1181,9 +1184,10 @@ properties:
   5 INDEX m_ulKeys = 0,                       // mask for all picked-up keys
   6 FLOAT m_fMaxHealth = 1,                   // default health supply player can have
   7 INDEX m_ulFlags = 0,                      // various flags
-  8 INDEX m_iMoney = 0,                       // money money money DOSH                        H3D
-  9 FLOAT m_fShield = 0.0f,                   // shield                                        H3D
- 10 FLOAT m_fMaxShield = 0.0f,                // max shield                                    H3D
+
+  8 INDEX m_iMoney = 0,                       // money money money DOSH
+  9 FLOAT m_fShield = 0.0f,                   // shield
+ 10 FLOAT m_fMaxShield = 0.0f,                // max shield
  11 FLOAT m_fShieldDelay = 10.0f,             // charge delay
  12 BOOL  m_bShieldCharging = FALSE,          // checking for Charging sound
   
@@ -1246,7 +1250,7 @@ properties:
  78 CSoundObject m_soSpeech,    // for quotes
  79 CSoundObject m_soSniperZoom, // for sniper zoom sound
 
- 80 CSoundObject m_soShield,     // H3D - Shield
+ 80 CSoundObject m_soShield,     // HUD 3D - Shield
 
  81 INDEX m_iMana    = 0,        // current score worth for killed player
  94 FLOAT m_fManaFraction = 0.0f,// fractional part of mana, for slow increase with time
@@ -1327,8 +1331,8 @@ properties:
  191 INDEX m_iLastSeriousBombCount = 0,  // ammount of serious bombs player had before firing
  192 FLOAT m_tmSeriousBombFired = -10.0f,  // when the bomb was last fired
 
- 200 CModelObject m_moH3D,               //  *3D HUD***********************************************
- 201 FLOAT m_h3dAppearTime = 5.0f,
+ 200 CModelObject m_moH3D,               //  HUD 3D ***********************************************
+ 201 FLOAT m_h3dAppearTime = 5.0f,              // for Health border
  202 FLOAT m_fBorderHealth = 0.0f,
  203 ANGLE3D m_aWeaponSway = ANGLE3D(0,0,0),
  204 ANGLE3D m_aWeaponSwayOld = ANGLE3D(0,0,0),
@@ -1342,7 +1346,7 @@ properties:
  209 FLOAT m_fDamageShakeY = 0.0f,
  210 FLOAT m_tmDamageShakeEnd = 0.0f,
  211 FLOAT m_fDamageShakePower = 1.0f,
- 212 FLOAT3D m_vDamageShakeOffset = FLOAT3D(0,0,0),
+ 212 FLOAT3D m_vDamageShakeOffset = FLOAT3D(0,0,0), // HUD shake
  212 FLOAT3D m_vDamageShakeOffsetLast = FLOAT3D(0,0,0),
 
  213 FLOAT m_fDamageTaken = 0.0f,
@@ -1355,17 +1359,18 @@ properties:
  219 FLOAT m_tmShieldBroken       = -10.0f,     // when shield was broken
  233 FLOAT m_fShieldBrokenAmmount = 0.0f,
 
- 220 CModelObject m_moShop,               //  * SHOP ********************************************
+ 220 CModelObject m_moShop,               //  * SHOP **********************************************
  221 CEntityPointer m_penShop,
  222 INDEX m_iSelectedShopIndex = 0,
  223 BOOL m_bShowingTabInfo = FALSE,
- 224 BOOL m_bShopInTheWorld = FALSE,
- 225 FLOAT m_tmMoneyDropped = -10.0f,     //  ***************************************************
+ 224 BOOL m_bShopInTheWorld = FALSE,      // For "Tab" table purposes
+ 225 FLOAT m_tmMoneyDropped = -10.0f,
 
- 230 BOOL m_bSpectatorDeath = FALSE, // means we're dying for spectator purposes
- 231 CEntityPointer m_penWorldLinkController,
+ 230 BOOL m_bSpectatorDeath = FALSE,      // means we're dying for spectator purposes
+ 231 CEntityPointer m_penWorldLinkController, // for auto-restart level in the game with respawn credits
 
  232 FLOAT3D m_vShieldBroken=FLOAT3D(0,0,0),// position for particles of destroyed shield
+                                          //  *****************************************************
 
 {
   ShellLaunchData ShellLaunchData_array;  // array of data describing flying empty shells
@@ -1413,7 +1418,7 @@ properties:
   H3D_AniNum anCurrentMana;
   H3D_AniNum anCurrentMoney;
 
-  CEntityPointer m_penSpectatorPlayer; //  * SPECTATOR *****************************************
+  CEntityPointer m_penSpectatorPlayer; //  * HUD 3D - SPECTATOR *****************************************
   INDEX m_iSpectatorPlayerIndex;
 }
 
@@ -1424,10 +1429,11 @@ components:
   4 class   CLASS_BASIC_EFFECT    "Classes\\BasicEffect.ecl",
   5 class   CLASS_BLOOD_SPRAY     "Classes\\BloodSpray.ecl", 
   6 class   CLASS_SERIOUSBOMB     "Classes\\SeriousBomb.ecl",
-  7 class	  CLASS_MONEYITEM       "Classes\\MoneyItem.ecl",
-  8 class   CLASS_WORLDLINKCONTROLLER "Classes\\WorldLinkController.ecl",
- 10 model   MODEL_BAG             "Models\\Items\\Money\\Bag\\Bag.mdl",
- 11 texture TEXTURE_BAG           "Models\\Items\\Money\\Bag\\Bag.tex",
+
+  7 class	  CLASS_MONEYITEM       "Classes\\MoneyItem.ecl",               // HUD 3D
+  8 class   CLASS_WORLDLINKCONTROLLER "Classes\\WorldLinkController.ecl", //
+ 10 model   MODEL_BAG             "Models\\Items\\Money\\Bag\\Bag.mdl",   //
+ 11 texture TEXTURE_BAG           "Models\\Items\\Money\\Bag\\Bag.tex",   //
 
 // gender specific sounds - make sure that offset is exactly 100 
  50 sound SOUND_WATER_ENTER     "Sounds\\Player\\WaterEnter.wav",
@@ -1552,12 +1558,13 @@ components:
 421 sound SOUND_SHIELD_CHARGE   "Sounds\\Player\\ShieldCharge.wav",
 422 sound SOUND_SHIELD_BREAK    "Sounds\\Player\\ShieldBreak.wav",
 423 sound SOUND_SHIELD_CHARGED  "Sounds\\Player\\ShieldCharged.wav",
+// ******************************************
 
 functions:
 
+ // HUD 3D - Check for Shop entity for "Tab" table purposes
  void CheckShopInTheWorld(void){
 	 m_bShopInTheWorld = FALSE;
-	 // Hud 3D - Check for Shop (need for Tab table)
 		{FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
 		CEntity *pen = iten;
 	    if(IsOfClass(pen, "Shop")) {
@@ -1568,26 +1575,27 @@ functions:
     }
  }
 
-  // drop money
+  // HUD 3D - drop money
   void DropMoney(void) 
   {
 	  if (m_iMoney<=0 /*|| m_tmMoneyDropped+0.2f>_pTimer->CurrentTick()*/ || IsPredictor()) {return;}
-	CEntityPointer penMoneyItem = CreateEntity(GetPlacement(), CLASS_MONEYITEM);
+	  CEntityPointer penMoneyItem = CreateEntity(GetPlacement(), CLASS_MONEYITEM);
     CMoneyItem *pmi = (CMoneyItem*)&*penMoneyItem;
 
-	pmi->m_EhitType = m_iMoney>=10? MIT_BAG:MIT_CUSTOM;
-	pmi->m_fValue=m_iMoney;
-	pmi->m_fCustomRespawnTime=20.0f;
-	pmi->m_bDropped=TRUE;
+	  pmi->m_EhitType = m_iMoney>=10? MIT_BAG:MIT_CUSTOM;
+	  pmi->m_fValue=m_iMoney;
+	  pmi->m_fCustomRespawnTime=20.0f;  // time for the money the player threw away to disappear
+	  pmi->m_bDropped=TRUE;
     pmi->CEntity::Initialize();
-    
+  
     const FLOATmatrix3D &m = GetRotationMatrix();
     FLOAT3D vSpeed = FLOAT3D( 5.0f, 10.0f, -7.5f);
     pmi->GiveImpulseTranslationAbsolute(vSpeed*m);
-	m_iMoney-=m_iMoney>=10?10:m_iMoney;
-	m_tmMoneyDropped = _pTimer->CurrentTick();
+	  m_iMoney-=m_iMoney>=10?10:m_iMoney;
+	  m_tmMoneyDropped = _pTimer->CurrentTick();
   }
 
+  // HUD 3D - Spectator
   void SwitchSpectatorPlayer()  {
 	  if (!_pNetwork->IsPlayerLocal(this)) {
 		return;
@@ -1627,7 +1635,7 @@ functions:
 		return;
 	} 
 
-	// if playing on credits
+	// if we're playing with respawn credits
 	if (GetSP()->sp_ctCreditsLeft>0) {
 		((CSessionProperties*)GetSP())->sp_ctCreditsLeft--;
         // initiate respawn
@@ -1647,12 +1655,12 @@ functions:
 	}
   }
 
-  void ForceSpectate() {
+  void ForceSpectate() { // If a team has no respawn credits for a new player, kill them
 	  m_bSpectatorDeath = TRUE;
 	SendEvent(EDeath());
   }
 
-
+// Checking ammo for its maximum value
  BOOL IsAmmoFull(INDEX shopItemType) {
    switch (shopItemType) {
     case ITEM_AMMO_SHELLS:
@@ -1676,7 +1684,7 @@ functions:
    return FALSE;
  }
 
-
+// Checking weapons for their presence
 BOOL HasWeapon(INDEX iWeapon) {
     return GetPlayerWeapons()->m_iAvailableWeapons&(1<<(iWeapon-1));
 }
@@ -1712,7 +1720,6 @@ BOOL HasShopWeapon(INDEX shopItemType) {
   return FALSE;
 }
 
-//to do TRANS
  void BuyItem() {
     CShop* penShop = ((CShop*)&*m_penShop);
     INDEX type = penShop->GetItemType(m_iSelectedShopIndex);
@@ -1992,7 +1999,7 @@ PIX2D H3D_Shake( PIX pixAmmount, INDEX iCurrentValue, INDEX iLastValue,
   return PIX2D(fMoverX, fMoverY);
 }
 
-// * H3D angle offset *****************************************************************************
+// * HUD 3D angle offset **************************************************************************
 void H3DAngleOffset(ANGLE3D &plAngle)
 {
 	const FLOAT fMaxAngle = 5.0f;
@@ -2003,10 +2010,10 @@ void H3DAngleOffset(ANGLE3D &plAngle)
 	aH3DSway(2) = Clamp(aH3DSway(2), -fMaxAngle, fMaxAngle);
 	plAngle -= aH3DSway;
 }
-// * END H3D angle offset *************************************************************************
+// ************************************************************************************************
 
 void InitAniNum() {
-  // H3D * REFRESH HUD TIME ***********************************************************************
+  // HUD 3D - REFRESH DIGITS **********************************************************************
   anCurrentAmmo   = H3D_AniNum(20, 1); //50
   anCurrentHealth = H3D_AniNum(20, 1); //20
   anCurrentArmor  = H3D_AniNum(20, 1); //20
@@ -2017,7 +2024,7 @@ void InitAniNum() {
   anCurrentFrags  = H3D_AniNum(20, 1); //50
   anCurrentDeaths = H3D_AniNum(20, 1); //50
   anCurrentMoney  = H3D_AniNum(20, 1); //50
-  // H3D ******************************************************************************************
+  // **********************************************************************************************
 }
 
   void RenderH3D( CPerspectiveProjection3D &prProjection, CDrawPort *pdp,
@@ -2027,7 +2034,7 @@ void InitAniNum() {
     CPlacement3D plView;
     plView = en_plViewpoint;
     plView.RelativeToAbsolute(GetPlacement());
-      // make sure that h3d will be bright enough *************************************************
+      // make sure that hud 3d will be bright enough **********************************************
     UBYTE ubLR,ubLG,ubLB, ubAR,ubAG,ubAB;
     ColorToRGB( colViewerLight,   ubLR,ubLG,ubLB);
     ColorToRGB( colViewerAmbient, ubAR,ubAG,ubAB);
@@ -2057,10 +2064,12 @@ void InitAniNum() {
 	  FLOAT fP = AngleDeg(h3d_fP);
 	  FLOAT fB = AngleDeg(h3d_fB);
 
+// HUD 3D position
     CPlacement3D plHUD_H3D( FLOAT3D(h3d_fX,
                                     h3d_fY,
                                     h3d_fZ),
 							                      ANGLE3D(fH, fP, fB));
+// HUD 3D inertia
     if(h3d_bHudInertia) { H3DAngleOffset(plHUD_H3D.pl_OrientationAngle); }
 
     FLOATmatrix3D mRotation;
@@ -2073,7 +2082,7 @@ void InitAniNum() {
 
     BeginModelRenderingView(apr3, pdp);
 
-
+// HUD 3D bobbing
     if (GetFlags()&ENF_ALIVE) {
     if(h3d_bHudBobbing) { GetPlayerWeapons()->H3DMovingOffset(plHUD_H3D.pl_PositionVector); }
     }
@@ -2091,17 +2100,17 @@ void InitAniNum() {
     rmHUD_H3D.rm_vLightDirection = vViewerLightDirection;
     rmHUD_H3D.rm_ulFlags        |= RMF_WEAPON;
 
-	m_moH3D.SetupModelRendering(rmHUD_H3D);
+	  m_moH3D.SetupModelRendering(rmHUD_H3D);
     m_moH3D.RenderModel(rmHUD_H3D);
 
     if (m_penShop != NULL) {
       m_moShop.SetupModelRendering(rmHUD_H3D);
       m_moShop.RenderModel(rmHUD_H3D);
     }
-
     EndModelRenderingView();
   }
 
+// HUD 3D - Building shop interface
   void SetGUIShop() {
          SetComponents(this, m_moShop,                                        MODEL_SHOP_MENU_BASE,   TEXTURE_SHOP_BRD,    0, 0, 0);
 	AddAttachmentToModel(this, m_moShop, SHOP_BASE_ATTACHMENT_000_MENU1_BRD,    MODEL_SHOP_MENU_LONG,   TEXTURE_SHOP_BRD,    0, 0, 0);
@@ -2135,7 +2144,6 @@ void InitAniNum() {
 	AddAttachmentToModel(this, m_moShop, SHOP_BASE_ATTACHMENT_028_DGTVLU010,    MODEL_H3D_06X06,        TEXTURE_H3D_ANI,     0, 0, 0);
 	AddAttachmentToModel(this, m_moShop, SHOP_BASE_ATTACHMENT_029_DGTVLU001,    MODEL_H3D_06X06,        TEXTURE_H3D_ANI,     0, 0, 0);
 	AddAttachmentToModel(this, m_moShop, SHOP_BASE_ATTACHMENT_030_TIP,          MODEL_SHOP_MENU_MEDIUM, TEXTURE_SHOP_TIP,    0, 0, 0);
-
 
     for (INDEX bgrIndex = 0, i = 2; bgrIndex < 6; i+=3, bgrIndex++) {
      CModelObject &background = m_moShop.GetAttachmentModel(i)->amo_moModelObject;
@@ -2198,26 +2206,8 @@ void InitAniNum() {
         }
       }
     }
-    //const INDEX ANIM_INVISIBLE_ZERO = 123;
-    /*
-    // read item cost
-    {
-      BOOL isZero = TRUE;
-      for (INDEX i = 24, itemIndex=0; i >= 20; i--, itemIndex++) {
-        int multiplier = pow(10, itemIndex);
-        INDEX iNumCst      = (penShop->GetItemCost(m_iSelectedShopIndex) % (1000*multiplier)) / (100*multiplier);
-        CModelObject &digit = m_moShop.GetAttachmentModel(i)->amo_moModelObject; digit.mo_toTexture.PlayAnim(iNumCst+112, 0);
 
-        if (iNumCst==0 && !isZero) {
-          digit.mo_toTexture.PlayAnim(ANIM_INVISIBLE_ZERO, 0);
-        } else if (iNumCst != 0) {
-          isZero = FALSE;
-        }
-      }
-    }*/
-
-
-    // read item value
+    // read item value, cost
     {
       BOOL isZero = TRUE;
       for (INDEX i = 29, itemIndex=0; i >= 27; i--, itemIndex++) {
@@ -2245,7 +2235,7 @@ void InitAniNum() {
     }
 
   }
-
+// HUD 3D - building HUD
   void SetHUD() {
 
 	SetComponents		    (this, m_moH3D,                                                         MODEL_H3D_BASE,  TEXTURE_H3D_BASE, 0, 0, 0);
@@ -2363,7 +2353,7 @@ void InitAniNum() {
 
   SetGUIShop();
 
-  for (int i = 0; i < 110; i++) {
+  for (int i = 0; i < 110; i++) { // The exact number of attachments must be specified
     h3d_OriginalAttachmentPositions[i] = m_moH3D.GetAttachmentModel(i)->amo_plRelative.pl_PositionVector(2);
   }
 
@@ -2417,11 +2407,11 @@ void InitAniNum() {
 	  return -1;
   }
     
-    // * 3D HUD * SWITCH DIGITS *******************************************************************
+    // HUD 3D * SWITCH DIGITS *******************************************************************
 
   void UpdateHUD() {
 
-    // NOTE THAT h3d_OriginalAttachmentPositions LENGTH MUST BE UPDATED WHEN NEW ATTACHMENT
+    // NOTE THAT h3d_OriginalAttachmentPositions LENGTH MUST BE UPDATED WHEN NEW ATTACHMENTS
 
     int i = 0;
     // position for wide screen
@@ -2431,14 +2421,11 @@ void InitAniNum() {
     for (i = 30;  i <= 40; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
       amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //powerups, current ammo
 
-    for (i = 52;  i <= 77; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //ammo info
+    for (i = 52;  i <= 109; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //ammo info/weapons info/borders of health, armor, shields, ammo
 
-    for (i = 106; i <= 109; i++) {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //borders of health, armor, shields
-
-    for (i = 12;  i <= 26; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //score/frags and money/mana/deaths
+    for (i = 12;  i <= 29; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //score/frags and money/mana/deaths/extra life
 
     for (i = 41;  i <= 51; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
       amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //messages, boss health, oxygen
@@ -2448,7 +2435,7 @@ void InitAniNum() {
 
 		  INDEX H3DC_GREEN = 0x00FF0000;
 
-      COLOR colMax      = h3d_iColor;
+      COLOR colMax      = h3d_iColor; //for "monochrome" hud color
       COLOR colTop      = h3d_iColor;
       COLOR colMid      = h3d_iColor;
       COLOR colLow      = h3d_iColor;
@@ -2488,7 +2475,7 @@ void InitAniNum() {
         colShield   = h3d_iCustomColorShield;
         colHUD      = h3d_iCustomColorHUD;
         fFE         = 0;
-      } else { // h3d_iColorScheme=0 for Custom color
+      } else { // h3d_iColorScheme=0 for "monochrome"
         colMax      = h3d_iColor;
         colTop      = h3d_iColor;
         colMid      = h3d_iColor;
@@ -2502,12 +2489,8 @@ void InitAniNum() {
       INDEX iColHealth, iColArmor, iColAmmo, iColBossHealth, iColOxygen,
         iColBarShells, iColBarBullets, iColBarRockets, iColBarGrenades, iColBarFuel, iColBarSniperBullets, iColBarElectricity, iColBarIronball, iColBarSeriousBomb;
 
-
-	    //FLOAT iGetCount  = 0;
-		  //FLOAT iMaxCount  = 0;
 		  INDEX iCount     = 0;
 		  INDEX iCountType = 0;
-		  //FLOAT fNormValue = 0;
 		  FLOAT _tmNow     = _pTimer->CurrentTick();
 
       GetHPType(iCountType, iCount);
@@ -2592,15 +2575,13 @@ void InitAniNum() {
       anCurrentDeaths.iCurrent = anCurrentDeaths.iTo;
       
       if (GetSP()->sp_bSinglePlayer) {    //change digits show style
-        UpdateAniNum(anCurrentHealth);    //counter style in Single player
+        UpdateAniNum(anCurrentHealth);    //counter-style in "Single player" game mode
         UpdateAniNum(anCurrentArmor);
-
 		    UpdateAniNum(anCurrentShield);
 
       } else {
         UpdateAniDigits(anCurrentHealth); //change all digits in one time in Multiplayer
         UpdateAniDigits(anCurrentArmor);
-
 		    UpdateAniDigits(anCurrentShield);
 
         UpdateAniDigits(anCurrentFrags);
@@ -2611,25 +2592,26 @@ void InitAniNum() {
       UpdateAniDigits(anCurrentAmmo);
       UpdateAniDigits(anCurrentScore);
 	    UpdateAniNum(anCurrentMoney);
-      
-    INDEX iPlayerHealth   = ceil(anCurrentHealth.iCurrent);
-    INDEX iPlayerArmor    = ceil(anCurrentArmor.iCurrent);
+    
+    // get new variables for HUD 3D
+    INDEX iPlayerHealth    = ceil(anCurrentHealth.iCurrent);
+    INDEX iPlayerArmor     = ceil(anCurrentArmor.iCurrent);
 
-    INDEX iPlayerShield   = ceil(anCurrentShield.iCurrent);
+    INDEX iPlayerShield    = ceil(anCurrentShield.iCurrent);
 
-    INDEX iPlayerScore    = anCurrentScore.iCurrent;
-    INDEX iAbsPlayerScore = abs(anCurrentScore.iCurrent);
-    INDEX iPlayerMana     = anCurrentMana.iCurrent;
-    INDEX iAbsPlayerFrags = abs(anCurrentFrags.iCurrent);
+    INDEX iPlayerScore     = anCurrentScore.iCurrent;
+    INDEX iAbsPlayerScore  = abs(anCurrentScore.iCurrent);
+    INDEX iPlayerMana      = anCurrentMana.iCurrent;
+    INDEX iAbsPlayerFrags  = abs(anCurrentFrags.iCurrent);
     INDEX iPlayerFrags     = anCurrentFrags.iCurrent;
     INDEX iPlayerDeaths    = anCurrentDeaths.iCurrent;
-    INDEX iCurAmm         = anCurrentAmmo.iCurrent;
-    INDEX iMoney          = anCurrentMoney.iCurrent;
+    INDEX iCurAmm          = anCurrentAmmo.iCurrent;
+    INDEX iMoney           = anCurrentMoney.iCurrent;
 
-    INDEX iPlayerPwUpSD = ceil(m_tmSeriousDamage   - _pTimer->CurrentTick());
-    INDEX iPlayerPwUpIU = ceil(m_tmInvulnerability - _pTimer->CurrentTick());
-    INDEX iPlayerPwUpSS = ceil(m_tmSeriousSpeed    - _pTimer->CurrentTick());
-    INDEX iPlayerPwUpIS = ceil(m_tmInvisibility    - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpSD    = ceil(m_tmSeriousDamage   - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpIU    = ceil(m_tmInvulnerability - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpSS    = ceil(m_tmSeriousSpeed    - _pTimer->CurrentTick());
+    INDEX iPlayerPwUpIS    = ceil(m_tmInvisibility    - _pTimer->CurrentTick());
 
     INDEX iCurAmmBrd       = GetCurrentAmmo;
     INDEX iWntWep          = GetWantedWeapon;
@@ -2639,6 +2621,7 @@ void InitAniNum() {
     INDEX iDeathDigitAlpha = 255;
     FLOAT fHudAppear       = 0.0f;
 
+    //Smooth appearance of the interface at the beginning of the game
 	  if (GetStatsInGameTimeGame()<1.0f){
 		  fHudAppear=0.0f;
 	  } else if (GetStatsInGameTimeGame()>1.5f){
@@ -2646,9 +2629,10 @@ void InitAniNum() {
 	  } else {
       fHudAppear=(GetStatsInGameTimeGame()-1.0f)/0.5f;
 	  }
+
 	  INDEX iCurrentAlpha = 255*fHudAppear;
-	  INDEX iIAAlpha     = iCurrentAlpha;
-	  if (iInfAmm) {iIAAlpha = 0;} //Hide ammo if Infinity Ammo is enabled
+	  INDEX iIAAlpha     = iCurrentAlpha; //Hide ammo if Infinity Ammo is enabled
+	  if (iInfAmm) {iIAAlpha = 0;}        //
 
     INDEX iAvbWep      = GetPlayerWeapons()->m_iAvailableWeapons;
 		  
@@ -2697,7 +2681,7 @@ void InitAniNum() {
       iNumSc5 = (iPlayerScore%100)/10;
       iNumSc6 = iPlayerScore%10;
       iDotScr = 129;
-      } else {
+      } else {                                        //from 1kk score, display thousands
       iNumSc1 = (iPlayerScore%100000000)/10000000;
       iNumSc2 = (iPlayerScore%10000000)/1000000;
       iNumSc3 = (iPlayerScore%1000000)/100000;
@@ -2707,7 +2691,7 @@ void InitAniNum() {
       iDotScr = 130;
       }
 
-    INDEX iIcoScr      = 25;
+    INDEX iIcoScr      = 25;  //Score icon
 
     INDEX iNumDmSc1    = (iAbsPlayerScore%1000000)/100000;
     INDEX iNumDmSc2    = (iAbsPlayerScore%100000)/10000;
@@ -2723,7 +2707,7 @@ void InitAniNum() {
     INDEX iNumFr5      = ((abs(iPlayerFrags))%100)/10;
     INDEX iNumFr6      =  (abs(iPlayerFrags))%10;
 
-    INDEX iIcoFrg      = 100;
+    INDEX iIcoFrg      = 100; //Frag icon
 
     INDEX iNumDt1      = (iPlayerDeaths%1000000)/100000;
     INDEX iNumDt2      = (iPlayerDeaths%100000)/10000;
@@ -2732,7 +2716,7 @@ void InitAniNum() {
     INDEX iNumDt5      = (iPlayerDeaths%100)/10;
     INDEX iNumDt6      =  iPlayerDeaths%10;
 
-    INDEX iIcoDth      = 24;
+    INDEX iIcoDth      = 24;  //Skull icon
 
     INDEX iNumMn1      = (iPlayerMana%1000000)/100000;
     INDEX iNumMn2      = (iPlayerMana%100000)/10000;
@@ -2741,7 +2725,7 @@ void InitAniNum() {
     INDEX iNumMn5      = (iPlayerMana%100)/10;
     INDEX iNumMn6      =  iPlayerMana%10;
 
-    INDEX iIcoMan      = 24;
+    INDEX iIcoMan      = 24;  //Skull icon
 
     INDEX iNumMoney1   = (iMoney%1000000)/100000;
     INDEX iNumMoney2   = (iMoney%100000)/10000;
@@ -2750,12 +2734,12 @@ void InitAniNum() {
     INDEX iNumMoney5   = (iMoney%100)/10;
     INDEX iNumMoney6   =  iMoney%10;
 
-    INDEX iIcoMoney    = 25;
+    INDEX iIcoMoney    = 25;  //Money icon
 
     INDEX iNumExtra    = GetSP()->sp_ctCreditsLeft;
     INDEX iNumExtra1   = (GetSP()->sp_ctCreditsLeft%100)/10;
     INDEX iNumExtra2   = GetSP()->sp_ctCreditsLeft%10;
-    INDEX iIcoExtra    = 131;
+    INDEX iIcoExtra    = 131; //Extra life icon
 
     FLOAT fTimerSeriousDamage   = (m_tmSeriousDamage-_pTimer->CurrentTick())   / m_tmSeriousDamageMax;   INDEX iIcoPUSD = 26; INDEX iBarSeriousDamage   = 62;
     FLOAT fTimerInvulnerability = (m_tmInvulnerability-_pTimer->CurrentTick()) / m_tmInvulnerabilityMax; INDEX iIcoPUIU = 29; INDEX iBarInvulnerability = 62;
@@ -2770,7 +2754,7 @@ void InitAniNum() {
     INDEX iNumMsg1     = ((iMessages%1000)/100)+1;
     INDEX iNumMsg2     = ((iMessages%100)/10)+1;
     INDEX iNumMsg3     = (iMessages%10)+1;
-    INDEX iIcoMsg      = 37;
+    INDEX iIcoMsg      = 37;  //Message icon
 
     INDEX iNumCnt1     = ((iCount%1000)/100)+1;
     INDEX iNumCnt2     = ((iCount%100)/10)+1;
@@ -2779,7 +2763,7 @@ void InitAniNum() {
 
     INDEX iNumOxy1     = ((iOxygen%100)/10)+1;
     INDEX iNumOxy2     = (iOxygen%10)+1;
-    INDEX iIcoOxy      = 41;
+    INDEX iIcoOxy      = 41;  //Oxygen icon
 
     INDEX iShls        = GetPlayerWeapons()->m_iShells;        INDEX iMaxShls     = GetPlayerWeapons()->m_iMaxShells;
     INDEX iBlts        = GetPlayerWeapons()->m_iBullets;       INDEX iMaxBlts     = GetPlayerWeapons()->m_iMaxBullets;
@@ -2831,9 +2815,9 @@ void InitAniNum() {
     // Color Scheme
     if (iPlayerHealth > 100) {
       iColHealth = colMax;
-    } else if (iPlayerHealth >= 50) {
+    } else if (iPlayerHealth > 50) {
       iColHealth = colTop;
-    } else if (iPlayerHealth >= 25) {
+    } else if (iPlayerHealth > 25) {
       iColHealth = colMid;
     } else {
       iColHealth = colLow;
@@ -2865,9 +2849,9 @@ void InitAniNum() {
     // Color Scheme
     if (iPlayerArmor > 100) {
       iColArmor = colMax;
-    } else if (iPlayerArmor >= 50) {
+    } else if (iPlayerArmor > 50) {
       iColArmor = colTop;
-    } else if (iPlayerArmor >= 25) {
+    } else if (iPlayerArmor > 25) {
       iColArmor = colMid;
     } else {
       iColArmor = colLowArmor;
@@ -2919,7 +2903,7 @@ void InitAniNum() {
 
 		// = Render Player score/frags info =====================================================
     if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-    if (iPlayerScore > 99999900) {iNumSc1 = iNumSc2 = iNumSc3 = iNumSc4 = iNumSc5 = iNumSc6 = 10;}
+      if (iPlayerScore > 99999900) {iNumSc1 = iNumSc2 = iNumSc3 = iNumSc4 = iNumSc5 = iNumSc6 = 10;} // interface won't show you 100 million score
     if (iPlayerScore<999999) {
       if (iPlayerScore < 100000)   {iNumSc1 = 11;}
       if (iPlayerScore < 10000)    {iNumSc2 = 11;}
@@ -2946,14 +2930,15 @@ void InitAniNum() {
     }
       
     if (GetSP()->sp_gmGameMode == CSessionProperties::GM_FRAGMATCH) {
-    if (iAbsPlayerFrags > 999999) {iNumFr1 = iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 10;}
-    if (iAbsPlayerFrags < 100000) {iNumFr1 = 11;}
-    if (iAbsPlayerFrags < 10000)  {iNumFr2 = 11;}
-    if (iAbsPlayerFrags < 1000)   {iNumFr3 = 11;}
-    if (iAbsPlayerFrags < 100)    {iNumFr4 = 11;}
-    if (iAbsPlayerFrags < 10)     {iNumFr5 = 11;}
-    if (iAbsPlayerFrags < 0)      {iNumFr6 = 11;}
+      if (iAbsPlayerFrags > 999999) {iNumFr1 = iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 10;} // Just in case
+      if (iAbsPlayerFrags < 100000) {iNumFr1 = 11;}
+      if (iAbsPlayerFrags < 10000)  {iNumFr2 = 11;}
+      if (iAbsPlayerFrags < 1000)   {iNumFr3 = 11;}
+      if (iAbsPlayerFrags < 100)    {iNumFr4 = 11;}
+      if (iAbsPlayerFrags < 10)     {iNumFr5 = 11;}
+      if (iAbsPlayerFrags < 0)      {iNumFr6 = 11;}
 
+// Display a negative number
       if (iPlayerFrags < 0) {
         BOOL placed = FALSE;
         for (INDEX i = 1; i <= 5; i++) {
@@ -3106,11 +3091,11 @@ void InitAniNum() {
 	  }
 
       // = Render PowerUp Serious Damage info =====================================================
-	  if (iPlayerPwUpSD <= 0) {iIcoPUSD  = 26;}
-	  if (iPlayerPwUpSD >  0) {iIcoPUSD  = 27;}
-	  if (iPlayerPwUpSD >  7) {iIcoPUSD  = 28;}
+	  if (iPlayerPwUpSD <= 0) {iIcoPUSD  = 26;} // off
+	  if (iPlayerPwUpSD >  0) {iIcoPUSD  = 27;} // blink
+	  if (iPlayerPwUpSD >  7) {iIcoPUSD  = 28;} // on
 
-	  if (fTimerSeriousDamage <= 0   ) {iBarSeriousDamage = 62;}
+	  if (fTimerSeriousDamage <= 0   ) {iBarSeriousDamage = 62;}  // powerup bar timer
 	  if (fTimerSeriousDamage >  0.1 ) {iBarSeriousDamage = 63;}
 	  if (fTimerSeriousDamage >  0.28) {iBarSeriousDamage = 64;}
 	  if (fTimerSeriousDamage >  0.53) {iBarSeriousDamage = 65;}
@@ -3200,9 +3185,9 @@ void InitAniNum() {
 		if (iMessages < 10 ) {iNumMsg2 = 12;}
         if (iMessages < 1  ) {iNumMsg3 = 12;}
 
-		if (iMessages >  0 ) {iIcoMsg  = 39;} else {iIcoMsg = 38;}
+		if (iMessages >  0 ) {iIcoMsg  = 39;} else {iIcoMsg = 38;}  // Message icon
       } else { // if playing scorematch or fragmatch
-        iIcoMsg = 40;
+        iIcoMsg = 40;                                           // Replace message info with TIME LEFT for deathmatch
         FLOAT fTimeLeft = ClampDn(GetSP()->sp_iTimeLimit*60.0f - _pNetwork->GetGameTime(), 0.0f);
         INDEX iSeconds = (INDEX)fTimeLeft;
         INDEX iMinutes = INDEX(fTimeLeft / 60.0f);
@@ -3293,10 +3278,10 @@ void InitAniNum() {
 		  CModelObject &dgtoxy2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01)->amo_moModelObject; dgtoxy2.mo_toTexture.PlayAnim(iNumOxy2+112, 0); dgtoxy2.mo_colBlendColor  = iColOxygen|iCurrentAlpha;
 
 		  // = Render ammo info ===================================================================
-		  if (iShls      <= 0   ) {iIcoShl  = 44;}
-		  if (iShls      >  0   ) {iIcoShl  = 45;}
+		  if (iShls      <= 0   ) {iIcoShl  = 44;}  // icon off
+		  if (iShls      >  0   ) {iIcoShl  = 45;}  // icon on
 
-		  if (fGetAmmShl <= 0   ) {iBarShl  = 62;}
+		  if (fGetAmmShl <= 0   ) {iBarShl  = 62;}  // bar
 		  if (fGetAmmShl >  0.1 ) {iBarShl  = 63;}
 		  if (fGetAmmShl >  0.28) {iBarShl  = 64;}
 		  if (fGetAmmShl >  0.53) {iBarShl  = 65;}
@@ -3719,7 +3704,7 @@ void InitAniNum() {
       }
       
   }
-    // * END 3D HUD *******************************************************************************
+    // * END HUD 3D *******************************************************************************
 
 
   INDEX GenderSound(INDEX iSound)
@@ -3846,8 +3831,8 @@ void InitAniNum() {
     anCurrentHealth = penOther->anCurrentHealth;
     anCurrentArmor  = penOther->anCurrentArmor;
 
-    anCurrentShield = penOther->anCurrentShield;
-    anCurrentMoney  = penOther->anCurrentMoney;
+    anCurrentShield = penOther->anCurrentShield;  // HUD 3D
+    anCurrentMoney  = penOther->anCurrentMoney;   //
 
     // if creating predictor
     if (ulFlags&COPY_PREDICTOR)
@@ -3969,16 +3954,16 @@ void InitAniNum() {
     ostr->Write_t(&m_psGameStats , sizeof(m_psGameStats ));
     ostr->Write_t(&m_psGameTotal , sizeof(m_psGameTotal ));
 
-    // H3D ****************************************************
+    // HUD 3D ****************************************************
     ostr->Write_t(&anCurrentAmmo  , sizeof(anCurrentAmmo  ));
     ostr->Write_t(&anCurrentHealth, sizeof(anCurrentHealth));
     ostr->Write_t(&anCurrentArmor , sizeof(anCurrentArmor ));
 
-    ostr->Write_t(&anCurrentShield, sizeof(anCurrentShield ));
+    ostr->Write_t(&anCurrentShield, sizeof(anCurrentShield));
 
     ostr->Write_t(&anCurrentScore , sizeof(anCurrentScore ));
     ostr->Write_t(&anCurrentMoney , sizeof(anCurrentMoney ));
-    // H3D ****************************************************
+    // ***********************************************************
   }
   /* Read from stream. */
   void Read_t( CTStream *istr) // throw char *
@@ -4008,16 +3993,16 @@ void InitAniNum() {
     istr->Read_t(&m_psGameStats , sizeof(m_psGameStats ));
     istr->Read_t(&m_psGameTotal , sizeof(m_psGameTotal ));
 
-    // H3D ****************************************************
+    // HUD 3D ****************************************************
     istr->Read_t(&anCurrentAmmo  , sizeof(anCurrentAmmo  ));
     istr->Read_t(&anCurrentHealth, sizeof(anCurrentHealth));
     istr->Read_t(&anCurrentArmor , sizeof(anCurrentArmor ));
 
-    istr->Read_t(&anCurrentShield, sizeof(anCurrentShield ));
+    istr->Read_t(&anCurrentShield, sizeof(anCurrentShield));
 
     istr->Read_t(&anCurrentScore , sizeof(anCurrentScore ));
     istr->Read_t(&anCurrentMoney , sizeof(anCurrentMoney ));
-    // H3D ****************************************************
+    // ***********************************************************
 
     SetHUD();
 
@@ -4703,7 +4688,7 @@ void InitAniNum() {
   {
     m_soSpeech.Set3DParameters(50.0f, 10.0f, 2.0f, 1.0f);
   }
-  void SetRandomShieldPitch(FLOAT fMin, FLOAT fMax)
+  void SetRandomShieldPitch(FLOAT fMin, FLOAT fMax)   // HUD 3D - Shield sound
   {
     m_soShield.Set3DParameters(10.0f, 10.0f, 2.0f, Lerp(fMin, fMax, FRnd()));
   }
@@ -4761,7 +4746,7 @@ void InitAniNum() {
     plViewer.pl_OrientationAngle(3) += fShakeB;
     
   }
-// * H3D - SHAKE HUD AFTER RECEIVE DAMAGE *********************************************************
+// * HUD 3D - SHAKE HUD AFTER RECEIVE DAMAGE *********************************************************
   void ApplyShakingFromDamage() {
     // no shaking when no damage
     if (m_fDamageTaken <= 0.0f) {
@@ -4951,9 +4936,10 @@ void InitAniNum() {
   {
     // clear screen
     pdp->Fill(C_BLACK|CT_OPAQUE);
+    // HUD 3D - Now render a server settings
 	static CTextureObject _toBCG;
 	try {
-		_toBCG.SetData_t(_pNetwork->ga_fnmWorld.NoExt()+".bcg");
+		_toBCG.SetData_t(_pNetwork->ga_fnmWorld.NoExt()+".bcg");  // search a bcg file of level to load a background image
 		((CTextureData*)_toBCG.GetData())->Force(TEX_CONSTANT);
 		static PIXaabbox2D _boxScreen_SE;
 		_boxScreen_SE = PIXaabbox2D ( PIX2D(0,0), PIX2D(pdp->GetWidth(), pdp->GetHeight()));
@@ -4966,24 +4952,23 @@ void InitAniNum() {
       PIX pixDPWidth  = pdp->GetWidth();
       PIX pixDPHeight = pdp->GetHeight();
       FLOAT fScale = (FLOAT)pixDPWidth/640.0f;
-	  FLOAT fScaleh= (FLOAT)pixDPHeight/480.0f;
-	  INDEX iGameOptionPosX= pixDPWidth*0.05f;
-	  INDEX iPlayerListPosX= pixDPWidth*0.75f;
-	  const INDEX iHeightSpacing=  20;
-    pdp->SetFont( _pfdDisplayFont);
-    pdp->SetTextScaling( fScale);
-    pdp->SetTextAspect( 1.0f);
-	  pdp->PutTextCXY(TranslateConst(en_pwoWorld->GetName(), 0), pixDPWidth*0.5f, pixDPHeight*0.05f, SE_COL_WHITE|CT_OPAQUE);
-    pdp->PutTextC(TRANS("Players"),   iPlayerListPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
-	  pdp->PutText(TRANS("Game options"), iGameOptionPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
-	  INDEX iDisplayedOption=0;
-	  
+	    FLOAT fScaleh= (FLOAT)pixDPHeight/480.0f;
+	    INDEX iGameOptionPosX= pixDPWidth*0.05f;
+	    INDEX iPlayerListPosX= pixDPWidth*0.75f;
+	    const INDEX iHeightSpacing=20;
+      pdp->SetFont( _pfdDisplayFont);
+      pdp->SetTextScaling( fScale);
+      pdp->SetTextAspect( 1.0f);
+	    pdp->PutTextCXY(TranslateConst(en_pwoWorld->GetName(), 0), pixDPWidth*0.5f, pixDPHeight*0.05f, SE_COL_WHITE|CT_OPAQUE);
+      pdp->PutTextC(TRANS("Players"),   iPlayerListPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
+	    pdp->PutText(TRANS("Game options"), iGameOptionPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
+	    INDEX iDisplayedOption=0;
 
-	  		  CTString strGameDifficulty;
-			  INDEX iDifficulty=(GetSP()->sp_gdGameDifficulty);
-			  if (iDifficulty==-1) {
-				  strGameDifficulty = TRANS("Tourist");
-			  }
+      CTString strGameDifficulty;
+      INDEX iDifficulty=(GetSP()->sp_gdGameDifficulty);
+      if (iDifficulty==-1) {
+        strGameDifficulty = TRANS("Tourist");
+      }
 			    switch (iDifficulty) {
 					case  0: strGameDifficulty = TRANS("Easy")   ; break;
 					case  1: strGameDifficulty = TRANS("Normal") ; break;
@@ -4995,7 +4980,6 @@ void InitAniNum() {
 				iDisplayedOption++;
 
 		  if (GetSP()->sp_bCooperative) {
-
 			  if (GetSP()->sp_bUseExtraEnemies) {
 				pdp->PutText(TRANS("Extra enemies") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 				iDisplayedOption++;
@@ -5106,15 +5090,14 @@ void InitAniNum() {
 			iDisplayedOption++;
 		}
 
-
-
-      for (INDEX iPlayer=0, iDisplayedPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
-		CPlayer *penPlayer = (CPlayer*)GetPlayerEntity(iPlayer);
-		if (penPlayer != NULL) {
-			pdp->PutTextC( penPlayer->GetPlayerName(), iPlayerListPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedPlayer*fScaleh), SE_COL_WHITE|CT_OPAQUE);
-			iDisplayedPlayer++;
-		}
-	  }
+// now show a connected players
+    for (INDEX iPlayer=0, iDisplayedPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+      CPlayer *penPlayer = (CPlayer*)GetPlayerEntity(iPlayer);
+		    if (penPlayer != NULL) {
+			    pdp->PutTextC( penPlayer->GetPlayerName(), iPlayerListPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedPlayer*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+			    iDisplayedPlayer++;
+        }
+    }
     }
   }
 
@@ -5441,8 +5424,8 @@ void InitAniNum() {
       }
     }
 
-	
-    if (m_tmLastDamage+m_fShieldDelay < _pTimer->CurrentTick() && GetFlags()&ENF_ALIVE) { //h3d Shield regen
+    //HUD 3D - Shield regen
+    if (m_tmLastDamage+m_fShieldDelay < _pTimer->CurrentTick() && GetFlags()&ENF_ALIVE) {
       m_fShield=ClampUp(m_fShield+_pTimer->TickQuantum+(m_fMaxShield/300.0f), m_fMaxShield);
 	  }
 
@@ -5766,7 +5749,7 @@ void InitAniNum() {
       return;
     }
 	
-	// Shield H3D
+	// HUD 3D - Shield
 	if (dmtType != DMT_DROWNING && dmtType != DMT_ABYSS && dmtType != DMT_SPIKESTAB && dmtType != DMT_TELEPORT && dmtType != DMT_HEAT && m_fShield > 0) {
 	FLOAT fDamage=m_fShield-fDamageAmmount;
 	FLOAT fShield=m_fShield;
@@ -5824,10 +5807,8 @@ void InitAniNum() {
 
     FLOAT fRealArmorDamage = Min(fSubArmor, m_fArmor);
 
-	// * H3D **************************************************************************************
-
-	m_h3dAppearTimeArmor = Min(m_h3dAppearTimeArmor + fRealArmorDamage/10.0f, 10.0f);
-    m_fBorderArmor       = _pTimer->CurrentTick() + m_h3dAppearTimeArmor;
+	  m_h3dAppearTimeArmor = Min(m_h3dAppearTimeArmor + fRealArmorDamage/10.0f, 10.0f); // HUD 3D
+    m_fBorderArmor       = _pTimer->CurrentTick() + m_h3dAppearTimeArmor;             //
 
     // if any damage
     if( fSubHealth>0) { 
@@ -5862,8 +5843,8 @@ void InitAniNum() {
 
     // receive damage
     CPlayerEntity::ReceiveDamage( penInflictor, dmtType, fSubHealth, vHitPoint, vDirection);
-	m_h3dAppearTime = Min(m_h3dAppearTime + fSubHealth/10.0f, 10.0f); //H3D Health border
-    m_fBorderHealth = _pTimer->CurrentTick() + m_h3dAppearTime;
+    m_h3dAppearTime = Min(m_h3dAppearTime + fSubHealth/10.0f, 10.0f); // HUD 3D - Health border
+    m_fBorderHealth = _pTimer->CurrentTick() + m_h3dAppearTime;       //
 
     m_fDamageTaken += fSubHealth;
 
@@ -6386,7 +6367,7 @@ void InitAniNum() {
     m_aWeaponSway(1) -= aDeltaRotation(1) * h3d_fWpnInertFactor;
     m_aWeaponSway /= 2;
 
-    // H3D inert
+    // HUD 3D inertia
     m_aH3DSwayOld = m_aH3DSway;
     if (en_plViewpoint.pl_OrientationAngle(2) > -90 && en_plViewpoint.pl_OrientationAngle(2) < 90)
     {
@@ -6526,15 +6507,16 @@ void InitAniNum() {
     if (CheatsEnabled()) {
       Cheats();
     }
-
-	if (dbg_strEnemySpawnerInfo==1 && _pNetwork->IsPlayerLocal(this)) {
+    
+    // show all existing Enemy Spawners
+    if (dbg_strEnemySpawnerInfo==1 && _pNetwork->IsPlayerLocal(this)) {
 	      // for each entity in the world
 		{FOREACHINDYNAMICCONTAINER(GetWorld()->wo_cenEntities, CEntity, iten) {
 		 CEntity *pen = iten;
       if (IsOfClass(pen, "Enemy Spawner")) {
         CEnemySpawner* penSpawner = ((CEnemySpawner*)&*pen);
         CPlacement3D plSpawner = penSpawner->GetPlacement();
-        if (penSpawner->m_penTarget == NULL && penSpawner->m_penSeriousTarget == NULL) {
+        if (penSpawner->m_penTarget == NULL && penSpawner->m_penSeriousTarget == NULL) {  // If there are no targets on Enemy Spawner, mark
           CPrintF("^cff0000Enemy spawner: %s, X: %f, Y: %f, Z: %f \n^C", 
             penSpawner->GetName(), 
             plSpawner.pl_PositionVector(1),
@@ -6670,7 +6652,7 @@ void InitAniNum() {
       paAction.pa_aRotation     = ANGLE3D(0,0,0);
       paAction.pa_aViewRotation = ANGLE3D(0,0,0);
 
-
+    // HUD 3D - SHOP
       if (m_penShop == NULL) {
         // default croteam code
         // if fire or use is pressed
@@ -6680,7 +6662,7 @@ void InitAniNum() {
         }
       } else {
         //
-        // SHOP INPUT
+        // HUD 3D - SHOP INPUT
         //
 
         CShop* penShop = ((CShop*)&*m_penShop);
@@ -6723,7 +6705,7 @@ void InitAniNum() {
       ButtonsActions(paAction);
     }
 
-    if (m_tmLastDamage+m_fShieldDelay < _pTimer->CurrentTick()) { //h3d Shield sound regen
+    if (m_tmLastDamage+m_fShieldDelay < _pTimer->CurrentTick()) { // HUD 3D - Shield sound regen
       if (m_bShieldCharging == FALSE && m_fShield<m_fMaxShield) {
         SetRandomShieldPitch( 0.9f, 1.1f);
         PlaySound(m_soShield, SOUND_SHIELD_CHARGE, SOF_3D);
@@ -6750,7 +6732,7 @@ void InitAniNum() {
       m_fDamageAmmount = 0.0f;
     }
 
-    // * H3D SHIELD ***************************************************************
+    // * HUD 3D - SHIELD **********************************************************
   	// if less than few seconds elapsed since last damage
     FLOAT tmSinceShieldWounding = _pTimer->CurrentTick() - m_tmShieldWoundTime;
     if( tmSinceShieldWounding<4.0f) {
@@ -6762,7 +6744,7 @@ void InitAniNum() {
     }
   	// ****************************************************************************
 
-    // * H3D SHIELD ***************************************************************
+    // * HUD 3D - SHIELD **********************************************************
 	  // if less than few seconds elapsed since last damage
     FLOAT tmSinceShieldBroken = _pTimer->CurrentTick() - m_tmShieldBroken;
     if( tmSinceShieldBroken<1.0f) {
@@ -7334,7 +7316,8 @@ void InitAniNum() {
         (ANGLE)((FLOAT)paAction.pa_aRotation(3)*_pTimer->TickQuantum)));
     }
 
-	m_bShowingTabInfo = FALSE;
+    // HUD 3D - Enable "Tab" table button for dead players
+    m_bShowingTabInfo = FALSE;
     if (ulButtonsNow&PLACT_SHOW_TAB_INFO) {
       m_bShowingTabInfo = TRUE;
     }
@@ -7430,12 +7413,12 @@ void InitAniNum() {
       }
     }
 
-    m_bShowingTabInfo = FALSE;
+    m_bShowingTabInfo = FALSE;                //  HUD 3D
     if (ulButtonsNow&PLACT_SHOW_TAB_INFO) {
       m_bShowingTabInfo = TRUE;
     }
 
-	if (ulNewButtons&PLACT_DROP_MONEY) {
+	if (ulNewButtons&PLACT_DROP_MONEY) {        //  HUD 3D
       DropMoney();
     }
 
@@ -7569,9 +7552,10 @@ void InitAniNum() {
       cht_bRefresh = FALSE;
       SetHealth(TopHealth());
     }
-    if (cht_fMaxShield) {
+    if (cht_fMaxShield) { // look, a new cheat!
       cht_fMaxShield;
       m_fMaxShield=cht_fMaxShield;
+      //M_fShield=cht_fMaxShield;
     }
   };
 
@@ -7727,6 +7711,12 @@ void InitAniNum() {
   {
     CPlacement3D plViewOld = prProjection.ViewerPlacementR();
     BOOL bSniping = ((CPlayerWeapons&)*m_penWeapons).m_bSniping;
+
+    if (((CPlayerWeapons*)&*m_penWeapons)->m_iCurrentWeapon==WEAPON_SNIPER
+    &&bSniping) {
+      HUD_DrawSniperMask();
+    }
+
     // render weapon models if needed
     // do not render weapon if sniping
     BOOL bRenderModels = _pShell->GetINDEX("gfx_bRenderModels");
@@ -7780,7 +7770,7 @@ void InitAniNum() {
     // add rest of blend ammount
 
 	
-	// * H3D Shield glaring *********************************************************************************************
+	// * HUD 3D - Shield glaring ****************************************************************************************
 
     FLOAT tmSinceShieldWounding = _pTimer->CurrentTick() - pen->m_tmShieldWoundTime;
    	
@@ -7796,7 +7786,7 @@ void InitAniNum() {
 
 	// ******************************************************************************************************************
 
-  // * H3D Glare of destroyed shield **********************************************************************************
+  // * HUD 3D - Glare of destroyed shield *****************************************************************************
 
     FLOAT tmSinceShieldBroken = _pTimer->CurrentTick() - pen->m_tmShieldBroken;
    	
@@ -7837,6 +7827,16 @@ void InitAniNum() {
     pdp->BlendScreen();
 
     // render status info line (if needed)
+    if (!m_bShowingTabInfo) {
+	  	if(IsPredicted()) {
+		    ((CPlayer*)GetPredictor())->RenderH3D(prProjection, pdp, 
+			  vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
+		  } else {
+		    RenderH3D(prProjection, pdp, 
+			  vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
+  		}
+	  }
+
     if( hud_bShowInfo) { 
       if (IsPredicted()) {
          DrawHUD( (CPlayer*)GetPredictor(), pdp);
@@ -7845,17 +7845,6 @@ void InitAniNum() {
          DrawHUD(this, pdp);
       }
     }
-
-    if (!m_bShowingTabInfo) {
-		if(IsPredicted()) {
-		  ((CPlayer*)GetPredictor())->RenderH3D(prProjection, pdp, 
-			vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
-		}
-		else {
-		  RenderH3D(prProjection, pdp, 
-			vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
-		}
-	}
   }
 
 
@@ -8151,7 +8140,7 @@ void InitAniNum() {
       SetHealth(TopHealth());
       m_iMana  = GetSP()->sp_iInitialMana;
       m_fArmor = 0.0f;
-      m_fShield= 0.0f;
+      m_fShield= 0.0f;  //  HUD 3D
       // teleport where you were when you were killed
       Teleport(CPlacement3D(m_vDied, m_aDied));
 
@@ -8371,7 +8360,7 @@ void InitAniNum() {
         if (m_tmSeriousSpeed>tmNow) {
           Particles_RunAfterBurner(this, m_tmSeriousSpeed, 0.3f, 0);
         }
-        if (m_tmShieldWoundTime+0.5f>tmNow) {                                                                                 // * H3D - Render ShieldWound *********
+        if (m_tmShieldWoundTime+0.5f>tmNow) {                                                                           // HUD 3D - Render ShieldWound
           Particles_ModelGlow(this, m_tmShieldWoundTime+0.5f, PT_STAR05, 0.15f, 2, 0.03f, 0x3333ff00);
         }
         if (m_tmShieldBroken+1.0f>tmNow) {
@@ -8504,7 +8493,7 @@ procedures:
     }
     // find music holder on new world
     FindMusicHolder();
-	CheckShopInTheWorld();
+    CheckShopInTheWorld();  // HUD 3D
     // store group name
 
     autocall Rebirth() EReturn;
@@ -8726,7 +8715,7 @@ procedures:
 		}
     }
 
-	if (m_bSpectatorDeath) {
+	if (m_bSpectatorDeath) {  // HUD 3D
 		SetHealth(0);
 		m_fArmor = 0.0f;
 		m_fShield = 0.0f;
@@ -8852,7 +8841,8 @@ procedures:
  *                      R E B I R T H                       *
  ************************************************************/
   FirstInit() {
-
+    
+    // give players shield from multiplayer settings
     if (GetSP()->sp_fStartMaxShield>0.0f && GetSP()->sp_bSinglePlayer==FALSE) {
       m_fMaxShield=(GetSP()->sp_fStartMaxShield);
     }
@@ -8871,7 +8861,7 @@ procedures:
     }
 
     FindMusicHolder();
-	CheckShopInTheWorld();
+    CheckShopInTheWorld();  // HUD 3D
 
     // update per-level stats
     UpdateLevelStats();
@@ -8888,9 +8878,9 @@ procedures:
     if (GetSettings()->ps_ulFlags&PSF_PREFER3RDPERSON) {
 		ChangePlayerView();
     }
-	FLOAT fTime = GetSP()->sp_fForceSpectateCD;
+	FLOAT fTime = GetSP()->sp_fForceSpectateCD; // HUD 3D
 	CMusicHolder *pmh = (CMusicHolder *)m_penMainMusicHolder.ep_pen;
-	if (/*GetSP()->sp_bCooperative*/GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP/* && !GetSP()->sp_bSinglePlayer*/) {
+	if (GetSP()->sp_bCooperative/*GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP*/ && !GetSP()->sp_bSinglePlayer) {
 		if (_pTimer->CurrentTick()>pmh->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft>0) {
 			((CSessionProperties*)GetSP())->sp_ctCreditsLeft--;
 		} else if (_pTimer->CurrentTick()>pmh->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft==0) {

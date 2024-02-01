@@ -16,6 +16,7 @@ components:
 functions:
 
 procedures:
+  // This entity is used to restart level
   RestartLevel(){
 	CPrintF(TRANS("^cFFFF00All players are dead. The level will be restarted in 10 seconds.^C\n"));
 	autowait(10.5f);

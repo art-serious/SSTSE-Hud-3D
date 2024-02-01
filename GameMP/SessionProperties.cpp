@@ -35,9 +35,9 @@ extern INDEX gam_bGibs;
 extern INDEX gam_bUseExtraEnemies;
 extern CTString gam_strGameSpyExtras;
 
-extern FLOAT gam_fForceSpectateCD;
-extern INDEX gam_bGiveExtraShield;
-extern FLOAT gam_fStartMaxShield;
+extern FLOAT gam_fForceSpectateCD;  // HUD 3D
+extern INDEX gam_bGiveExtraShield;  //
+extern FLOAT gam_fStartMaxShield;   //
 
 
 static void SetGameModeParameters(CSessionProperties &sp)
@@ -189,14 +189,14 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp)
 
   sp.sp_bEndOfGame = FALSE;
 
-  sp.sp_bQuickTest = FALSE;
-  sp.sp_bCooperative = sp.sp_gmGameMode==CSessionProperties::GM_COOPERATIVE || sp.sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP;
-  sp.sp_bSinglePlayer = FALSE;
+  sp.sp_bQuickTest      = FALSE;
+  sp.sp_bCooperative    = sp.sp_gmGameMode==CSessionProperties::GM_COOPERATIVE || sp.sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP;
+  sp.sp_bSinglePlayer   = FALSE;
   sp.sp_bPlayEntireGame = gam_bPlayEntireGame;
-  sp.sp_bUseFrags = sp.sp_gmGameMode==CSessionProperties::GM_FRAGMATCH;
-  sp.sp_bWeaponsStay = gam_bWeaponsStay;
-  sp.sp_bFriendlyFire = gam_bFriendlyFire;
-  sp.sp_ctMaxPlayers = gam_ctMaxPlayers;
+  sp.sp_bUseFrags       = sp.sp_gmGameMode==CSessionProperties::GM_FRAGMATCH;
+  sp.sp_bWeaponsStay    = gam_bWeaponsStay;
+  sp.sp_bFriendlyFire   = gam_bFriendlyFire;
+  sp.sp_ctMaxPlayers    = gam_ctMaxPlayers;
   sp.sp_bWaitAllPlayers = gam_bWaitAllPlayers;
 
   sp.sp_bAmmoStays        = gam_bAmmoStays       ;
@@ -217,32 +217,32 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp)
 
   sp.sp_bUseExtraEnemies = gam_bUseExtraEnemies;
 
-  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;
-  sp.sp_bGiveExtraShield = gam_bGiveExtraShield;
-  sp.sp_fStartMaxShield  = gam_fStartMaxShield;
+  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;  // HUD 3D
+  sp.sp_bGiveExtraShield = gam_bGiveExtraShield;  //
+  sp.sp_fStartMaxShield  = gam_fStartMaxShield;   //
 
   // set credits and limits
-  if (sp.sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
-    sp.sp_ctCredits     = 1;
-    sp.sp_ctCreditsLeft = 1;
+  if (sp.sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {  // SRUVIVAL CO-OP PARAMETERS
+    sp.sp_ctCredits     = 1;                                    // Start with 1 respawn credit
+    sp.sp_ctCreditsLeft = 1;                                    //
     sp.sp_iScoreLimit = 0;
     sp.sp_iFragLimit  = 0;
     sp.sp_iTimeLimit  = 0;
     sp.sp_bAllowHealth = TRUE;
     sp.sp_bAllowArmor  = TRUE;
-	  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;
-    sp.sp_bAmmoStays        = FALSE;
-    sp.sp_bHealthArmorStays = FALSE;
-    sp.sp_bInfiniteAmmo     = FALSE;
-    sp.sp_bRespawnInPlace   = FALSE;
-    sp.sp_fExtraEnemyStrengthPerPlayer = 0.1f;
+	  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;              // I'll delete it on next version
+    sp.sp_bAmmoStays        = FALSE;                            // Ammo,
+    sp.sp_bHealthArmorStays = FALSE;                            // health and armor pick up only
+    sp.sp_bInfiniteAmmo     = FALSE;                            // No infinity ammo
+    sp.sp_bRespawnInPlace   = FALSE;                            // Respawn only from PlayerStart
+    sp.sp_fExtraEnemyStrengthPerPlayer = 0.1f;                  // +10% Enemy Strength per player
     sp.sp_tmSpawnInvulnerability = 3;
     sp.sp_bUseExtraEnemies  = TRUE;
-    sp.sp_bFriendlyFire = TRUE;
+    sp.sp_bFriendlyFire = TRUE;                                 // For fun
     sp.sp_gdGameDifficulty=sp.GD_HARD;
 
     sp.sp_ulSpawnFlags = SPF_HARD;
-    sp.sp_fEnemyMovementSpeed = gam_afEnemyMovementSpeed [3];
+    sp.sp_fEnemyMovementSpeed = gam_afEnemyMovementSpeed [3];   // Set all stats to HARD difficulty
     sp.sp_fEnemyAttackSpeed   = gam_afEnemyAttackSpeed   [3];
     sp.sp_fDamageStrength     = gam_afDamageStrength     [3];
     sp.sp_fAmmoQuantity       = gam_afAmmoQuantity       [3];
@@ -251,7 +251,7 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp)
     sp.sp_fForceSpectateCD = 60;
     sp.sp_bGiveExtraShield = gam_bGiveExtraShield;
 
-    //sp.sp_fStartMaxShield  = 0;
+    sp.sp_fStartMaxShield  = 0;
 
     SetGameModeParameters(sp);
     sp.sp_ulSpawnFlags&=~SPF_SINGLEPLAYER;

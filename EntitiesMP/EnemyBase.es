@@ -174,8 +174,6 @@ properties:
 192 FLOAT m_fMoneyBagChance "Money Bag Chance" = 0.0f,
 193 FLOAT m_fMoneyChestChance "Money Chest Chance" = 0.0f,
 
-
-200 CEntityPointer m_penAdditionalTarget01 "Additional Target 01",
   {
     TIME m_tmPredict;  // time to predict the entity to
   }

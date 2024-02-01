@@ -77,8 +77,8 @@ properties:
 
 components:
 
-  1 model   MODEL_MARKER     "Models\\Editor\\Axis.mdl",
-  2 texture TEXTURE_MARKER   "Models\\Editor\\Vector2.tex"
+  1 model   MODEL_MARKER     "Models\\Editor\\Shop.mdl",
+  2 texture TEXTURE_MARKER   "Models\\Editor\\Shop.tex"
 
 
 functions:
@@ -160,7 +160,7 @@ procedures:
         }
 
         if (m_penCamera == NULL) {
-          WarningMessage("No suitable camera for Shop, stopping\n");
+          WarningMessage("No suitable camera for Shop, stopping\n");  // Shop can work without Camera, but it's designed to work with it.
           resume;
         }
 

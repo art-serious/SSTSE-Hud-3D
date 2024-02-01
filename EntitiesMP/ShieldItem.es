@@ -41,7 +41,7 @@ components:
 101 model   MODEL_FLARE    "Models\\Items\\Flares\\Flare.mdl",
 
 // ************** REFLECTIONS **************
-200 texture TEX_REFL_LIGHTMETAL01       "Models\\ReflectionTextures\\LightMetal01.tex",
+200 texture TEX_REFL_LIGHTMETAL01       "Models\\ReflectionTextures\\LightBlueMetal01.tex",
 
 // ************** SPECULAR **************
 210 texture TEX_SPEC_MEDIUM             "Models\\SpecularTextures\\Medium.tex",
@@ -82,7 +82,7 @@ functions:
     }
     switch (m_EaitType) {
       case SHIT_SHIELD_25:
-        Particles_Emanate(this, 1.0f*0.75, 1.0f*0.75, PT_STAR04, 32, 7.0f);
+        Particles_Emanate(this, 1.25f*0.75, 1.25f*0.75, PT_STAR04, 32, 7.0f);
         break;                                      
       case SHIT_SHIELD_5:
         Particles_Emanate(this, 0.875f*0.75, 0.875f*0.75, PT_STAR04, 16, 7.0f);
@@ -110,20 +110,13 @@ functions:
         m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 10.0f; 
         m_strDescription.PrintF("Shield +5 - H:%g  T:%g", m_fValue, m_fRespawnTime);
         // set appearance
-        AddItem(MODEL_5, TEXTURE_5, 0, TEX_SPEC_MEDIUM, 0);
+        AddItem(MODEL_5, TEXTURE_5,  TEX_REFL_LIGHTMETAL01, TEX_SPEC_MEDIUM, 0);
         AddFlare(MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.5f,0), FLOAT3D(1.5,1.5,0.4f) );
         StretchItem(FLOAT3D(0.875f*0.75, 0.875f*0.75, 0.875f*0.75));
         m_iSoundComponent = SOUND_SHIELD_5;
         break;        
     }
   };
-
-/*  void AdjustDifficulty(void)
-  {
-    if (!GetSP()->sp_bAllowArmor && m_penTarget==NULL) {
-      Destroy();
-    }
-  }*/
 
 procedures:
   ItemCollected(EPass epass) : CItem::ItemCollected {
@@ -155,7 +148,7 @@ procedures:
       }
 
       // play the pickup sound
-      m_soPick.Set3DParameters(50.0f, 1.0f, 1.0f, 1.0f);
+      m_soPick.Set3DParameters(50.0f, 1.0f, 2.5f, 1.0f);
       PlaySound(m_soPick, m_iSoundComponent, SOF_3D);
       m_fPickSoundLen = GetSoundLength(m_iSoundComponent);
 
