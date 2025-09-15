@@ -14,6 +14,7 @@ enum AmmoPackType {
 
 // event for sending through receive item
 event EAmmoPackItem {
+  AmmoPackType aptPackType,
   INDEX iShells,                
   INDEX iBullets,                
   INDEX iRockets,                
@@ -168,6 +169,7 @@ procedures:
 
     // send ammo to entity
     EAmmoPackItem eAmmo;
+    eAmmo.aptPackType = m_aptPackType;
     eAmmo.iShells = m_iShells;
     eAmmo.iBullets = m_iBullets;
     eAmmo.iRockets = m_iRockets;

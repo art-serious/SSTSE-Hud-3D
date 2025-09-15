@@ -101,19 +101,6 @@ functions:
         }
       }
     }
-
-	/*if (IsDerivedFromClass(m_penOwner, "Enemy Base")) {
-		CEnemyBase* penEnemyOwner = ((CEnemyBase*)&*m_penOwner);
-		if (penEnemyOwner->m_penAdditionalTarget01 != NULL) {
-			FLOAT fDistance = (penEnemyOwner->m_penAdditionalTarget01->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
-			// update if closer
-			if (fDistance<fClosestPlayer) {
-			  fClosestPlayer = fDistance;
-			  penClosestPlayer = penEnemyOwner->m_penAdditionalTarget01;
-			}
-		}
-	}*/
-
     // if no players found
     if (penClosestPlayer==NULL) {
       // behave as if very close - must check for new ones
@@ -201,7 +188,6 @@ functions:
 
     // find closest player
     CEntity *penClosest = FindClosestPlayer();
-	//CPrintF("Found closest: %s\n", penClosest != NULL ? penClosest->GetName() : "NULL");
 
     FLOAT fSeeDistance  = GetOwner()->m_fIgnoreRange;
     FLOAT fStopDistance  = Max(fSeeDistance*1.5f, GetOwner()->m_fActivityRange);
@@ -217,13 +203,13 @@ functions:
     }
 
 	
-	// if inside view angle and visible
-    if (penClosest != NULL && !IsOfClass(penClosest, "Player")/* && GetOwner()->SeeEntity(penClosest, Cos(GetOwner()->m_fViewAngle/2.0f))*/) {
+/*	// if inside view angle and visible
+    if (penClosest != NULL && !IsOfClass(penClosest, "Player")) {
       // send event to owner
       SendWatchEvent(penClosest);
 	  SetWatchDelays();
 	  return;
-    }
+    }*/
 
 
     // if the closest player is close enough to be seen
@@ -277,17 +263,6 @@ functions:
         }
       }
     }
-
-	/*CEntityPointer penTarget01 = GetOwner()->m_penAdditionalTarget01;
-	if (penTarget01 != NULL && penTarget01 != penCurrentTarget && penTarget01->GetFlags()&ENF_ALIVE && penTarget01 != m_penOwner) {
-		FLOAT fDistance = (penTarget01->GetPlacement().pl_PositionVector-m_penOwner->GetPlacement().pl_PositionVector).Length();
-		// update if closer
-		if (fDistance<fClosestPlayer) {
-		  fClosestPlayer = fDistance;
-		  penClosestPlayer = penTarget01;
-		}
-	}*/
-	
 
     return penClosestPlayer;
   }

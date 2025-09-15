@@ -52,9 +52,6 @@ properties:
  60 CEntityPointer m_penTacticsHolder  "Tactics Holder",
  61 BOOL m_bTacticsAutostart           "Tactics autostart" = TRUE,
 
- 90 FLOAT m_MoneyDropChance = 0.0f,
- 91 FLOAT m_moneyRareChance = 0.0f,
-
  
 
 components:

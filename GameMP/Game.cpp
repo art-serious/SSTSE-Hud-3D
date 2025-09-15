@@ -44,8 +44,23 @@ static CStaticStackArray<INDEX> _actTriangles;  // world, model, particle, total
 // one and only Game object
 extern CGame *_pGame = NULL;
 
+/*extern "C" __declspec (dllexport) CGame *GAME_Create(void)
+{
+  _pGame = new CGame;
+
+  return _pGame;
+}*/
 extern "C" __declspec (dllexport) CGame *GAME_Create(void)
 {
+  HMODULE kernel = ::LoadLibraryA("Kernel32.dll");
+  if (kernel)
+  {
+    typedef BOOL (WINAPI* SetDllDirectoryAType)(LPCSTR);
+    SetDllDirectoryAType SetDllDirectoryA = (SetDllDirectoryAType)::GetProcAddress(kernel, "SetDllDirectoryA");
+    if (SetDllDirectoryA)
+      SetDllDirectoryA(_fnmApplicationPath+_fnmMod+"Bin");
+    ::FreeLibrary(kernel);
+  }
   _pGame = new CGame;
 
   return _pGame;
@@ -131,10 +146,14 @@ extern CSessionProperties* _pspLocal;
 extern CSessionProperties* _pspServer;
 
 extern FLOAT gam_fForceSpectateCD = 120.0f;
+extern INDEX gam_bIncrementCredit = FALSE;
+extern FLOAT gam_fStartMaxShield  = 0.0f;     // value of energy shield on start
 
 // survival coop flags
-extern INDEX gam_bGiveExtraShield = FALSE;    // give to player extra energy shield after next level
-extern FLOAT gam_fStartMaxShield  = 0.0f;     // give to players energy shield
+extern INDEX gam_bGiveExtraShield = FALSE;    // convert extralifes to shield on the next level
+extern INDEX gam_bResetCredits    = FALSE;    // reset credits to max on the next level
+
+extern INDEX gam_bPlayerMarkerSaveWeapon = FALSE;
 
 
 // make sure that console doesn't show last lines if not playing in network
@@ -990,6 +1009,9 @@ void CGame::InitInternal( void)
   _pShell->DeclareSymbol("persistent user FLOAT gam_fForceSpectateCD       ;", &gam_fForceSpectateCD       );
   _pShell->DeclareSymbol("persistent user INDEX gam_bGiveExtraShield       ;", &gam_bGiveExtraShield       );
   _pShell->DeclareSymbol("persistent user FLOAT gam_fStartMaxShield        ;", &gam_fStartMaxShield        );
+  _pShell->DeclareSymbol("persistent user INDEX gam_bResetCredits          ;", &gam_bResetCredits          );
+  _pShell->DeclareSymbol("persistent user INDEX gam_bIncrementCredit       ;", &gam_bIncrementCredit       );
+  _pShell->DeclareSymbol("persistent user INDEX gam_bPlayerMarkerSaveWeapon;", &gam_bPlayerMarkerSaveWeapon);
 
   CAM_Init();
 
@@ -1690,6 +1712,67 @@ void CGame::SavePlayersAndControls( void)
   }
 }
 
+float GetInflatedThickness(void* pen)
+{
+  CEntity* entity = (CEntity*)pen;
+  if (IsDerivedFromClass(entity, "Enemy Base")) return 0.15f;
+  if (IsOfClass(entity, "Health Item"))         return 0.20f;
+  if (IsOfClass(entity, "Armor Item"))          return 0.10f;
+  if (IsOfClass(entity, "Shield Item"))         return 0.10f;
+  if (IsOfClass(entity, "Ammo Item"))           return 0.15f;
+  if (IsOfClass(entity, "Ammo Pack"))           return 0.20f;
+  if (IsOfClass(entity, "Weapon Item"))         return 0.05f;
+  if (IsOfClass(entity, "KeyItem"))             return 0.10f;
+  if (IsOfClass(entity, "Money Item"))          return 0.10f;
+  if (IsOfClass(entity, "PowerUp Item"))        return 0.15f;
+  if (IsOfClass(entity, "Switch"))              return 0.15f;
+  return 0.0f;
+}
+
+void PrecacheInflated()
+{
+  static HMODULE fastOutlineModule = NULL;
+  if (fastOutlineModule == NULL)
+  {
+    CTFileName fnmExpanded;
+    ExpandFilePath(EFP_READ, CTString("Bin\\FastSimpleOutlineMP.dll"), fnmExpanded);
+    fastOutlineModule = ::LoadLibraryA(fnmExpanded);
+  }
+  if (fastOutlineModule == NULL)
+    return;
+
+  typedef void(*TPrecacheModels)(float(*)(void*));
+  static TPrecacheModels PrecacheInflatedModels = NULL;
+  if (PrecacheInflatedModels == NULL)
+    PrecacheInflatedModels = (TPrecacheModels)::GetProcAddress(fastOutlineModule, "PrecacheInflatedModels");
+  if (PrecacheInflatedModels == NULL)
+    return;
+
+  PrecacheInflatedModels(GetInflatedThickness);
+  
+  /*
+  typedef void(*TPrecacheModelData)(float, void*);
+  static TPrecacheModelData PrecacheInflatedModelData = NULL;
+  if (PrecacheInflatedModelData == NULL)
+    PrecacheInflatedModelData = (TPrecacheModelData)::GetProcAddress(fastOutlineModule, "PrecacheInflatedModelData");
+  if (PrecacheInflatedModelData == NULL)
+    return;
+  
+  // can call PrecacheInflatedModelData with CModelData* here
+  */
+  
+  /*
+  typedef void(*TPrecacheModelPath)(float, char*);
+  static TPrecacheModelPath PrecacheInflatedModelPath = NULL;
+  if (PrecacheInflatedModelPath == NULL)
+    PrecacheInflatedModelPath = (TPrecacheModelPath)::GetProcAddress(fastOutlineModule, "PrecacheInflatedModelPath");
+  if (PrecacheInflatedModelPath == NULL)
+    return;
+  
+  // can call PrecacheInflatedModelPath with CTFileName here
+  */
+}
+
 
 void CGame::SetupLocalPlayers( void)
 {
@@ -1710,6 +1793,7 @@ void CGame::SetupLocalPlayers( void)
   if (gm_StartSplitScreenCfg < CGame::SSC_PLAY4) {
     gm_lpLocalPlayers[3].lp_iPlayer = -1;
   }
+  PrecacheInflated();
 }
 
 BOOL CGame::AddPlayers(void)

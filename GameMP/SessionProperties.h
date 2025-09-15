@@ -71,6 +71,9 @@ public:
   FLOAT sp_fForceSpectateCD;  // Newcomers will be forced to spectate after timer
   INDEX sp_bGiveExtraShield;  // Give extra MaxShield after complete level
   FLOAT sp_fStartMaxShield;   // Give some MaxShield on the start game
+  INDEX sp_bResetCredits;     // Reset credits to max for next level
+  INDEX sp_bIncrementCredit;  // Increment credits for cooperation and co-op sirvival mode
+  BOOL  sp_bPlayerMarkerSaveWeapon; // Save weapons after 'respawn in place'
 };
 
 // NOTE: never instantiate CSessionProperties, as its size is not fixed to the size defined in engine

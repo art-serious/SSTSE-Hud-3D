@@ -59,17 +59,32 @@ void DrawSessionDetails(CDrawPort *pdp, CSessionProperties *psp)
 	  pdp->PutText(TRANS("Game options"), iGameOptionPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
 	  INDEX iDisplayedOption=0;
 	  
+
+        CTString strGameMode;        
+          switch (psp->sp_gmGameMode) {
+	          case -1: strGameMode = TRANS("Flyover");     break;
+	          case  0: strGameMode = TRANS("Cooperative"); break;
+	          case  1: strGameMode = TRANS("Scorematch");  break;
+	          case  2: strGameMode = TRANS("Fragmatch");   break;
+            case  3: strGameMode = TRANS("Survival co-op");   break;
+        }
+
 				CTString strGameDifficulty;
 			    switch (psp->sp_gdGameDifficulty) {
-					case -1: strGameDifficulty = TRANS("Tourist"); break;
-					case  0: strGameDifficulty = TRANS("Easy")   ; break;
-					case  1: strGameDifficulty = TRANS("Normal") ; break;
-					case  2: strGameDifficulty = TRANS("Hard")   ; break;
-					case  3: strGameDifficulty = TRANS("Serious"); break;
+					  case -1: strGameDifficulty = TRANS("Tourist"); break;
+					  case  0: strGameDifficulty = TRANS("Easy")   ; break;
+					  case  1: strGameDifficulty = TRANS("Normal") ; break;
+					  case  2: strGameDifficulty = TRANS("Hard")   ; break;
+					  case  3: strGameDifficulty = TRANS("Serious"); break;
 				}
-				strGameDifficulty.PrintF(TRANS("Difficulty: %s"), strGameDifficulty);
-			    pdp->PutText(strGameDifficulty , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
-				iDisplayedOption++;
+      
+      strGameMode.PrintF(TRANS("Game type: %s"), strGameMode);
+			  pdp->PutText(strGameMode , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+			iDisplayedOption++;
+
+			strGameDifficulty.PrintF(TRANS("Difficulty: %s"), strGameDifficulty);
+			  pdp->PutText(strGameDifficulty , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+			iDisplayedOption++;
 		  if (psp->sp_bCooperative) {
 
 			  if (psp->sp_bUseExtraEnemies) {
@@ -98,6 +113,10 @@ void DrawSessionDetails(CDrawPort *pdp, CSessionProperties *psp)
 			  }
 				iDisplayedOption++;
 			  }
+        if (psp->sp_bResetCredits) {
+				  pdp->PutText(TRANS("Replenish credits") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+				  iDisplayedOption++;
+			  }
 			  if (psp->sp_bFriendlyFire) {
 				pdp->PutText(TRANS("^cff9900Friendly fire") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 				iDisplayedOption++;
@@ -122,6 +141,10 @@ void DrawSessionDetails(CDrawPort *pdp, CSessionProperties *psp)
 			  }
 			  if (!psp->sp_bRespawnInPlace) {
 				pdp->PutText(TRANS("Players reborn on control point") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+				iDisplayedOption++;
+			  }
+        if (psp->sp_bPlayerMarkerSaveWeapon) {
+				pdp->PutText(TRANS("Save weapons") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 				iDisplayedOption++;
 			  }
 

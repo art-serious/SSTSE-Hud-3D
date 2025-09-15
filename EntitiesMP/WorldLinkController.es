@@ -10,6 +10,7 @@ features "HasName";
 
 properties:
   1 CTString m_strName     "" = "World link controller",
+  2 BOOL     m_bTriggered  = FALSE,
   
 components:
   
@@ -18,11 +19,13 @@ functions:
 procedures:
   // This entity is used to restart level
   RestartLevel(){
-	CPrintF(TRANS("^cFFFF00All players are dead. The level will be restarted in 10 seconds.^C\n"));
-	autowait(10.5f);
-	((CSessionProperties*)GetSP())->sp_ctCreditsLeft=GetSP()->sp_ctCredits;
-	_pNetwork->ChangeLevel(_pNetwork->GetCurrentWorld(), false, 0);
-	return;
+    if (_pNetwork->IsServer()) {
+        _pNetwork->SendChat(0, -1, TRANS("^cFFFF00All players are dead. The level will be restarted in 10 seconds."));
+      }
+    m_bTriggered = TRUE;
+	  autowait(10.5f);
+	  _pNetwork->ChangeLevel(_pNetwork->GetCurrentWorld(), false, 0);
+	  return;
   }
 /************************************************************
  *                       M  A  I  N                         *

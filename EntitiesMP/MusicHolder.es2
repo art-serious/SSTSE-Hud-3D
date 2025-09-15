@@ -1,27 +1,14 @@
-/* Copyright (c) 2002-2012 Croteam Ltd. 
-This program is free software; you can redistribute it and/or modify
-it under the terms of version 2 of the GNU General Public License as published by
-the Free Software Foundation
-
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. */
-
-222
+222 
 %{
 #include "StdH.h"
 #include "EntitiesMP/EnemyBase.h"
 #include "EntitiesMP/EnemySpawner.h"
 #include "EntitiesMP/Trigger.h"
 #include "EntitiesMP/Woman.h"
-%}
+#include <EntitiesMP/Player.h>
 
+  extern INDEX hud_bShowNickname;
+%}
 
 enum MusicType {
   0 MT_LIGHT  "light",
@@ -41,6 +28,7 @@ event EChangeMusic {
 %{
 #define MUSIC_VOLUMEMIN   0.02f     // minimum volume (considered off)
 #define MUSIC_VOLUMEMAX   0.98f     // maximum volume (considered full)
+
 
 float FadeInFactor(TIME fFadeTime)
 {
@@ -115,6 +103,12 @@ properties:
 133 INDEX m_iSubChannel3 = 1,
 134 INDEX m_iSubChannel4 = 1,
 
+300 FLOAT m_fLevelTime = -1.0f,    // Time point when the level was started
+301 INDEX m_iLevelScore  = 0,      // Score of current level, needed for giving extra credits in co-op mode
+302 INDEX m_iCurrentMilestone = 0, // Case number of Milestone
+303 INDEX m_iEnemyCount = 0,       // Containes a count of killed enemies.  The player is not a reliable container of the "monsters killed" counter.
+304 INDEX m_iSecretCount = 0,      // Containes a count of founded secrets. The player is not a reliable container of the "secrets found" counter.
+
   {
     // array of enemies that make fuss
     CDynamicContainer<CEntity> m_cenFussMakers;
@@ -122,10 +116,93 @@ properties:
 
 components:
   1 model   MODEL_MARKER     "Models\\Editor\\MusicHolder.mdl",
-  2 texture TEXTURE_MARKER   "Models\\Editor\\MusicHolder.tex"
-
+  2 texture TEXTURE_MARKER   "Models\\Editor\\MusicHolder.tex",
+  3 sound   SOUND_EXTRA_CREDIT "Sounds\\Misc\\ExtraLife.wav",
 
 functions:
+	  // !!!!! THE MODIFIED MUSICHOLDER IS NOW A REQUIRED ENTITY FOR THE LEVEL TO WORK !!!!!
+  INDEX GetNextMilestonePoints() { //for Survival co-op
+		switch (m_iCurrentMilestone) {
+			case 0:  return 25000;
+			case 1:  return 50000;
+			case 2:  return 100000;
+			case 3:  return 200000;
+			case 4:  return 500000;
+			case 5:  return 1000000;  //  1m
+			case 6:  return 2000000;  //  2m
+			case 7:  return 5000000;  //  5m
+			case 8:  return 10000000; // 10m
+			case 9:  return 25000000; // 25m
+			case 10: return 50000000; // 50m
+		}
+      return MAX_SLONG;
+	  }
+
+    // Handle an event, return false if the event is not handled.
+  BOOL HandleEvent(const CEntityEvent &ee) {
+    if (ee.ee_slEvent==EVENTCODE_EKilledEnemy) {
+      m_iEnemyCount++;
+    }
+
+    if (ee.ee_slEvent==EVENTCODE_ESecretFound) {
+      m_iSecretCount++;
+    }
+
+    if (ee.ee_slEvent==EVENTCODE_EReceiveScore) {
+      INDEX iPreviousLevelScore = m_iLevelScore;
+
+      EReceiveScore eReceiveScore = ((EReceiveScore &) ee);
+      m_iLevelScore += eReceiveScore.iPoints;
+      
+      // increment credits
+      if (GetSP()->sp_ctCredits!=-1 && GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+        while (TRUE) {
+        if (GetNextMilestonePoints() <= m_iLevelScore) {
+          // move to next milestone
+          m_iCurrentMilestone++;
+          // if all players alive, increase credit
+          BOOL bAllPlayersAlive = TRUE;
+          for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+            CPlayer *ppl = (CPlayer *)&*GetPlayerEntity(iPlayer);
+            if (ppl==NULL) { 
+              continue;
+            }
+          // but if someone is dead during increment, revive all players without incrementing
+            if (!(ppl->GetFlags()&ENF_ALIVE)) {
+              ppl->SendEvent(EEnd());
+              bAllPlayersAlive = FALSE;
+            }
+          }
+
+          BOOL bCreditsMax = GetSP()->sp_ctCreditsLeft >= GetSP()->sp_ctCredits;
+          CPlayer *ppl = (CPlayer *)&*GetPlayerEntity(iPlayer);
+          if (bAllPlayersAlive) {
+            if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+              ((CSessionProperties*)GetSP())->sp_ctCreditsLeft++;        
+              CPrintF(TRANS("The team received an extra credit!\n"));
+              for (INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+                CPlayer *ppl2 = (CPlayer *)&*GetPlayerEntity(iPlayer);
+                if (ppl2==NULL) { 
+                  continue;
+                }
+                ppl2->m_soHighScore.Set3DParameters(5000.0f, 5000.0f, 2.0f, 1.0f);
+                PlaySound(ppl2->m_soHighScore, SOUND_EXTRA_CREDIT, SOF_3D|SOF_LOCAL);
+              }
+            }
+          } else {
+            CPrintF(TRANS("Fallen players are riding the gun again\n"));
+          }
+          continue;
+        }
+        break;
+      }
+      }
+      return TRUE;
+    }
+
+    return CRationalEntity::HandleEvent(ee);
+  }
+
   // count enemies in current world
   void CountEnemies(void)
   {
@@ -320,6 +397,10 @@ procedures:
 
     // wait for game to start
     autowait(_pTimer->TickQuantum);
+	if (m_fLevelTime<0) {
+		m_fLevelTime=_pTimer->CurrentTick()/*_pNetwork->GetGameTime()*/;
+		//CPrintF("%f\n", _pTimer->CurrentTick());
+	}
 
     // prepare initial music channel values
     ChangeMusicChannel(MT_LIGHT,        m_fnMusic0, m_fVolume0);

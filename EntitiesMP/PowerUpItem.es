@@ -9,11 +9,12 @@ uses "EntitiesMP/Player";
 
 // health type 
 enum PowerUpItemType {
-  0 PUIT_INVISIB  "Invisibility",
-  1 PUIT_INVULNER "Invulnerability",
-  2 PUIT_DAMAGE   "SeriousDamage",
-  3 PUIT_SPEED    "SeriousSpeed",
-  4 PUIT_BOMB     "SeriousBomb",
+  0 PUIT_INVISIB   "Invisibility",
+  1 PUIT_INVULNER  "Invulnerability",
+  2 PUIT_DAMAGE    "SeriousDamage",
+  3 PUIT_SPEED     "SeriousSpeed",
+  4 PUIT_BOMB      "SeriousBomb",
+  5 PUIT_EXTRALIFE "ExtraLife",
 };
 
 // event for sending through receive item
@@ -34,24 +35,28 @@ components:
   0 class   CLASS_BASE      "Classes\\Item.ecl",
 
 // ********* INVISIBILITY *********
-  1 model   MODEL_INVISIB   "ModelsMP\\Items\\PowerUps\\Invisibility\\Invisibility.mdl",
+  1 model   MODEL_INVISIB     "ModelsMP\\Items\\PowerUps\\Invisibility\\Invisibility.mdl",
 // 2 texture TEXTURE_INVISIB "ModelsMP\\Items\\PowerUps\\Invisibility\\Invisibility.tex",
 
 // ********* INVULNERABILITY *********
- 10 model   MODEL_INVULNER  "ModelsMP\\Items\\PowerUps\\Invulnerability\\Invulnerability.mdl",
+ 10 model   MODEL_INVULNER    "ModelsMP\\Items\\PowerUps\\Invulnerability\\Invulnerability.mdl",
 // 11 texture TEXTURE_INVULNER  "ModelsMP\\Items\\PowerUps\\Invulnerability\\Invulnerability.tex",
 
 // ********* SERIOUS DAMAGE *********
- 20 model   MODEL_DAMAGE    "ModelsMP\\Items\\PowerUps\\SeriousDamage\\SeriousDamage.mdl",
- 21 texture TEXTURE_DAMAGE  "ModelsMP\\Items\\PowerUps\\SeriousDamage\\SeriousDamage.tex",
+ 20 model   MODEL_DAMAGE      "ModelsMP\\Items\\PowerUps\\SeriousDamage\\SeriousDamage.mdl",
+ 21 texture TEXTURE_DAMAGE    "ModelsMP\\Items\\PowerUps\\SeriousDamage\\SeriousDamage.tex",
 
 // ********* SERIOUS SPEED *********
- 30 model   MODEL_SPEED     "ModelsMP\\Items\\PowerUps\\SeriousSpeed\\SeriousSpeed.mdl",
- 31 texture TEXTURE_SPEED   "ModelsMP\\Items\\PowerUps\\SeriousSpeed\\SeriousSpeed.tex",
+ 30 model   MODEL_SPEED       "ModelsMP\\Items\\PowerUps\\SeriousSpeed\\SeriousSpeed.mdl",
+ 31 texture TEXTURE_SPEED     "ModelsMP\\Items\\PowerUps\\SeriousSpeed\\SeriousSpeed.tex",
 
 // ********* SERIOUS BOMB *********
- 40 model   MODEL_BOMB      "ModelsMP\\Items\\PowerUps\\SeriousBomb\\SeriousBomb.mdl",
- 41 texture TEXTURE_BOMB    "ModelsMP\\Items\\PowerUps\\SeriousBomb\\SeriousBomb.tex",
+ 40 model   MODEL_BOMB        "ModelsMP\\Items\\PowerUps\\SeriousBomb\\SeriousBomb.mdl",
+ 41 texture TEXTURE_BOMB      "ModelsMP\\Items\\PowerUps\\SeriousBomb\\SeriousBomb.tex",
+
+// ********* EXTRA LIFE *********
+ 42 model   MODEL_EXTRALIFE   "ModelsMP\\Items\\PowerUps\\ExtraLife\\ExtraLife.mdl",
+ 43 texture TEXTURE_EXTRALIFE "ModelsMP\\Items\\PowerUps\\ExtraLife\\ExtraLife.tex",
 
  // ********* MISC *********
  50 texture TEXTURE_SPECULAR_STRONG  "ModelsMP\\SpecularTextures\\Strong.tex",
@@ -67,20 +72,22 @@ components:
 //302 sound   SOUND_INVULNER "SoundsMP\\Items\\Invulnerability.wav",
 //303 sound   SOUND_DAMAGE   "SoundsMP\\Items\\SeriousDamage.wav",
 //304 sound   SOUND_SPEED    "SoundsMP\\Items\\SeriousSpeed.wav",
-301 sound   SOUND_PICKUP   "SoundsMP\\Items\\PowerUp.wav",
-305 sound   SOUND_BOMB     "SoundsMP\\Items\\SeriousBomb.wav",
+301 sound   SOUND_PICKUP    "SoundsMP\\Items\\PowerUp.wav",
+305 sound   SOUND_BOMB      "SoundsMP\\Items\\SeriousBomb.wav",
+306 sound   SOUND_EXTRALIFE "Sounds\\Misc\\ExtraLife.wav",
 
 functions:
 
   void Precache(void)
   {
     switch( m_puitType) {
-    case PUIT_INVISIB :  /*PrecacheSound(SOUND_INVISIB );  break;*/
-    case PUIT_INVULNER:  /*PrecacheSound(SOUND_INVULNER);  break; */                                    
-    case PUIT_DAMAGE  :  /*PrecacheSound(SOUND_DAMAGE  );  break;*/
-    case PUIT_SPEED   :  /*PrecacheSound(SOUND_SPEED   );  break;*/
-                         PrecacheSound(SOUND_PICKUP  );  break;
-    case PUIT_BOMB    :  PrecacheSound(SOUND_BOMB    );  break;
+    case PUIT_INVISIB  :  /*PrecacheSound(SOUND_INVISIB );  break;*/
+    case PUIT_INVULNER :  /*PrecacheSound(SOUND_INVULNER);  break; */                                    
+    case PUIT_DAMAGE   :  /*PrecacheSound(SOUND_DAMAGE  );  break;*/
+    case PUIT_SPEED    :  /*PrecacheSound(SOUND_SPEED   );  break;*/
+                          PrecacheSound(SOUND_PICKUP   );  break;
+    case PUIT_BOMB     :  PrecacheSound(SOUND_BOMB     );  break;
+    case PUIT_EXTRALIFE:  PrecacheSound(SOUND_EXTRALIFE);  break;
     }
   }
 
@@ -94,11 +101,12 @@ functions:
     pes->es_iScore = 0;//m_iScore;
     
     switch( m_puitType) {
-    case PUIT_INVISIB :  pes->es_strName += " invisibility";     break;
-    case PUIT_INVULNER:  pes->es_strName += " invulnerability";  break;
-    case PUIT_DAMAGE  :  pes->es_strName += " serious damage";   break;
-    case PUIT_SPEED   :  pes->es_strName += " serious speed";    break;
-    case PUIT_BOMB    :  pes->es_strName = "Serious Bomb!"; 
+    case PUIT_INVISIB  :  pes->es_strName += " invisibility";     break;
+    case PUIT_INVULNER :  pes->es_strName += " invulnerability";  break;
+    case PUIT_DAMAGE   :  pes->es_strName += " serious damage";   break;
+    case PUIT_SPEED    :  pes->es_strName += " serious speed";    break;
+    case PUIT_BOMB     :  pes->es_strName = "Serious Bomb!";      break;
+    case PUIT_EXTRALIFE:  pes->es_strName = "Extra life";
     }
     return TRUE;
   }
@@ -126,6 +134,9 @@ functions:
         break;
       case PUIT_BOMB:
         Particles_Atomic(this, 2.0f*0.75f, 2.0f*0.95f, PT_STAR05, 12);
+        break;
+      case PUIT_EXTRALIFE:
+        Particles_Stardust( this, 2.0f*0.75f, 1.00f*0.75f, PT_STAR08, 320);
         break;
     }
   }
@@ -180,6 +191,15 @@ functions:
         AddFlare( MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );  // add flare
         StretchItem( FLOAT3D(1.0f*3.0f, 1.0f*3.0f, 1.0f*3.0));
         break;
+      case PUIT_EXTRALIFE:
+        StartModelAnim( ITEMHOLDER_ANIM_SMALLOSCILATION, AOF_LOOPING|AOF_NORESTART);
+        ForceCollisionBoxIndexChange( ITEMHOLDER_COLLISION_BOX_BIG);
+        m_fRespawnTime = (m_fCustomRespawnTime>0) ? m_fCustomRespawnTime : 600.0f; 
+        m_strDescription.PrintF("Extra Life");
+        AddItem(  MODEL_EXTRALIFE, TEXTURE_EXTRALIFE, 0, 0, 0);  // set appearance
+        AddFlare( MODEL_FLARE, TEXTURE_FLARE, FLOAT3D(0,0.2f,0), FLOAT3D(1,1,0.3f) );  // add flare
+        StretchItem( FLOAT3D(1.0f*3.0f, 1.0f*3.0f, 1.0f*3.0));
+        break;
     }
   };
 
@@ -199,6 +219,22 @@ procedures:
       }
     }
 
+    if (m_puitType == PUIT_EXTRALIFE) {
+      m_bPickupOnce = true;
+      if (IsOfClass(epass.penOther, "Player")) {
+        CSessionProperties *pSP = (CSessionProperties *)GetSP();
+        if (pSP->sp_ctCredits != -1) {
+          pSP->sp_ctCreditsLeft++;
+          m_soPick.Set3DParameters(50000.0f, 50000.0f, 2.0, 1.0f);
+          PlaySound(m_soPick, SOUND_EXTRALIFE, SOF_3D);
+          m_fPickSoundLen = GetSoundLength(SOUND_EXTRALIFE);
+          CPrintF(TRANS("The team received an extra credit!\n"));
+          jump CItem::ItemReceived();
+          return;
+        }
+      }
+    }
+
     if( !(m_bPickupOnce||m_bRespawn)) {
       // if already picked by this player
       BOOL bWasPicked = MarkPickedBy(epass.penOther);
@@ -211,6 +247,7 @@ procedures:
     // send powerup to entity
     EPowerUp ePowerUp;
     ePowerUp.puitType = m_puitType;
+
     // if powerup is received
     if( epass.penOther->ReceiveItem(ePowerUp)) {
 

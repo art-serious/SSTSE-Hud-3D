@@ -49,6 +49,10 @@
 #include "EntitiesMP/MovingBrush.h"
 #include "EntitiesMP/MessageHolder.h"
 #include "EntitiesMP/EnemyBase.h"
+#include "EntitiesMP/AmmoPack.h"
+
+#include "EntitiesMP/Friend.h"
+
 extern INDEX hud_bShowWeapon;
 
 extern const INDEX aiWeaponsRemap[19] = { 0,  1,  10,  2,  3,  4,  5,  6,  7,
@@ -91,6 +95,8 @@ event EReleaseWeapon {};
 event EReloadWeapon {};
 // weapon changed - used to notify other entities
 event EWeaponChanged {};
+
+event EClearAmmoPack {}; // HUD 3D
 
 // weapons (do not change order! - needed by HUD.cpp)
 enum WeaponType {
@@ -612,6 +618,7 @@ properties:
 // 55 INDEX m_iMaxNukeBalls   = MAX_NUKEBALLS,
  54 INDEX m_iSniperBullets    = 0,
  55 INDEX m_iMaxSniperBullets = MAX_SNIPERBULLETS,
+ 56 FLOAT m_fAmmoPackExtra  = 0.0f,                    // HUD 3D
 
 // weapons specific
 // knife
@@ -654,7 +661,8 @@ properties:
 271 FLOAT m_tmFlamerStop=1e9,
 272 FLOAT m_tmLastChainsawSpray = 0.0f,
 
-301 INDEX m_iEnemyHealth = 0, // * H3D ****************************************************************
+301 INDEX m_iEnemyHealth      = 0, // * H3D ****************************************************************
+302 INDEX m_iEnemyHealthIndex = 0, //
 
 
 {
@@ -1337,6 +1345,12 @@ INDEX GetAmmoAmount(INDEX iHUDAmmoIndex) {
         if( IsDerivedFromClass( pen, "Enemy Base")) {
           m_fEnemyHealth = ((CEnemyBase*)pen)->GetHealth() / ((CEnemyBase*)pen)->m_fMaxHealth;
           m_iEnemyHealth = ceil((((CEnemyBase*)pen)->GetHealth() / ((CEnemyBase*)pen)->m_fMaxHealth)*100);
+          m_iEnemyHealthIndex = ceil(((CEnemyBase*)pen)->GetHealth());// HUD 3D
+        }
+        if( IsDerivedFromClass( pen, "Friend")) {
+          m_fEnemyHealth = ((CFriend*)pen)->GetHealth() / ((CFriend*)pen)->m_fMaxHealth;
+          m_iEnemyHealth = ceil((((CFriend*)pen)->GetHealth() / ((CFriend*)pen)->m_fMaxHealth)*100);
+          m_iEnemyHealthIndex = ceil(((CFriend*)pen)->GetHealth());
         }
          // cannot snoop while firing
         if( m_bFireWeapon) { m_tmTargetingStarted = 0; }
@@ -2531,6 +2545,20 @@ INDEX GetAmmoAmount(INDEX iHUDAmmoIndex) {
   // initialize weapons
   void InitializeWeapons(INDEX iGiveWeapons, INDEX iTakeWeapons, INDEX iTakeAmmo, FLOAT fMaxAmmoRatio)
   {
+    // default ammo pack size
+    FLOAT fModSurv  = 1.0f;
+    if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {fModSurv=0.5f;}
+    FLOAT fModifier = ClampDn((GetSP()->sp_fAmmoQuantity), 1.0f)*fModSurv;
+    m_iMaxBullets        = ClampUp((INDEX) ceil(MAX_BULLETS      *fModifier+(MAX_BULLETS      *m_fAmmoPackExtra)), INDEX(999));
+    m_iMaxShells         = ClampUp((INDEX) ceil(MAX_SHELLS       *fModifier+(MAX_SHELLS       *m_fAmmoPackExtra)), INDEX(999));
+    m_iMaxRockets        = ClampUp((INDEX) ceil(MAX_ROCKETS      *fModifier+(MAX_ROCKETS      *m_fAmmoPackExtra)), INDEX(999));
+    m_iMaxGrenades       = ClampUp((INDEX) ceil(MAX_GRENADES     *fModifier+(MAX_GRENADES     *m_fAmmoPackExtra)), INDEX(999));
+    m_iMaxNapalm         = ClampUp((INDEX) ceil(MAX_NAPALM       *fModifier+(MAX_NAPALM       *m_fAmmoPackExtra)), INDEX(999));
+    m_iMaxElectricity    = ClampUp((INDEX) ceil(MAX_ELECTRICITY  *fModifier+(MAX_ELECTRICITY  *m_fAmmoPackExtra)), INDEX(999));
+//    m_iMaxNukeBalls    = ClampUp((INDEX) ceil(MAX_NUKEBALLS*fModifier),    INDEX(999));
+    m_iMaxIronBalls      = ClampUp((INDEX) ceil(MAX_IRONBALLS    *fModifier+(MAX_IRONBALLS    *m_fAmmoPackExtra)), INDEX(999));
+    m_iMaxSniperBullets  = ClampUp((INDEX) ceil(MAX_SNIPERBULLETS*fModifier+(MAX_SNIPERBULLETS*m_fAmmoPackExtra)), INDEX(999));
+
     ResetWeaponMovingOffset();
     // remember old weapons
     ULONG ulOldWeapons = m_iAvailableWeapons;
@@ -2548,18 +2576,6 @@ INDEX GetAmmoAmount(INDEX iHUDAmmoIndex) {
         AddDefaultAmmoForWeapon(iWeapon, fMaxAmmoRatio);
       }
     }
-
-    // default ammo pack size
-    FLOAT fModifier = ClampDn(GetSP()->sp_fAmmoQuantity, 1.0f);
-    m_iMaxBullets        = ClampUp((INDEX) ceil(MAX_BULLETS*fModifier),       INDEX(999));
-    m_iMaxShells         = ClampUp((INDEX) ceil(MAX_SHELLS*fModifier),        INDEX(999));
-    m_iMaxRockets        = ClampUp((INDEX) ceil(MAX_ROCKETS*fModifier),       INDEX(999));
-    m_iMaxGrenades       = ClampUp((INDEX) ceil(MAX_GRENADES*fModifier),      INDEX(999));
-    m_iMaxNapalm         = ClampUp((INDEX) ceil(MAX_NAPALM*fModifier),        INDEX(999));
-    m_iMaxElectricity    = ClampUp((INDEX) ceil(MAX_ELECTRICITY*fModifier),   INDEX(999));
-//    m_iMaxNukeBalls    = ClampUp((INDEX) ceil(MAX_NUKEBALLS*fModifier),    INDEX(999));
-    m_iMaxIronBalls      = ClampUp((INDEX) ceil(MAX_IRONBALLS*fModifier),     INDEX(999));
-    m_iMaxSniperBullets  = ClampUp((INDEX) ceil(MAX_SNIPERBULLETS*fModifier), INDEX(999));
 
     // take away ammo
     if( iTakeAmmo & (1<<AMMO_BULLETS))       {m_iBullets    = 0;}
@@ -3080,9 +3096,30 @@ INDEX GetAmmoAmount(INDEX iHUDAmmoIndex) {
       // trigger something when picked - so they must be picked)
       return TRUE;
     }
-
+  
     ASSERT(ee.ee_slEvent == EVENTCODE_EAmmoPackItem);
     EAmmoPackItem &eapi = (EAmmoPackItem &)ee;
+    if(GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+      if(m_fAmmoPackExtra < 0.5f && eapi.aptPackType==APT_CUSTOM) {
+        m_fAmmoPackExtra = 0.5f;
+      } else if (m_fAmmoPackExtra < 0.6f && eapi.aptPackType==APT_SERIOUS)
+      {
+        m_fAmmoPackExtra = 0.6995f;
+      }
+      FLOAT fModSurv  = 1.0f;
+      if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {fModSurv=0.5f;}
+      FLOAT fModifier = ClampDn((GetSP()->sp_fAmmoQuantity), 1.0f)*fModSurv;
+
+      m_iMaxBullets        = ClampUp((INDEX) ceil(MAX_BULLETS      *fModifier+(MAX_BULLETS      *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxShells         = ClampUp((INDEX) ceil(MAX_SHELLS       *fModifier+(MAX_SHELLS       *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxRockets        = ClampUp((INDEX) ceil(MAX_ROCKETS      *fModifier+(MAX_ROCKETS      *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxGrenades       = ClampUp((INDEX) ceil(MAX_GRENADES     *fModifier+(MAX_GRENADES     *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxNapalm         = ClampUp((INDEX) ceil(MAX_NAPALM       *fModifier+(MAX_NAPALM       *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxElectricity    = ClampUp((INDEX) ceil(MAX_ELECTRICITY  *fModifier+(MAX_ELECTRICITY  *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxIronBalls      = ClampUp((INDEX) ceil(MAX_IRONBALLS    *fModifier+(MAX_IRONBALLS    *m_fAmmoPackExtra)), INDEX(999));
+      m_iMaxSniperBullets  = ClampUp((INDEX) ceil(MAX_SNIPERBULLETS*fModifier+(MAX_SNIPERBULLETS*m_fAmmoPackExtra)), INDEX(999));
+    }
+
     if( (eapi.iShells>0 && m_iShells<m_iMaxShells) ||
         (eapi.iBullets>0 && m_iBullets<m_iMaxBullets) ||
         (eapi.iRockets>0 && m_iRockets<m_iMaxRockets) ||
@@ -5835,6 +5872,7 @@ procedures:
         SelectWeaponChange(eSelect.iWeapon);
         resume;
       };
+      on (EClearAmmoPack): {m_fAmmoPackExtra=0.0f; resume;}
       // before level change
       on (EPreLevelChange) : { 
         // stop everything

@@ -44,6 +44,11 @@
 #include "EntitiesMP/EnemySpawner.h"
 #include "EntitiesMP/EnemyBase.h"
 
+#include "EntitiesMP/Beast.h"
+#include "EntitiesMP/Elemental.h"
+#include "EntitiesMP/Headman.h"
+#include "EntitiesMP/Walker.h"
+
 // HUD 3D *****************************************************************************************
 #include "EntitiesMP/Shop.h"
 #include "EntitiesMP/MoneyItem.h"
@@ -51,17 +56,35 @@
 
 #include "Models/Interface/H3D_Base.h"
 #include "Models/Interface/SHOP_BASE.h"
+
+#include "EntitiesMP/GameStat.h"
+#include "EntitiesMP/WorldLinkController.h"
+
+#include "EntitiesMP/Friend.h"
 // ************************************************************************************************
 
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
 
-extern void HUD_DrawSniperMask();
+extern void HUD_DrawSniperMask(const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent);
+//extern void HUD_DrawSniperMask(CPlayerWeapons* penWeapons);
 // from game
 #define GRV_SHOWEXTRAS  (1L<<0)   // add extra stuff like console, weapon, pause
 
 #define GENDER_MALE     0
 #define GENDER_FEMALE   1
 #define GENDEROFFSET    100   // sound components for genders are offset by this value
+
+#define MARK_ACTIVE         "Active"                      // Parametric Particles
+#define MARK_BLEND_TYPE     "Blend type"                  // 
+#define MARK_COLOR          "Color"                       // https://github.com/SeriousAlexej/ParametricParticles
+#define MARK_DEPTH_TESTING  "Depth testing"               //
+#define MARK_OUTLINE_ENTITY "Outline entity 01"           // 
+#define MARK_FALL_OFF       "Outline visibility fall-off" // 
+#define MARK_HOT_SPOT       "Outline visibility hot-spot" // 
+#define MARK_THICKNESS      "Thickness"                   // 
+#define MARK_TYPE           "Type"                        // 
+
+#define MARK_TEXTURE        "Texture"                     // 
 
 %}
 
@@ -110,7 +133,7 @@ event EShopEntered {
 };
 
 %{
-extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, BOOL bSnooping, const CPlayer *penPlayerOwner*/);
+extern void DrawHUD( const CPlayer *penPlayerCurrent, CDrawPort *pdpCurrent/*, BOOL bSnooping*/, const CPlayer *penPlayerOwner);
 extern void InitHUD(void);
 extern void EndHUD(void);
 
@@ -125,7 +148,6 @@ BOOL _bDiscard3rdView=FALSE;
 #define NAME name
 
 const FLOAT _fBlowUpAmmount = 70.0f;
-
 
 // computer message adding flags
 #define CMF_READ       (1L<<0)
@@ -276,8 +298,9 @@ static void KillAllEnemies(CEntity *penKiller)
 #define PLACT_SNIPER_USE          (1L<<12)
 #define PLACT_FIREBOMB            (1L<<13)
 #define PLACT_SHOW_TAB_INFO       (1L<<14)    // HUD 3D
-#define PLACT_DROP_MONEY          (1L<<15)    // HUD 3D
-#define PLACT_SELECT_WEAPON_SHIFT (16)
+#define PLACT_DROP_MONEY          (1L<<15)    // 
+#define PLACT_MARK                (1L<<16)    // 
+#define PLACT_SELECT_WEAPON_SHIFT (17)
 #define PLACT_SELECT_WEAPON_MASK  (0x1FL<<PLACT_SELECT_WEAPON_SHIFT)
                                      
 #define MAX_WEAPONS 30
@@ -287,6 +310,7 @@ static void KillAllEnemies(CEntity *penKiller)
 // is player spying another player
 //extern TIME _tmSnoopingStarted;
 //extern CEntity *_penTargeting;
+
 
 struct PlayerControls {
   FLOAT3D aRotation;
@@ -325,6 +349,7 @@ struct PlayerControls {
   BOOL bFire;
   BOOL bShowTabInfo;
   BOOL bDropMoney;
+  BOOL bMark;
   BOOL bReload;
   BOOL bUse;
   BOOL bComputer;
@@ -351,7 +376,8 @@ extern INDEX cht_bFly        = FALSE;
 extern INDEX cht_bGhost      = FALSE;
 extern INDEX cht_bInvisible  = FALSE;
 extern FLOAT cht_fTranslationMultiplier = 1.0f;
-extern FLOAT cht_fMaxShield  = 0.0f;  // HUD 3D
+extern FLOAT cht_fMaxShield  = -1.0f;  // HUD 3D
+       FLOAT cht_fOldMaxShield = -1.0f;//
 extern INDEX cht_bEnable     = 0;   
 
 // interface control
@@ -367,10 +393,12 @@ extern FLOAT hud_fScaling     = 1.0f;
 extern FLOAT hud_tmWeaponsOnScreen = 3.0f;
 extern FLOAT hud_tmLatencySnapshot = 1.0f;
 extern INDEX hud_bShowMatchInfo = TRUE;
-extern INDEX _colHUD = 0x4C80BB00;
+extern INDEX hud_iHUDColor = (INDEX)0x4C80BB00;
 
-extern INDEX hud_bShowPlayerList = FALSE;
-extern INDEX hud_bShowNickname = FALSE;
+extern INDEX hud_iOldHUD     = 0;
+extern INDEX hud_iOldHUDShop = 0;
+
+extern INDEX hud_iShowPlayerList = 0;      // HUD 3D - classic table of players
 
 extern FLOAT plr_fBreathingStrength = 0.0f;
 extern FLOAT plr_tmSnoopingTime;
@@ -451,6 +479,7 @@ static FLOAT h3d_fClip                 = (FLOAT)1;
 static INDEX h3d_iColor                = (INDEX)0x6CA0DB00;
 
 static INDEX h3d_bLowAmmoBorder        = 1;
+static INDEX h3d_bShowExtraLife        = 1;
 static INDEX h3d_iColorScheme          = 0;
 static INDEX h3d_iCustomColorMax       = (INDEX)0x6CA0DB00;
 static INDEX h3d_iCustomColorTop       = (INDEX)0x6CA0DB00;
@@ -466,12 +495,19 @@ static BOOL  h3d_bHudInertia           = TRUE;
 static BOOL  h3d_bHudBobbing           = TRUE;
 static BOOL  h3d_bShakingFromDamage    = TRUE;
 static FLOAT h3d_fEnemyShowMaxHealth   = (FLOAT)-1;
-static FLOAT h3d_OriginalAttachmentPositions[110];
+static FLOAT h3d_OriginalAttachmentPositions[114];
 static FLOAT h3d_fVerticalPlacementHUD = (FLOAT)0;
 static BOOL  h3d_bRenderSurfaceAdd     = FALSE;
 
 static INDEX dbg_strEnemySpawnerInfo   = 0;
 static INDEX dbg_strEnemyBaseInfo      = 0;
+// * Parametric Particles Outline *****************************************************************
+static INDEX ppo_iBlendType            = 5; //0, 1, 5
+static INDEX ppo_iColor                = 0xFFFFFFFF;
+static FLOAT ppo_fFallOff              = 1000.0f;
+static FLOAT ppo_fHotSpot              = 1000.0f;
+static FLOAT ppo_fThickness            = 0.15f;
+//static INDEX ppo_iType                 = 0;
 // ************************************************************************************************
 
 // !=NULL if some player wants to call computer
@@ -607,7 +643,8 @@ DECL_DLL void ctl_ComposeActionPacket(const CPlayerCharacter &pc, CPlayerAction 
   if(pctlCurrent.bFireBomb)      paAction.pa_ulButtons |= PLACT_FIREBOMB;
 
   if(pctlCurrent.bShowTabInfo)   paAction.pa_ulButtons |= PLACT_SHOW_TAB_INFO; // HUD 3D
-  if(pctlCurrent.bDropMoney)     paAction.pa_ulButtons |= PLACT_DROP_MONEY;    // HUD 3D
+  if(pctlCurrent.bDropMoney)     paAction.pa_ulButtons |= PLACT_DROP_MONEY;    // 
+  if(pctlCurrent.bMark)          paAction.pa_ulButtons |= PLACT_MARK;          // 
 
   // if userorcomp just pressed
   if(pctlCurrent.bUseOrComputer && !pctlCurrent.bUseOrComputerLast) {
@@ -747,6 +784,9 @@ void CPlayer_Precache(void)
   pdec->PrecacheModel(MODEL_H3D_1X1      );
   pdec->PrecacheModel(MODEL_H3D_06X06    );
   pdec->PrecacheModel(MODEL_H3D_07X07    );
+  pdec->PrecacheModel(MODEL_H3D_07X07    );
+  pdec->PrecacheModel(MODEL_H3D_BOSS     );
+  pdec->PrecacheModel(MODEL_H3D_BOSS_BG  );
 
   pdec->PrecacheTexture(TEXTURE_H3D_BASE ); 
   pdec->PrecacheTexture(TEXTURE_H3D_ANI  );
@@ -767,12 +807,82 @@ void CPlayer_Precache(void)
 
   pdec->PrecacheModel(MODEL_BAG            );
   pdec->PrecacheTexture(TEXTURE_BAG        );
+  pdec->PrecacheModel(MODEL_COIN           );
+  pdec->PrecacheTexture(TEXTURE_COIN       );
+  pdec->PrecacheModel(MODEL_CHEST          );
+  pdec->PrecacheTexture(TEXTURE_CHEST      );
 
   pdec->PrecacheSound(SOUND_SHIELD_HIT     );
   pdec->PrecacheSound(SOUND_SHIELD_CHARGE  );
   pdec->PrecacheSound(SOUND_SHIELD_BREAK   );
   pdec->PrecacheSound(SOUND_SHIELD_CHARGED );
+
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE1);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE2);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE3);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE4);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE5);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE6);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE7);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE8);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE9);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE10);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE11);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE12);
+  pdec->PrecacheSound(SOUND_MARK_ENEMYBASE13);
+  pdec->PrecacheSound(SOUND_MARK_SCREAM    );
+  pdec->PrecacheSound(SOUND_MARK_BIGENEMY  );
+  pdec->PrecacheSound(SOUND_MARK_OH_SHIT   );
+  pdec->PrecacheSound(SOUND_MARK_MARK1     );
+  pdec->PrecacheSound(SOUND_MARK_MARK2     );
+  pdec->PrecacheSound(SOUND_MARK_MARK3     );
+  pdec->PrecacheSound(SOUND_MARK_MARK4     );
+  pdec->PrecacheSound(SOUND_MARK_MARK5     );
+  pdec->PrecacheSound(SOUND_MARK_MARK6     );
+  pdec->PrecacheSound(SOUND_MARK_MARK7     );
+  pdec->PrecacheSound(SOUND_MARK_MARK8     );
+  pdec->PrecacheSound(SOUND_MARK_MARK9     );
+  pdec->PrecacheSound(SOUND_MARK_AMMO1     );
+  pdec->PrecacheSound(SOUND_MARK_AMMO2     );
+  pdec->PrecacheSound(SOUND_MARK_AMMO3     );
+  pdec->PrecacheSound(SOUND_MARK_SWITCH    );
+  pdec->PrecacheSound(SOUND_MARK_POWERUP1  );
+  pdec->PrecacheSound(SOUND_MARK_POWERUP2  );
+  pdec->PrecacheSound(SOUND_MARK_HEALTHITEM);
+  pdec->PrecacheSound(SOUND_MARK_ARMORITEM );
+  pdec->PrecacheSound(SOUND_MARK_WEAPON1   );
+  pdec->PrecacheSound(SOUND_MARK_WEAPON2   );
+  pdec->PrecacheSound(SOUND_MARK_WEAPON3   );
+  pdec->PrecacheSound(SOUND_MARK_WEAPON4   );
+//  pdec->PrecacheSound(SOUND_MARK_GRENADES  );
+//  pdec->PrecacheSound(SOUND_MARK_LASER     );
+//  pdec->PrecacheSound(SOUND_MARK_MINIGUN   );
+  pdec->PrecacheSound(SOUND_MARK_HEADMAN1  );
+  pdec->PrecacheSound(SOUND_MARK_HEADMAN2  );
+  pdec->PrecacheSound(SOUND_MARK_HEADMAN3  );
+  pdec->PrecacheSound(SOUND_MARK_HEADMAN4  );
+  pdec->PrecacheSound(SOUND_MARK_HEADMAN5  );
+  pdec->PrecacheSound(SOUND_MARK_KAMIKAZE1 );
+  pdec->PrecacheSound(SOUND_MARK_KAMIKAZE2 );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN1  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN2  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN3  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN4  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN5  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN6  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN7  );
+  pdec->PrecacheSound(SOUND_MARK_BONEMAN8  );
+  pdec->PrecacheSound(SOUND_MARK_EYEMAN1   );
+  pdec->PrecacheSound(SOUND_MARK_EYEMAN2   );
+  pdec->PrecacheSound(SOUND_MARK_WEREBULL1 );
+  pdec->PrecacheSound(SOUND_MARK_WEREBULL2 );
+  pdec->PrecacheSound(SOUND_MARK_WOMAN1    );
+  pdec->PrecacheSound(SOUND_MARK_SANTA     );
+  pdec->PrecacheSound(SOUND_MARK_SCORPMAN  );
+  pdec->PrecacheSound(SOUND_MARK_CHAINSAWFREAK);
   // **********************************************************************************************
+  pdec->PrecacheModel(MODEL_OUTLINE        );
+  pdec->PrecacheModel(MODEL_OUTLINE_FAST   );
 }
 
 
@@ -790,6 +900,7 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("persistent user INDEX h3d_iColor;",                &h3d_iColor);
   _pShell->DeclareSymbol("persistent user INDEX h3d_iColorScheme;",          &h3d_iColorScheme);
   _pShell->DeclareSymbol("persistent user INDEX h3d_bLowAmmoBorder;",        &h3d_bLowAmmoBorder);
+  _pShell->DeclareSymbol("persistent user INDEX h3d_bShowExtraLife;",        &h3d_bShowExtraLife);
   _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorMax;",       &h3d_iCustomColorMax);
   _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorTop;",       &h3d_iCustomColorTop);
   _pShell->DeclareSymbol("persistent user INDEX h3d_iCustomColorMid;",       &h3d_iCustomColorMid);
@@ -850,8 +961,10 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomIn;",         &pctlCurrent.bSniperZoomIn);
   _pShell->DeclareSymbol("user INDEX ctl_bSniperZoomOut;",        &pctlCurrent.bSniperZoomOut);
   _pShell->DeclareSymbol("user INDEX ctl_bFireBomb;",             &pctlCurrent.bFireBomb);
+
   _pShell->DeclareSymbol("user INDEX ctl_bShowTabInfo;",          &pctlCurrent.bShowTabInfo);       // HUD 3D
-  _pShell->DeclareSymbol("user INDEX ctl_bDropMoney;",            &pctlCurrent.bDropMoney);         // HUD 3D
+  _pShell->DeclareSymbol("user INDEX ctl_bDropMoney;",            &pctlCurrent.bDropMoney);         //
+  _pShell->DeclareSymbol("user INDEX ctl_bMark;",                 &pctlCurrent.bMark);              //
 
   _pShell->DeclareSymbol("user FLOAT plr_fSwimSoundDelay;", &plr_fSwimSoundDelay);
   _pShell->DeclareSymbol("user FLOAT plr_fDiveSoundDelay;", &plr_fDiveSoundDelay);
@@ -884,7 +997,16 @@ void CPlayer_OnInitClass(void)
   _pShell->DeclareSymbol("INDEX cht_bDumpPlayerShading;", &cht_bDumpPlayerShading);
   _pShell->DeclareSymbol("persistent user INDEX hud_bShowMatchInfo;", &hud_bShowMatchInfo);
 
-  _pShell->DeclareSymbol("persistent user FLOAT hud_bShowPlayerList;",    &hud_bShowPlayerList);    // HUD 3D
+  _pShell->DeclareSymbol("persistent user INDEX hud_iShowPlayerList;",    &hud_iShowPlayerList);    // HUD 3D
+  _pShell->DeclareSymbol("persistent user INDEX hud_iOldHUD;",            &hud_iOldHUD);            //
+  _pShell->DeclareSymbol("persistent user INDEX hud_iHUDColor;",          &hud_iHUDColor);
+
+  _pShell->DeclareSymbol("persistent user INDEX ppo_iBlendType;", &ppo_iBlendType);
+  _pShell->DeclareSymbol("persistent user INDEX ppo_iColor;",     &ppo_iColor    );
+  _pShell->DeclareSymbol("persistent user FLOAT ppo_fFallOff;",   &ppo_fFallOff  );
+  _pShell->DeclareSymbol("persistent user FLOAT ppo_fHotSpot;",   &ppo_fHotSpot  );
+  //_pShell->DeclareSymbol("persistent user FLOAT ppo_fThickness;", &ppo_fThickness);
+  //_pShell->DeclareSymbol("persistent user INDEX ppo_iType;",      &ppo_iType     );
 
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilSpeed[17];",   &wpn_fRecoilSpeed);
   _pShell->DeclareSymbol("persistent user FLOAT wpn_fRecoilLimit[17];",   &wpn_fRecoilLimit);
@@ -943,10 +1065,9 @@ void CPlayer_OnInitClass(void)
 
   // player appearance interface
   _pShell->DeclareSymbol("INDEX SetPlayerAppearance(INDEX, INDEX, INDEX, INDEX);", &SetPlayerAppearance);
+
   _pShell->DeclareSymbol("user INDEX dbg_strEnemySpawnerInfo;", &dbg_strEnemySpawnerInfo);
   _pShell->DeclareSymbol("user INDEX dbg_strEnemyBaseInfo;", &dbg_strEnemyBaseInfo);
-
-  _pShell->DeclareSymbol("user INDEX hud_bShowNickname;", &hud_bShowNickname);
 
   // call player weapons persistant variable initialization
   extern void CPlayerWeapons_Init(void);
@@ -1190,6 +1311,7 @@ properties:
  10 FLOAT m_fMaxShield = 0.0f,                // max shield
  11 FLOAT m_fShieldDelay = 10.0f,             // charge delay
  12 BOOL  m_bShieldCharging = FALSE,          // checking for Charging sound
+ 13 FLOAT m_fExtraShield = 0.0f,              //
   
  16 CEntityPointer m_penWeapons,              // player weapons
  17 CEntityPointer m_penAnimator,             // player animator
@@ -1223,6 +1345,7 @@ properties:
  57 FLOAT m_tmAnimateInbox = -100.0f,      // show animation of inbox icon animation
  
  44 CEntityPointer m_penMainMusicHolder,
+ 45 CEntityPointer m_penBackgroundViewer,
 
  51 FLOAT m_tmLastDamage = -1.0f,
  52 FLOAT m_fMaxDamageAmmount = 0.0f,
@@ -1340,37 +1463,48 @@ properties:
 
  206 FLOAT m_h3dAppearTimeArmor = 5.0f,
  207 FLOAT m_fBorderArmor = 0.0f,
- 232 FLOAT m_h3dAppearTimeShield = 5.0f,
- 233 FLOAT m_fBorderShield = 0.0f,
- 208 FLOAT m_fDamageShakeX = 0.0f,
- 209 FLOAT m_fDamageShakeY = 0.0f,
- 210 FLOAT m_tmDamageShakeEnd = 0.0f,
- 211 FLOAT m_fDamageShakePower = 1.0f,
- 212 FLOAT3D m_vDamageShakeOffset = FLOAT3D(0,0,0), // HUD shake
- 212 FLOAT3D m_vDamageShakeOffsetLast = FLOAT3D(0,0,0),
+ 208 FLOAT m_h3dAppearTimeShield = 5.0f,
+ 209 FLOAT m_fBorderShield = 0.0f,
+ 210 FLOAT m_fDamageShakeX = 0.0f,
+ 211 FLOAT m_fDamageShakeY = 0.0f,
+ 212 FLOAT m_tmDamageShakeEnd = 0.0f,
+ 213 FLOAT m_fDamageShakePower = 1.0f,
+ 214 FLOAT3D m_vDamageShakeOffset = FLOAT3D(0,0,0), // HUD shake
+ 215 FLOAT3D m_vDamageShakeOffsetLast = FLOAT3D(0,0,0),
 
- 213 FLOAT m_fDamageTaken = 0.0f,
- 214 ANGLE3D m_aH3DSway = ANGLE3D(0,0,0),
- 215 ANGLE3D m_aH3DSwayOld = ANGLE3D(0,0,0),
+ 216 FLOAT m_fDamageTaken = 0.0f,
+ 217 ANGLE3D m_aH3DSway = ANGLE3D(0,0,0),
+ 218 ANGLE3D m_aH3DSwayOld = ANGLE3D(0,0,0),
 
- 216 FLOAT m_fShieldDamageAmmount = 0.0f,       // how much was last wound to shield
- 217 FLOAT m_tmShieldWoundTime    = -10.0f,     // when was last wound to shield
- 218 FLOAT m_tmShieldScreamTime   = -10.0f,     // when was last wound to shield sound played
- 219 FLOAT m_tmShieldBroken       = -10.0f,     // when shield was broken
- 233 FLOAT m_fShieldBrokenAmmount = 0.0f,
+ 219 FLOAT m_fShieldDamageAmmount = 0.0f,       // how much was last wound to shield
+ 220 FLOAT m_tmShieldWoundTime    = -10.0f,     // when was last wound to shield
+ 221 FLOAT m_tmShieldScreamTime   = -10.0f,     // when was last wound to shield sound played
+ 222 FLOAT m_tmShieldBroken       = -10.0f,     // when shield was broken
+ 223 FLOAT m_fShieldBrokenAmmount = 0.0f,
 
- 220 CModelObject m_moShop,               //  * SHOP **********************************************
- 221 CEntityPointer m_penShop,
- 222 INDEX m_iSelectedShopIndex = 0,
- 223 BOOL m_bShowingTabInfo = FALSE,
- 224 BOOL m_bShopInTheWorld = FALSE,      // For "Tab" table purposes
- 225 FLOAT m_tmMoneyDropped = -10.0f,
+ 224 CEntityPointer m_penGameStat,
 
- 230 BOOL m_bSpectatorDeath = FALSE,      // means we're dying for spectator purposes
- 231 CEntityPointer m_penWorldLinkController, // for auto-restart level in the game with respawn credits
+ 225 CModelObject m_moShop,               //  * SHOP **********************************************
+ 226 CEntityPointer m_penShop,
+ 227 INDEX m_iSelectedShopIndex = 0,
+ 228 BOOL m_bShowingTabInfo = FALSE,
+ 229 BOOL m_bShopInTheWorld = FALSE,      // For "Tab" table purposes
+ 230 FLOAT m_tmMoneyDropped = -10.0f,
 
- 232 FLOAT3D m_vShieldBroken=FLOAT3D(0,0,0),// position for particles of destroyed shield
+ 231 BOOL m_bSpectatorDeath = FALSE,      // means we're dying for spectator purposes
+ 232 CEntityPointer m_penWorldLinkController, // for auto-restart level in the game with respawn credits
+
+ 233 FLOAT3D m_vShieldBroken=FLOAT3D(0,0,0),// position for particles of destroyed shield
                                           //  *****************************************************
+ 240 CEntityPointer m_penOutline,           // Parametric Particles
+ 241 FLOAT m_tmOutlineTime = -10.0f,        //
+ 242 CEntityPointer m_penOutlineFast,       // Fast Parametric Particles
+ 243 CEntityPointer m_penOutlineEntity,     //
+ 244 CEntityPointer m_penOutlineFastEntity, //
+
+ 245 FLOAT m_tmSpeechTime    = -3.0f,       //
+
+ 246 INDEX m_iSavedAvailableWeapons = 0x03, //
 
 {
   ShellLaunchData ShellLaunchData_array;  // array of data describing flying empty shells
@@ -1405,7 +1539,7 @@ properties:
   PlayerStats m_psGameStats;
   PlayerStats m_psGameTotal;
 
-  CModelObject m_moRender;                  // model object to render - this one can be customized
+  CModelObject m_moRender;                  // model object to render
   H3D_AniNum anCurrentAmmo;
   H3D_AniNum anCurrentHealth;
   H3D_AniNum anCurrentArmor;
@@ -1430,10 +1564,20 @@ components:
   5 class   CLASS_BLOOD_SPRAY     "Classes\\BloodSpray.ecl", 
   6 class   CLASS_SERIOUSBOMB     "Classes\\SeriousBomb.ecl",
 
-  7 class	  CLASS_MONEYITEM       "Classes\\MoneyItem.ecl",               // HUD 3D
-  8 class   CLASS_WORLDLINKCONTROLLER "Classes\\WorldLinkController.ecl", //
- 10 model   MODEL_BAG             "Models\\Items\\Money\\Bag\\Bag.mdl",   //
- 11 texture TEXTURE_BAG           "Models\\Items\\Money\\Bag\\Bag.tex",   //
+  7 class	  CLASS_MONEYITEM       "Classes\\MoneyItem.ecl",                // HUD 3D
+  8 class   CLASS_WORLDLINKCONTROLLER "Classes\\WorldLinkController.ecl",  //
+  9 class   CLASS_GAMESTAT        "Classes\\GameStat.ecl",                 //
+ 10 model   MODEL_BAG             "Models\\Items\\Money\\Bag\\Bag.mdl",    //
+ 11 texture TEXTURE_BAG           "Models\\Items\\Money\\Bag\\Bag.tex",    //
+ 12 model   MODEL_COIN            "Models\\Items\\Money\\Coin\\Coin.mdl",  //
+ 13 texture TEXTURE_COIN          "Models\\Items\\Money\\Coin\\Coin.tex",  //
+ 14 model   MODEL_CHEST           "Models\\Items\\Money\\Chest\\Chest.mdl",//
+ 15 texture TEXTURE_CHEST         "Models\\Items\\Money\\Chest\\Chest.tex",//
+ 16 class   CLASS_OUTLINE         "Classes\\Outline.ecl",                  //
+ 17 model   MODEL_OUTLINE         "Models\\Editor\\Outline.mdl",           //
+ 18 class   CLASS_OUTLINE_FAST    "Classes\\FastSimpleOutline.ecl",        //
+ 19 model   MODEL_OUTLINE_FAST    "Models\\Editor\\FastOutline.mdl",       //
+ 20 class   CLASS_BACKGROUNDVIEWER "Classes\\BackgroundViewer.ecl",        //
 
 // gender specific sounds - make sure that offset is exactly 100 
  50 sound SOUND_WATER_ENTER     "Sounds\\Player\\WaterEnter.wav",
@@ -1470,6 +1614,7 @@ components:
  90 sound SOUND_WALK_SNOW_L     "SoundsMP\\Player\\WalkSnowL.wav",
  91 sound SOUND_WALK_SNOW_R     "SoundsMP\\Player\\WalkSnowR.wav",
  92 sound SOUND_BLOWUP          "SoundsMP\\Player\\BlowUp.wav",
+
 
 150 sound SOUND_F_WATER_ENTER   "SoundsMP\\Player\\Female\\WaterEnter.wav",
 151 sound SOUND_F_WATER_LEAVE   "SoundsMP\\Player\\Female\\WaterLeave.wav",
@@ -1530,12 +1675,14 @@ components:
 225 texture TEXTURE_FLESH_LOLLY  "Models\\Effects\\Debris\\Fruits\\LollyPop.tex",
 226 texture TEXTURE_FLESH_ORANGE "Models\\Effects\\Debris\\Fruits\\Orange.tex",
 
-// ************** 3D HUD PARTS **************
+// ************** HUD 3D PARTS **************
 400 model   MODEL_H3D_BASE       "Models\\Interface\\H3D_BASE.mdl",
 403 model   MODEL_H3D_4X4        "Models\\Interface\\H3D_4x4.mdl",
 401 model   MODEL_H3D_1X1        "Models\\Interface\\H3D_1x1.mdl",
 402 model   MODEL_H3D_07X07      "Models\\Interface\\H3D_07x07.mdl",
 404 model   MODEL_H3D_06X06      "Models\\Interface\\H3D_06x06.mdl",
+424 model   MODEL_H3D_BOSS       "Models\\Interface\\H3D_bar1.mdl",
+425 model   MODEL_H3D_BOSS_BG    "Models\\Interface\\H3D_bar2.mdl",
 
 405 model   MODEL_SHOP_MENU_BASE   "Models\\Interface\\SHOP_BASE.mdl",
 406 model   MODEL_SHOP_MENU_LONG   "Models\\Interface\\4x1.mdl",
@@ -1552,15 +1699,93 @@ components:
 
 418 sound   SOUND_SHOP_BUY         "Sounds\\Shop\\Buy.wav",
 419 sound   SOUND_SHOP_ERROR       "Sounds\\Shop\\Error.wav",
-
-/// h3d - shield sounds
-420 sound SOUND_SHIELD_HIT      "Sounds\\Player\\ShieldHit.wav",
-421 sound SOUND_SHIELD_CHARGE   "Sounds\\Player\\ShieldCharge.wav",
-422 sound SOUND_SHIELD_BREAK    "Sounds\\Player\\ShieldBreak.wav",
-423 sound SOUND_SHIELD_CHARGED  "Sounds\\Player\\ShieldCharged.wav",
 // ******************************************
 
+/// shield sounds
+420 sound SOUND_SHIELD_HIT         "Sounds\\Player\\ShieldHit.wav",
+421 sound SOUND_SHIELD_CHARGE      "Sounds\\Player\\ShieldCharge.wav",
+422 sound SOUND_SHIELD_BREAK       "Sounds\\Player\\ShieldBreak.wav",
+423 sound SOUND_SHIELD_CHARGED     "Sounds\\Player\\ShieldCharged.wav",
+///
+
+430 sound SOUND_MARK_MARK1         "Sounds\\Player\\Mark\\Mark1.wav",
+431 sound SOUND_MARK_MARK2         "Sounds\\Player\\Mark\\Mark2.wav",
+432 sound SOUND_MARK_MARK3         "Sounds\\Player\\Mark\\Mark3.wav",
+433 sound SOUND_MARK_MARK4         "Sounds\\Player\\Mark\\Mark4.wav",
+434 sound SOUND_MARK_MARK5         "Sounds\\Player\\Mark\\Mark5.wav",
+435 sound SOUND_MARK_MARK6         "Sounds\\Player\\Mark\\Mark6.wav",
+436 sound SOUND_MARK_MARK7         "Sounds\\Player\\Mark\\Mark7.wav",
+437 sound SOUND_MARK_MARK8         "Sounds\\Player\\Mark\\Mark8.wav",
+438 sound SOUND_MARK_MARK9         "Sounds\\Player\\Mark\\Mark9.wav",
+439 sound SOUND_MARK_SWITCH        "Sounds\\Player\\Mark\\Switch.wav",
+440 sound SOUND_MARK_POWERUP1      "Sounds\\Player\\Mark\\PowerUp1.wav",
+441 sound SOUND_MARK_POWERUP2      "Sounds\\Player\\Mark\\PowerUp2.wav",
+442 sound SOUND_MARK_HEALTHITEM    "Sounds\\Player\\Mark\\HealthItem.wav",
+443 sound SOUND_MARK_ARMORITEM     "Sounds\\Player\\Mark\\ArmorItem.wav",
+444 sound SOUND_MARK_WEAPON1       "Sounds\\Player\\Mark\\WeaponItem1.wav",
+445 sound SOUND_MARK_WEAPON2       "Sounds\\Player\\Mark\\WeaponItem2.wav",
+446 sound SOUND_MARK_WEAPON3       "Sounds\\Player\\Mark\\WeaponItem3.wav",
+447 sound SOUND_MARK_WEAPON4       "Sounds\\Player\\Mark\\WeaponItem4.wav",
+//446 sound SOUND_MARK_GRENADES      "Sounds\\Player\\Mark\\AGrenades.wav",
+//447 sound SOUND_MARK_LASER         "Sounds\\Player\\Mark\\WLaser.wav",
+//448 sound SOUND_MARK_MINIGUN       "Sounds\\Player\\Mark\\WMinigun.wav",
+448 sound SOUND_MARK_AMMO1         "Sounds\\Player\\Mark\\Ammo1.wav",
+449 sound SOUND_MARK_AMMO2         "Sounds\\Player\\Mark\\Ammo2.wav",
+450 sound SOUND_MARK_AMMO3         "Sounds\\Player\\Mark\\Ammo3.wav",
+
+460 sound SOUND_MARK_ENEMYBASE1    "Sounds\\Player\\Mark\\EnemyBase1.wav",
+461 sound SOUND_MARK_ENEMYBASE2    "Sounds\\Player\\Mark\\EnemyBase2.wav",
+462 sound SOUND_MARK_ENEMYBASE3    "Sounds\\Player\\Mark\\EnemyBase3.wav",
+463 sound SOUND_MARK_ENEMYBASE4    "Sounds\\Player\\Mark\\EnemyBase4.wav",
+464 sound SOUND_MARK_ENEMYBASE5    "Sounds\\Player\\Mark\\EnemyBase5.wav",
+465 sound SOUND_MARK_ENEMYBASE6    "Sounds\\Player\\Mark\\EnemyBase6.wav",
+466 sound SOUND_MARK_ENEMYBASE7    "Sounds\\Player\\Mark\\EnemyBase7.wav",
+467 sound SOUND_MARK_ENEMYBASE8    "Sounds\\Player\\Mark\\EnemyBase8.wav",
+468 sound SOUND_MARK_ENEMYBASE9    "Sounds\\Player\\Mark\\EnemyBase9.wav",
+469 sound SOUND_MARK_ENEMYBASE10   "Sounds\\Player\\Mark\\EnemyBase10.wav",
+470 sound SOUND_MARK_ENEMYBASE11   "Sounds\\Player\\Mark\\EnemyBase11.wav",
+471 sound SOUND_MARK_ENEMYBASE12   "Sounds\\Player\\Mark\\EnemyBase12.wav",
+472 sound SOUND_MARK_ENEMYBASE13   "Sounds\\Player\\Mark\\EnemyBase13.wav",
+473 sound SOUND_MARK_OH_SHIT       "Sounds\\Player\\Mark\\Oh_Shit.wav",
+474 sound SOUND_MARK_BIGENEMY      "Sounds\\Player\\Mark\\BigEnemy.wav",
+475 sound SOUND_MARK_HEADMAN1      "Sounds\\Player\\Mark\\Headman1.wav",
+476 sound SOUND_MARK_HEADMAN2      "Sounds\\Player\\Mark\\Headman2.wav",
+477 sound SOUND_MARK_HEADMAN3      "Sounds\\Player\\Mark\\Headman3.wav",
+478 sound SOUND_MARK_HEADMAN4      "Sounds\\Player\\Mark\\Headman4.wav",
+479 sound SOUND_MARK_HEADMAN5      "Sounds\\Player\\Mark\\Headman5.wav",
+480 sound SOUND_MARK_KAMIKAZE1     "Sounds\\Player\\Mark\\Kamikaze1.wav",
+481 sound SOUND_MARK_KAMIKAZE2     "Sounds\\Player\\Mark\\Kamikaze2.wav",
+482 sound SOUND_MARK_SCREAM        "Sounds\\Player\\Mark\\Scream.wav",
+483 sound SOUND_MARK_EYEMAN1       "Sounds\\Player\\Mark\\Eyeman1.wav",
+484 sound SOUND_MARK_EYEMAN2       "Sounds\\Player\\Mark\\Eyeman2.wav",
+485 sound SOUND_MARK_BONEMAN1      "Sounds\\Player\\Mark\\Boneman1.wav",
+486 sound SOUND_MARK_BONEMAN2      "Sounds\\Player\\Mark\\Boneman2.wav",
+487 sound SOUND_MARK_BONEMAN3      "Sounds\\Player\\Mark\\Boneman3.wav",
+488 sound SOUND_MARK_BONEMAN4      "Sounds\\Player\\Mark\\Boneman4.wav",
+489 sound SOUND_MARK_BONEMAN5      "Sounds\\Player\\Mark\\Boneman5.wav",
+490 sound SOUND_MARK_BONEMAN6      "Sounds\\Player\\Mark\\Boneman6.wav",
+491 sound SOUND_MARK_BONEMAN7      "Sounds\\Player\\Mark\\Boneman7.wav",
+492 sound SOUND_MARK_BONEMAN8      "Sounds\\Player\\Mark\\Boneman8.wav",
+493 sound SOUND_MARK_WEREBULL1     "Sounds\\Player\\Mark\\Werebull1.wav",
+494 sound SOUND_MARK_WEREBULL2     "Sounds\\Player\\Mark\\Werebull2.wav",
+495 sound SOUND_MARK_WOMAN1        "Sounds\\Player\\Mark\\Woman1.wav",
+496 sound SOUND_MARK_SANTA         "Sounds\\Player\\Mark\\Santa.wav",
+497 sound SOUND_MARK_SCORPMAN      "Sounds\\Player\\Mark\\Scorpman.wav",
+498 sound SOUND_MARK_CHAINSAWFREAK "Sounds\\Player\\Mark\\ChainsawFreak.Wav",
+
 functions:
+
+  BOOL HasAlivePlayers(BOOL bCountSelf){
+  //find first live player
+    for(INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
+      CPlayer *pen = (CPlayer*)&*GetPlayerEntity(iPlayer);
+      BOOL bSelf = bCountSelf? TRUE:pen!=this;
+      if (pen!=NULL && bSelf && (pen->GetFlags()&ENF_ALIVE) && !(pen->GetFlags()&ENF_DELETED) ) {
+        return TRUE;
+	    }
+    }
+    return FALSE;
+  }
 
  // HUD 3D - Check for Shop entity for "Tab" table purposes
  void CheckShopInTheWorld(void){
@@ -1595,33 +1820,664 @@ functions:
 	  m_tmMoneyDropped = _pTimer->CurrentTick();
   }
 
+  BOOL IsValidMarkEntity(CEntityPointer pen) { // Is the marked entity valid?
+    if (IsDerivedFromClass(pen, "Enemy Base")) {
+      CEnemyBase *penBase=((CEnemyBase*)&*pen);
+      return !penBase->m_bTemplate && (penBase->GetFlags()&ENF_ALIVE);
+    }
+    return TRUE;
+  }
+
+  // calc jitter target
+  FLOAT3D CalcTarget(CPlacement3D pl, FLOAT fRange) {
+    FLOAT3D vDestination;
+    // destination in bullet direction
+    AnglesToDirectionVector(pl.pl_OrientationAngle, vDestination);
+    vDestination *= fRange;
+    vDestination += pl.pl_PositionVector;
+    return vDestination;
+  };
+
+  // HUD 3D: Parametric Particles Outline and voice mention of the selected entity
+  void /*Oh, Hi*/ Mark() {
+    if (IsPredictor()) {return;}
+    CPlacement3D plCrosshair;
+    FLOAT fFX = 0;
+    FLOAT fFY = 0;
+    if (m_iViewState == PVT_3RDPERSONVIEW) {
+      fFX = fFY = 0;
+    }
+    GetPlayerWeapons()->CalcWeaponPosition(FLOAT3D(fFX, fFY, 0), plCrosshair, FALSE);
+    // cast ray
+    CCastRay crRay( this, plCrosshair.pl_PositionVector, CalcTarget(plCrosshair, 1000.0f));
+    crRay.cr_bHitTranslucentPortals = TRUE;
+    crRay.cr_ttHitModels = CCastRay::TT_FULL/*TT_COLLISIONBOX*/;
+    crRay.cr_bPhysical   = TRUE;
+    INDEX iCasts    = 1;
+    INDEX iMaxCasts = 5;
+      do {
+        if (iCasts==1) {
+          GetWorld()->CastRay(crRay);
+        } else {
+          GetWorld()->ContinueCast(crRay);
+        }
+        if( crRay.cr_penHit==NULL){
+          //CPrintF("Hit NULL\n"); //cdebug
+          break;
+        }
+
+        CEntity *pen = crRay.cr_penHit;
+        //CPrintF("Start ray from pen->GetName: %s\n", pen->GetName()); //cdebug
+        if (IsOfClass(pen, "WorldBase")) {
+          break;
+        }
+        if (IsOfClass(pen, "Moving Brush")) {
+          break;
+        }
+        BOOL bMark = FALSE;
+        COLOR colOutlineColor;
+        INDEX iSoundCategory = -1;
+        INDEX iSoundFile     = -1;
+        FLOAT fThickness     =  0.15f;
+      
+        // **************************
+        // *                        *
+        // *  E N E M Y    B A S E  *
+        // *                        *
+        // **************************
+        if (IsDerivedFromClass(pen, "Enemy Base")) {
+          /*if (pen->IsPredicted()) {
+            pen=pen->GetPredictor();
+          }*/
+          FLOAT fDistance = (GetPlacement().pl_PositionVector-pen->GetPlacement().pl_PositionVector).Length(); // distance to the enemy
+          FLOATaabbox3D box;                                                                                   // Creating box
+          pen->GetBoundingBox(box);                                                                            // Taking (enemy) in the box
+          FLOAT fEntitySize = box.Size().MaxNorm();                                                            // Get box size
+          //CPrintF("Size: %f, Distance: %f\n",fEntitySize, fDistance); //cdebug
+
+          bMark=TRUE;
+          colOutlineColor = 0xFF8800FF;
+          iSoundCategory = 95;
+          fThickness = 0.15f;
+          CEnemyBase *penEnemy = (CEnemyBase *)pen;
+          if (fEntitySize <= 5.0f) { // small enemy
+            iSoundCategory=94;
+            //CPrintF("Small enemy base\n"); //cdebug
+          } else if (fEntitySize < 10.0f) { // medium enemy
+            iSoundCategory=95;
+            //CPrintF("Medium enemy base\n"); //cdebug
+          } else if (fEntitySize <= 15.0f && fDistance <= 40.0f && penEnemy->m_penEnemy==this) { // large and target enemy
+            iSoundCategory=97;
+            //CPrintF("Huge and close enemy base\n"); //cdebug
+          } else if (fEntitySize <= 15.0f) { // large enemy
+            iSoundCategory=96;
+            //CPrintF("Huge enemy base\n"); //cdebug
+          } else if (fEntitySize >  15.0f && fDistance <= 60.0f && penEnemy->m_penEnemy==this) { // extremly huge and target enemy
+            iSoundCategory=97;
+
+          } else if (fEntitySize >  15.0f) { // extremly huge enemy
+            iSoundCategory=92;
+          }
+          if (IsOfClass(pen, "Beast")) {
+            INDEX iSound = 1;
+            CBeast* penBeast = ((CBeast*)&*pen);
+            switch (penBeast->m_bcType) {
+              case BT_NORMAL: iSound = 95; break;
+              case BT_BIG:    {if (fDistance< 60.0f && penBeast->m_penEnemy==this) {iSound = 93;} else {iSound = 97;} break;}
+              case BT_HUGE:   {if (fDistance<160.0f && penBeast->m_penEnemy==this) {iSound = 93;} else {iSound = 97;} break;}
+              //case BT_HUGE:   iSound = penBeast->m_penEnemy==this?93:96; break; // scream:huge enemy
+            }
+              iSoundCategory=iSound;
+          }
+          if (IsOfClass(pen, "BigHead")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=97; break;} // hey
+              case 1: {iSoundCategory=99; break;} // what the
+            }
+          }
+          if (IsOfClass(pen, "Boneman")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=95; break;} // medium enemy
+              case 1: {iSoundCategory=2;  break;} // kleers
+            }
+          }
+          if (IsOfClass(pen, "ChainsawFreak")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=95; break;} // medium enemy
+              case 1: {iSoundCategory=4;  break;} // freak
+            }
+          }
+          if (IsOfClass(pen, "Elemental")) {
+            INDEX iSound = 1;
+            CElemental* penElem = ((CElemental*)&*pen);
+            switch (IRnd()%2) {
+              case 0: {iSound=94; break;} // small enemy
+              case 1: {iSound=97; break;} // hey
+            }
+            switch (penElem->m_EecChar) {
+              case ELC_BIG:   {if (fDistance<  30.0f && penElem->m_penEnemy==this) {iSound = 93;} else {iSound = 95;} break;} // medium enemy
+              case ELC_LARGE: {if (fDistance< 100.0f && penElem->m_penEnemy==this) {iSound = 93;} else {iSound = 97;} break;} // scream:huge enemy
+            }
+            iSoundCategory=iSound;
+          }
+          if (IsOfClass(pen, "Eyeman")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=97; break;} // hey
+              case 1: {iSoundCategory=5;  break;} // eyeman
+            }
+          }
+          if (IsOfClass(pen, "Gizmo")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=94; break;} // small enemy
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+          if (IsOfClass(pen, "Grunt")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=95; break;} // medium enemy
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+          if (IsOfClass(pen, "Guffy")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=95; break;} // medium enemy
+              case 1: {iSoundCategory=4;  break;} // freak
+            }
+          }
+          if (IsOfClass(pen, "Headman")) {
+            INDEX iSound = 1;
+            CHeadman* penHeadman = ((CHeadman*)&*pen);
+            switch (IRnd()%2) {
+                case 0: {iSound=97; break;} // hey
+                case 1: {iSound=1;  break;} // stupid headless freaks
+            }
+            if (penHeadman->m_hdtType==HDT_KAMIKAZE) {
+              if (fDistance<= 15.0f && penHeadman->m_penEnemy==this) {iSound = 93;} // scream
+              else {
+                switch (IRnd()%4) {
+                  case 0: {iSound=96; break;} // huge enemy
+                  case 1: {iSound=97; break;} // hey
+                  case 2: {iSound=1;  break;} // stupid headless freaks
+                  case 3: {iSound=8;  break;} // kamikaze
+                }
+              }
+            }
+            iSoundCategory=iSound;
+          }
+          if (IsOfClass(pen, "Santa")) {
+            switch (IRnd()%3) {
+              case 0: {iSoundCategory=7;  break;} // santa
+              case 1: {iSoundCategory=97; break;} // hey
+              case 2: {iSoundCategory=99; break;} // what the
+            }
+          }
+          if (IsOfClass(pen, "Scorpman")) {
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=6;  break;} // santa
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+          if (IsOfClass(pen, "Walker")) {
+            INDEX iSound = 97;
+            CWalker* penWalker = ((CWalker*)&*pen);
+            switch (IRnd()%2) {
+              case 0: {iSound=95; break;} // medium enemy
+              case 1: {iSound=97; break;} // hey
+            }
+            if (penWalker->m_EwcChar==WLC_SERGEANT) {
+              switch (IRnd()%2) {
+                case 0: {iSound=96; if (fDistance< 40.0f && penWalker->m_penEnemy==this) {iSound = 93;} break;} // huge enemy OR scream
+                case 1: {iSound=97; break;} // hey
+              }
+            }
+
+            iSoundCategory=iSound;
+          } 
+          if (IsOfClass(pen, "Werebull")) {
+            switch (IRnd()%3) {
+              case 0: {iSoundCategory=95; break;} // medium enemy
+              case 1: {iSoundCategory=97; break;} // hey
+              case 2: {iSoundCategory=3;  break;} // werebull
+            }
+          }
+          if (IsOfClass(pen, "Woman")) {
+            switch (IRnd()%3) {
+              case 0: {iSoundCategory=94; break;} // small enemy
+              case 1: {iSoundCategory=97; break;} // hey
+              case 2: {iSoundCategory=9;  break;} // woman
+            }
+          }
+        }
+
+        /*if (IsOfClass(pen, "Player")) {
+          bMark           = TRUE;
+          iType           = 4;
+          colOutlineColor = 0xFFFFFFFF;
+          switch (IRnd()%1) {
+            case 0: {iSoundCategory=97; break;} // hey
+          }
+        }*/
+
+        // **************************
+        // *                        *
+        // *    E N T I T I E S     *
+        // *                        *
+        // **************************
+
+          if (IsDerivedFromClass(pen, "Item")) {
+            INDEX iPlayer = ((CPlayerEntity*)pen)->GetMyPlayerIndex();
+         /* BOOL bPickedAlready = (1<<iPlayer)&m_ulPickedMask;
+            m_ulPickedMask |= (1<<iPlayer);
+            return bPickedAlready;*/
+
+         // health item
+          if (IsOfClass(pen, "Health Item")) {
+            bMark           = TRUE;
+            colOutlineColor = 0xFF0000FF;
+            fThickness      = 0.2f;
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=31; break;} // health item
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+          // armor item
+          if (IsOfClass(pen, "Armor Item")) {
+            bMark           = TRUE;
+            colOutlineColor = 0x0094FFFF;
+            fThickness      = 0.1f;
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=32; break;} // armor item
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+          // shield item
+          if (IsOfClass(pen, "Shield Item")) {
+            bMark           = TRUE;
+            colOutlineColor = 0x0094FFFF;
+            fThickness      = 0.1f;
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=33; break;} // powerup item
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+
+          // ammo item
+          if (IsOfClass(pen, "Ammo Item")) {
+            bMark           = TRUE;
+            colOutlineColor = 0xFFFF00FF;
+            fThickness      = 0.15f;
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=34; break;} // ammo
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+
+          // backpack
+          if (IsOfClass(pen, "Ammo Pack")) {
+            bMark=TRUE;
+            colOutlineColor = 0xC8FF00FF;
+            fThickness      = 0.2f;
+           switch (IRnd()%2) {
+              case 0: {iSoundCategory=34; break;} // ammo
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+      
+          // weapon item
+          if (IsOfClass(pen, "Weapon Item")) {
+            bMark           = TRUE;
+            colOutlineColor = 0xFFBA00FF;
+            fThickness      = 0.05f;
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=36; break;} // weapon item
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+
+          // key item
+          if (IsOfClass(pen, "KeyItem")) {
+            bMark           = TRUE;
+            colOutlineColor = 0xFF00DCFF;
+            fThickness      = 0.1f;
+            switch (IRnd()%2) {
+              case 0: {iSoundCategory=37; break;} // switch
+              case 1: {iSoundCategory=97; break;} // hey
+            }
+          }
+
+          // money item
+          if (IsOfClass(pen, "Money Item")) {
+            bMark           = TRUE;
+            colOutlineColor = 0xFF00DCFF;
+            fThickness      = 0.1f;
+            switch (IRnd()%4) {
+              case 0: {iSoundCategory=31; break;} // health item
+              case 1: {iSoundCategory=32; break;} // armor item
+              case 2: {iSoundCategory=37; break;} // switch
+              case 3: {iSoundCategory=97; break;} // hey
+            }
+          }
+        }
+
+        // moving brush
+        /*if (IsOfClass(pen, "Moving Brush")) {
+          bMark=TRUE;
+          colOutlineColor = 0xFFFFAAFF;
+          switch (IRnd()%3) {
+            case 0:  { iSoundCategory=97; break;} // hey
+            case 1:  { iSoundCategory=98; break;} // hmm
+            case 2:  { iSoundCategory=99; break;} // what the
+          }
+        }*/
+
+        // bouncer
+        /*if (IsOfClass(pen, "Bouncer")) {
+          bMark=TRUE;
+          colOutlineColor = 0xFFFFAAFF;
+          switch (IRnd()%2) {
+            case 0:  { iSoundCategory=97; break;} // hey
+            case 1:  { iSoundCategory=98; break;} // hmm
+          }
+        }*/
+
+        // powerup item
+        if (IsOfClass(pen, "PowerUp Item")) {
+          bMark           = TRUE;
+          colOutlineColor = 0xB200FFFF;
+          fThickness      = 0.15f;
+          switch (IRnd()%2) {
+            case 0: {iSoundCategory=33; break;} // powerup
+            case 1: {iSoundCategory=97; break;} // hey
+          }
+        }
+
+        // switch
+        if (IsOfClass(pen, "Switch")) {
+          bMark           = TRUE;
+          colOutlineColor = 0xD5FFAAFF;
+          fThickness      = 0.15f;
+          switch (IRnd()%2) {
+            case 0: {iSoundCategory=37; break;} // switch
+            case 1: {iSoundCategory=97; break;} // hey
+          }
+        }
+
+        // projectile
+        /* if (IsOfClass(pen, "Projectile")) {
+          bMark           = TRUE;
+          iType           = 4;
+          colOutlineColor = 0xFEFEFEFF;
+          switch (IRnd()%2) {
+            case 0: {iSoundCategory=97; break;} // hey
+            case 1: {iSoundCategory=92; break;} // incoming
+          }
+        }*/
+
+        // **************************
+        // *                        *
+        // *     S T O R A G E      *
+        // *                        *
+        // **************************
+
+        // Extremly huge enemy
+        if (iSoundCategory==92) {
+          switch (IRnd()%7) {
+            case 0:  { iSoundFile=SOUND_MARK_ENEMYBASE1;    break;}
+            case 1:  { iSoundFile=SOUND_MARK_ENEMYBASE2;    break;}
+            case 2:  { iSoundFile=SOUND_MARK_ENEMYBASE3;    break;}
+            case 3:  { iSoundFile=SOUND_MARK_ENEMYBASE4;    break;}
+            case 4:  { iSoundFile=SOUND_MARK_ENEMYBASE5;    break;}
+            case 5:  { iSoundFile=SOUND_MARK_ENEMYBASE6;    break;}
+            case 6:  { iSoundFile=SOUND_MARK_BIGENEMY;      break;}
+          }
+        }
+      
+        // scream 
+        if (iSoundCategory==93) {
+          switch (IRnd()%2) {
+            case 0:  { iSoundFile=SOUND_MARK_SCREAM;        break;}
+            case 1:  { iSoundFile=SOUND_MARK_OH_SHIT;       break;}
+          }
+        }
+        // small enemy  
+        if (iSoundCategory==94) {
+          switch (IRnd()%6) {
+            case 0:  { iSoundFile=SOUND_MARK_ENEMYBASE1;    break;}
+            case 1:  { iSoundFile=SOUND_MARK_ENEMYBASE9;    break;}
+            case 2:  { iSoundFile=SOUND_MARK_ENEMYBASE10;   break;}
+            case 3:  { iSoundFile=SOUND_MARK_ENEMYBASE11;   break;}
+            case 4:  { iSoundFile=SOUND_MARK_ENEMYBASE12;   break;}
+            case 5:  { iSoundFile=SOUND_MARK_ENEMYBASE13;   break;}
+          }
+        }
+      
+        // medium enemy
+        if (iSoundCategory==95) {
+          switch (IRnd()%9) {
+            case 0:  { iSoundFile=SOUND_MARK_ENEMYBASE1;    break;}
+            case 1:  { iSoundFile=SOUND_MARK_ENEMYBASE4;    break;}
+            case 2:  { iSoundFile=SOUND_MARK_ENEMYBASE5;    break;}
+            case 3:  { iSoundFile=SOUND_MARK_ENEMYBASE7;    break;}
+            case 4:  { iSoundFile=SOUND_MARK_ENEMYBASE8;    break;}
+            case 5:  { iSoundFile=SOUND_MARK_ENEMYBASE10;   break;}
+            case 6:  { iSoundFile=SOUND_MARK_ENEMYBASE11;   break;}
+            case 7:  { iSoundFile=SOUND_MARK_ENEMYBASE12;   break;}
+            case 8:  { iSoundFile=SOUND_MARK_ENEMYBASE13;   break;}
+          }
+        }
+          // huge enemy
+        if (iSoundCategory==96) {
+          switch (IRnd()%6) {
+            case 0:  { iSoundFile=SOUND_MARK_ENEMYBASE1;    break;}
+            case 1:  { iSoundFile=SOUND_MARK_ENEMYBASE2;    break;}
+            case 2:  { iSoundFile=SOUND_MARK_ENEMYBASE3;    break;}
+            case 3:  { iSoundFile=SOUND_MARK_ENEMYBASE4;    break;}
+            case 4:  { iSoundFile=SOUND_MARK_ENEMYBASE5;    break;}
+            case 5:  { iSoundFile=SOUND_MARK_ENEMYBASE6;    break;}
+          }
+        }
+          // Headman
+        if (iSoundCategory==1) {
+          switch (IRnd()%5) {
+            case 0:  { iSoundFile=SOUND_MARK_HEADMAN1;      break;}
+            case 1:  { iSoundFile=SOUND_MARK_HEADMAN2;      break;}
+            case 2:  { iSoundFile=SOUND_MARK_HEADMAN3;      break;}
+            case 3:  { iSoundFile=SOUND_MARK_HEADMAN4;      break;}
+            case 4:  { iSoundFile=SOUND_MARK_HEADMAN5;      break;}
+          }
+        }
+          // Boneman
+        if (iSoundCategory==2) {
+          switch (IRnd()%8) {
+            case 0:  { iSoundFile=SOUND_MARK_BONEMAN1;      break;}
+            case 1:  { iSoundFile=SOUND_MARK_BONEMAN2;      break;}
+            case 2:  { iSoundFile=SOUND_MARK_BONEMAN3;      break;}
+            case 3:  { iSoundFile=SOUND_MARK_BONEMAN4;      break;}
+            case 4:  { iSoundFile=SOUND_MARK_BONEMAN5;      break;}
+            case 5:  { iSoundFile=SOUND_MARK_BONEMAN6;      break;}
+            case 6:  { iSoundFile=SOUND_MARK_BONEMAN7;      break;}
+            case 7:  { iSoundFile=SOUND_MARK_BONEMAN8;      break;}
+          }
+        }
+          // Werebull
+        if (iSoundCategory==3) {
+          switch (IRnd()%2) {
+            case 0:  { iSoundFile=SOUND_MARK_WEREBULL1;     break;}
+            case 1:  { iSoundFile=SOUND_MARK_WEREBULL2;     break;}
+          }
+        }
+          // Chainsawfreak
+        if (iSoundCategory==4) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_CHAINSAWFREAK; break;}
+          }
+        }
+          // Eyeman
+        if (iSoundCategory==5) {
+          switch (IRnd()%2) {
+            case 0:  { iSoundFile=SOUND_MARK_EYEMAN1;       break;}
+            case 1:  { iSoundFile=SOUND_MARK_EYEMAN2;       break;}
+          }
+        }
+          // Scorpman
+        if (iSoundCategory==6) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_SCORPMAN;      break;}
+          }
+        }
+          // Santa
+        if (iSoundCategory==7) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_SANTA;         break;}
+          }
+        }
+          // Kamikaze
+        if (iSoundCategory==8) {
+          switch (IRnd()%2) {
+            case 0:  { iSoundFile=SOUND_MARK_KAMIKAZE1;     break;}
+            case 1:  { iSoundFile=SOUND_MARK_KAMIKAZE2;     break;}
+          }
+        }
+          // Woman
+        if (iSoundCategory==9) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_WOMAN1;        break;}
+          }
+        }
+          // ********************************************************************************************
+          // Health Item
+        if (iSoundCategory==31) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_HEALTHITEM;    break;}
+          }
+        }
+          // Armor Item
+        if (iSoundCategory==32) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_ARMORITEM;     break;}
+          }
+        }
+          // Powerup Item, Shield Item
+        if (iSoundCategory==33) {
+          switch (IRnd()%2) {
+            case 0:  { iSoundFile=SOUND_MARK_POWERUP1;      break;}
+            case 1:  { iSoundFile=SOUND_MARK_POWERUP2;      break;}
+          }
+        }
+          // Ammo Item
+        if (iSoundCategory==34) {
+          switch (IRnd()%3) {
+            case 0:  { iSoundFile=SOUND_MARK_AMMO1;         break;}
+            case 1:  { iSoundFile=SOUND_MARK_AMMO2;         break;}
+            case 2:  { iSoundFile=SOUND_MARK_AMMO3;         break;}
+          }
+        }
+          // Weapon Item
+        if (iSoundCategory==36) {
+          switch (IRnd()%4) {
+            case 0:  { iSoundFile=SOUND_MARK_WEAPON1;       break;}
+            case 1:  { iSoundFile=SOUND_MARK_WEAPON2;       break;}
+            case 2:  { iSoundFile=SOUND_MARK_WEAPON3;       break;}
+            case 3:  { iSoundFile=SOUND_MARK_WEAPON4;       break;}
+          }
+        }
+          // ********************************************************************************************
+          // Switch, Key Item, Money Item
+        if (iSoundCategory==37) {
+          switch (IRnd()%1) {
+            case 0:  { iSoundFile=SOUND_MARK_SWITCH;        break;}
+          }
+        }
+          // ********************************************************************************************
+          // Hey
+        if (iSoundCategory==97) {
+          switch (IRnd()%2) {
+            case 0:  { iSoundFile=SOUND_MARK_MARK1;         break;}
+            case 1:  { iSoundFile=SOUND_MARK_MARK2;         break;}
+          }
+        }
+          // Hmm
+        if (iSoundCategory==98) {
+          switch (IRnd()%3) {
+            case 0:  { iSoundFile=SOUND_MARK_MARK3;         break;}
+            case 1:  { iSoundFile=SOUND_MARK_MARK4;         break;}
+            case 2:  { iSoundFile=SOUND_MARK_MARK5;         break;}
+          }
+        }
+          // What the
+        if (iSoundCategory==99) {
+          switch (IRnd()%4) {
+            case 0:  { iSoundFile=SOUND_MARK_MARK6;         break;}
+            case 1:  { iSoundFile=SOUND_MARK_MARK7;         break;}
+            case 2:  { iSoundFile=SOUND_MARK_MARK8;         break;}
+            case 3:  { iSoundFile=SOUND_MARK_MARK9;         break;}
+          }
+        }
+        if (bMark && IsValidMarkEntity(pen)) {
+          m_tmOutlineTime = _pTimer->CurrentTick()+10.0f;
+          /*m_penOutlineEntity = pen;
+          CPrintF("Outline pen->GetName: %s\n",pen->GetName()); //cdebug
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_OUTLINE_ENTITY)->ep_slOffset, CEntityPointer) = pen;
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_BLEND_TYPE    )->ep_slOffset, INDEX) = ppo_iBlendType; // 
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_COLOR         )->ep_slOffset, COLOR) = colOutlineColor;// 
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_FALL_OFF      )->ep_slOffset, FLOAT) = ppo_fFallOff;   // 1000.0f
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_HOT_SPOT      )->ep_slOffset, FLOAT) = ppo_fHotSpot;   //   10.0f
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_THICKNESS     )->ep_slOffset, FLOAT) = ppo_fThickness; //    0.025f
+          ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_TYPE          )->ep_slOffset, INDEX) = iType;          //      0*/
+
+          m_penOutlineFastEntity = pen;
+          //CPrintF("OutlineFast pen->GetName: %s\n",pen->GetName()); //cdebug
+          ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_OUTLINE_ENTITY)->ep_slOffset, CEntityPointer) = pen;
+          ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_BLEND_TYPE    )->ep_slOffset, INDEX) = ppo_iBlendType; // 
+          ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_COLOR         )->ep_slOffset, COLOR) = colOutlineColor;// 
+          ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_FALL_OFF      )->ep_slOffset, FLOAT) = ppo_fFallOff;   // 1000.0f
+          ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_HOT_SPOT      )->ep_slOffset, FLOAT) = ppo_fHotSpot;   //   10.0f
+          ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_THICKNESS     )->ep_slOffset, FLOAT) = fThickness/*ppo_fThickness*/; //    0.025f
+          //ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_TEXTURE       )->ep_slOffset, CTFileName) = CTString("Models\\Effects\\Debris\\Flesh\\FleshRed.tex"); //
+          //ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForTypeAndID(CEntityProperty::EPT_STRING, (0x000010cc<<8)+23)->ep_slOffset, CTString) = "0 0 3 1"; //    Move texture
+          //m_penOutlineFast->SendEvent(ETrigger());
+
+          if (iSoundCategory!=-1 && iSoundFile!=-1 && m_tmSpeechTime<_pTimer->CurrentTick()) {
+            //CPrintF("Speech: %i\n", iSoundFile);
+            m_tmSpeechTime  = _pTimer->CurrentTick()+3.0f;
+            SetSpeakMouthPitch();
+            PlaySound(m_soSpeech, iSoundFile, SOF_3D|SOF_VOLUMETRIC);
+          }
+          break;
+        } 
+        iCasts++;
+        //CPrintF("Invalid pen->GetName: %s, next iCasts: %i\n\n",pen->GetName(), iCasts); //cdebug
+      } while(iCasts<iMaxCasts); //do
+  }
+
   // HUD 3D - Spectator
   void SwitchSpectatorPlayer()  {
 	  if (!_pNetwork->IsPlayerLocal(this)) {
 		return;
 	  }
 
+    if (m_iSpectatorPlayerIndex < -1 || m_iSpectatorPlayerIndex > GetMaxPlayers()) {
+          m_iSpectatorPlayerIndex = -1;
+    }
+
 	do {
       m_iSpectatorPlayerIndex++;
-      hud_bShowNickname=1;
-	  if (m_iSpectatorPlayerIndex>=GetMaxPlayers()) {
-		  m_iSpectatorPlayerIndex=0;
-	  }
+	    if (m_iSpectatorPlayerIndex>=GetMaxPlayers()) {
+		    m_iSpectatorPlayerIndex=0;
+	    }
       CEntityPointer penPlayer=GetPlayerEntity(m_iSpectatorPlayerIndex);
       if (penPlayer==NULL) {
         continue;
       }
       m_penSpectatorPlayer=penPlayer;
-	  if (m_penSpectatorPlayer==this) {
-        m_penSpectatorPlayer=NULL;
-        hud_bShowNickname=0;
-      }
+	  if (m_penSpectatorPlayer.ep_pen==this) {
+      m_penSpectatorPlayer=NULL;
+    }
       break;
     } while (true);
   }
 
   void CoopRespawn() {
-
   	// if playing on infinite credits
 	if (GetSP()->sp_ctCredits==-1) {
 		CPrintF(TRANS("%s is riding the gun again\n"), GetPlayerName());
@@ -1638,8 +2494,16 @@ functions:
 	// if we're playing with respawn credits
 	if (GetSP()->sp_ctCreditsLeft>0) {
 		((CSessionProperties*)GetSP())->sp_ctCreditsLeft--;
-        // initiate respawn
-        CPrintF(TRANS("%s is riding the gun again\n"), GetPlayerName());
+    CGameStat* penGameStat = (CGameStat* )m_penGameStat.ep_pen;
+    penGameStat->m_iCreditsUsed++;
+    if (penGameStat->m_iCreditsUsed > 6 && GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+      if (_pNetwork->IsServer()) {
+        _pNetwork->SendChat(0, -1, TRANS("^cffff00Assist activated. Maximum shields increased."));
+      }
+    }
+    //CPrintF("^cffff00m_iCreditsUsed=%i\n", penGameStat->m_iCreditsUsed);
+    // initiate respawn
+    CPrintF(TRANS("%s is riding the gun again\n"), GetPlayerName());
 		SendEvent(EEnd());
 
 		// report number of credits left
@@ -2238,122 +3102,126 @@ void InitAniNum() {
 // HUD 3D - building HUD
   void SetHUD() {
 
-	SetComponents		    (this, m_moH3D,                                                         MODEL_H3D_BASE,  TEXTURE_H3D_BASE, 0, 0, 0);
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_000_ICO_HEALTH,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   0
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_001_DGT_HEALTH_100,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   1
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_002_DGT_HEALTH_010,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   2
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_003_DGT_HEALTH_001,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   3
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_004_ICO_ARMOR,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   4
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_005_DGT_ARMOR_100,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   5
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_006_DGT_ARMOR_010,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   6
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_007_DGT_ARMOR_001,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   7
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_008_ICO_SHIELD,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   8
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //   9
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  10
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  11
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_012_ICO_SCORE,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  12
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  13
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  14
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_015_DGT_SCORE_001000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  15
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_016_DGT_SCORE_000100,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  16
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_017_DGT_SCORE_000010,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  17
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_018_DGT_SCORE_000001,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  18
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_019_DOT_SCORE,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  19
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_020_ICO_SKULL,                      MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  20
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  21
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  22
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_023_DGT_DEATH_001000,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  23
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_024_DGT_DEATH_000100,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  24
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_025_DGT_DEATH_000010,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  25
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_026_DGT_DEATH_000001,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  26
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_027_ICO_EXTRALIFE,                  MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  27
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_028_DGT_EXTRALIFE_10,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  28
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_029_DGT_EXTRALIFE_01,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  29
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_030_ICO_SERIOUSDAMAGE,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  30
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_031_BAR_SERIOUSDAMAGE,              MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  31
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_032_ICO_INVULNERABILITY,            MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  32
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_033_BAR_INVULNERABILITY,            MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  33
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_034_ICO_SERIOUSSPEED,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  34
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_035_BAR_SERIOUSSPEED,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  35
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_036_ICO_INVISIBILITY,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  36
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_037_BAR_INVISIBILITY,               MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  37
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_038_DGT_CURRENTAMMO_100,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  38
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_039_DGT_CURRENTAMMO_010,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  39
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_040_DGT_CURRENTAMMO_001,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  40
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_041_ICO_MESSAGE,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  41
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  42
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  43
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  44
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_045_ICO_BOSSHEALTH,                 MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  45
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_100,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  46
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_010,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  47
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_001,             MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  48
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_049_ICO_OXYGEN,                     MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  49
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_050_DGT_OXYGEN_10,                  MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  50
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01,                  MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  51
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_052_ICO_SHELLS,                     MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  52
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_053_BAR_SHELLS,                     MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  53
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_054_BRD_SHELLS,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  54
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_055_ICO_BULLETS,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  55
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_056_BAR_BULLETS,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  56
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_057_BRD_BULLETS,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  57
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_058_ICO_ROCKETS,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  58
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_059_BAR_ROCKETS,                    MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  59
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_060_BRD_ROCKETS,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  60
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_061_ICO_GRENADES,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  61
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_062_BAR_GRENADES,                   MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  62
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_063_BRD_GRENADES,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  63
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_064_ICO_FUEL,                       MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  64
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_065_BAR_FUEL,                       MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  65
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_066_BRD_FUEL,                       MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  66
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_067_ICO_SNIPERBULLETS,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  67
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_068_BAR_SNIPERBULLETS,              MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  68
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_069_BRD_SNIPERBULLETS,              MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  69
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_070_ICO_ELECTRICITY,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  70
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_071_BAR_ELECTRICITY,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  71
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_072_BRD_ELECTRICITY,                MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  72
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_073_ICO_IRONBALL,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  73
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_074_BAR_IRONBALL,                   MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  74
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_075_BRD_IRONBALL,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  75
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_076_ICO_SERIOUSBOMB,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  76
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_077_BAR_SERIOUSBOMB,                MODEL_H3D_06X06, TEXTURE_H3D_ANI,  0, 0, 0); //  77
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_078_ICO_KNIFE,                      MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  78
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_079_BRD_KNIFE,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  79
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_080_ICO_CHAINSAW,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  80
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_081_BRD_CHAINSAW,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  81
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_082_ICO_COLT,                       MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  82
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_083_BRD_COLT,                       MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  83
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_084_ICO_DOUBLECOLT,                 MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  84
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_085_BRD_DOUBLECOLT,                 MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  85
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_086_ICO_SHOTGUN,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  86
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_087_BRD_SHOTGUN,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  87
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_088_ICO_DOUBLESHOTGUN,              MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  88
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_089_BRD_DOUBLESHOTGUN,              MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  89
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_090_ICO_TOMMYGUN,                   MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  90
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_091_BRD_TOMMYGUN,                   MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  91
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_092_ICO_MINIGUN,                    MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  92
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_093_BRD_MINIGUN,                    MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  93
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_094_ICO_ROCKETLAUNCHER,             MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  94
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_095_BRD_ROCKETLAUNCHER,             MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  95
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_096_ICO_GRENADELAUNCHER,            MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  96
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_097_BRD_GRENADELAUNCHER,            MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  97
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_098_ICO_FLAMETHROWER,               MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); //  98
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_099_BRD_FLAMETHROWER,               MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); //  99
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_100_ICO_SNIPERRIFLE,                MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); // 100
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_101_BRD_SNIPERRIFLE,                MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); // 101
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_102_ICO_LASER,                      MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); // 102
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_103_BRD_LASER,                      MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); // 103
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_104_ICO_CANNON,                     MODEL_H3D_07X07, TEXTURE_H3D_ANI,  0, 0, 0); // 104
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_105_BRD_CANNON,                     MODEL_H3D_1X1,   TEXTURE_H3D_ANI,  0, 0, 0); // 105
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_106_BORDER_HEALTH,                  MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 106
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_107_BORDER_ARMOR,                   MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 107
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_108_BORDER_SHIELD,                  MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 108
-	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_109_BORDER_AMMO,                    MODEL_H3D_4X4,   TEXTURE_H3D_ANI,  0, 0, 0); // 109
+	SetComponents		    (this, m_moH3D,                                                         MODEL_H3D_BASE,    TEXTURE_H3D_BASE, 0, 0, 0);
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_000_ICO_HEALTH,                     MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   0
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_001_DGT_HEALTH_100,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   1
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_002_DGT_HEALTH_010,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   2
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_003_DGT_HEALTH_001,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   3
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_004_ICO_ARMOR,                      MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   4
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_005_DGT_ARMOR_100,                  MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   5
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_006_DGT_ARMOR_010,                  MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   6
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_007_DGT_ARMOR_001,                  MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   7
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_008_ICO_SHIELD,                     MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   8
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //   9
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  10
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  11
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_012_ICO_SCORE,                      MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  12
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_013_DGT_SCORE_100000,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  13
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_014_DGT_SCORE_010000,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  14
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_015_DGT_SCORE_001000,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  15
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_016_DGT_SCORE_000100,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  16
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_017_DGT_SCORE_000010,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  17
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_018_DGT_SCORE_000001,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  18
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_019_DOT_SCORE,                      MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  19
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_020_ICO_SKULL,                      MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  20
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  21
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  22
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_023_DGT_DEATH_001000,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  23
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_024_DGT_DEATH_000100,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  24
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_025_DGT_DEATH_000010,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  25
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_026_DGT_DEATH_000001,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  26
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_027_ICO_EXTRALIFE,                  MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  27
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_028_DGT_EXTRALIFE_10,               MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  28
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_029_DGT_EXTRALIFE_01,               MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  29
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_030_ICO_SERIOUSDAMAGE,              MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  30
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_031_BAR_SERIOUSDAMAGE,              MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  31
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_032_ICO_INVULNERABILITY,            MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  32
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_033_BAR_INVULNERABILITY,            MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  33
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_034_ICO_SERIOUSSPEED,               MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  34
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_035_BAR_SERIOUSSPEED,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  35
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_036_ICO_INVISIBILITY,               MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  36
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_037_BAR_INVISIBILITY,               MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  37
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_038_DGT_CURRENTAMMO_100,            MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  38
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_039_DGT_CURRENTAMMO_010,            MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  39
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_040_DGT_CURRENTAMMO_001,            MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  40
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_041_ICO_MESSAGE,                    MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  41
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100,                MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  42
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010,                MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  43
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001,                MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  44
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_045_DGT_BOSSHEALTH_1000,            MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  45
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_0100,            MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  46
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_0010,            MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  47
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_0001,            MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  48
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_049_ICO_OXYGEN,                     MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  49
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_050_DGT_OXYGEN_10,                  MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  50
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_051_DGT_OXYGEN_01,                  MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  51
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_052_ICO_SHELLS,                     MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  52
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_053_BAR_SHELLS,                     MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  53
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_054_BRD_SHELLS,                     MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  54
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_055_ICO_BULLETS,                    MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  55
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_056_BAR_BULLETS,                    MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  56
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_057_BRD_BULLETS,                    MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  57
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_058_ICO_ROCKETS,                    MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  58
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_059_BAR_ROCKETS,                    MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  59
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_060_BRD_ROCKETS,                    MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  60
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_061_ICO_GRENADES,                   MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  61
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_062_BAR_GRENADES,                   MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  62
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_063_BRD_GRENADES,                   MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  63
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_064_ICO_FUEL,                       MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  64
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_065_BAR_FUEL,                       MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  65
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_066_BRD_FUEL,                       MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  66
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_067_ICO_SNIPERBULLETS,              MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  67
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_068_BAR_SNIPERBULLETS,              MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  68
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_069_BRD_SNIPERBULLETS,              MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  69
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_070_ICO_ELECTRICITY,                MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  70
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_071_BAR_ELECTRICITY,                MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  71
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_072_BRD_ELECTRICITY,                MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  72
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_073_ICO_IRONBALL,                   MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  73
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_074_BAR_IRONBALL,                   MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  74
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_075_BRD_IRONBALL,                   MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  75
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_076_ICO_SERIOUSBOMB,                MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  76
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_077_BAR_SERIOUSBOMB,                MODEL_H3D_06X06,   TEXTURE_H3D_ANI,  0, 0, 0); //  77
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_078_ICO_KNIFE,                      MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  78
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_079_BRD_KNIFE,                      MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  79
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_080_ICO_CHAINSAW,                   MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  80
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_081_BRD_CHAINSAW,                   MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  81
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_082_ICO_COLT,                       MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  82
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_083_BRD_COLT,                       MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  83
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_084_ICO_DOUBLECOLT,                 MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  84
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_085_BRD_DOUBLECOLT,                 MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  85
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_086_ICO_SHOTGUN,                    MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  86
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_087_BRD_SHOTGUN,                    MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  87
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_088_ICO_DOUBLESHOTGUN,              MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  88
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_089_BRD_DOUBLESHOTGUN,              MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  89
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_090_ICO_TOMMYGUN,                   MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  90
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_091_BRD_TOMMYGUN,                   MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  91
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_092_ICO_MINIGUN,                    MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  92
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_093_BRD_MINIGUN,                    MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  93
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_094_ICO_ROCKETLAUNCHER,             MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  94
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_095_BRD_ROCKETLAUNCHER,             MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  95
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_096_ICO_GRENADELAUNCHER,            MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  96
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_097_BRD_GRENADELAUNCHER,            MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  97
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_098_ICO_FLAMETHROWER,               MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); //  98
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_099_BRD_FLAMETHROWER,               MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); //  99
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_100_ICO_SNIPERRIFLE,                MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); // 100
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_101_BRD_SNIPERRIFLE,                MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); // 101
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_102_ICO_LASER,                      MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); // 102
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_103_BRD_LASER,                      MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); // 103
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_104_ICO_CANNON,                     MODEL_H3D_07X07,   TEXTURE_H3D_ANI,  0, 0, 0); // 104
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_105_BRD_CANNON,                     MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); // 105
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_106_BORDER_HEALTH,                  MODEL_H3D_4X4,     TEXTURE_H3D_ANI,  0, 0, 0); // 106
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_107_BORDER_ARMOR,                   MODEL_H3D_4X4,     TEXTURE_H3D_ANI,  0, 0, 0); // 107
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_108_BORDER_SHIELD,                  MODEL_H3D_4X4,     TEXTURE_H3D_ANI,  0, 0, 0); // 108
+	AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_109_BORDER_AMMO,                    MODEL_H3D_4X4,     TEXTURE_H3D_ANI,  0, 0, 0); // 109
+  AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_110_BOSS_BAR,                       MODEL_H3D_BOSS,    TEXTURE_H3D_ANI,  0, 0, 0); // 110
+  AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_111_BOSS_BAR_BOSS,                  MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); // 111
+  AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_112_BOSS_BAR_COUNTER,               MODEL_H3D_1X1,     TEXTURE_H3D_ANI,  0, 0, 0); // 112
+  AddAttachmentToModel(this, m_moH3D, H3D_BASE_ATTACHMENT_113_BOSS_BAR_BG,                    MODEL_H3D_BOSS_BG, TEXTURE_H3D_ANI,  0, 0, 0); // 113
         
 
   SetGUIShop();
 
-  for (int i = 0; i < 110; i++) { // The exact number of attachments must be specified
+  for (int i = 0; i < 114; i++) { // The exact number of attachments must be specified
     h3d_OriginalAttachmentPositions[i] = m_moH3D.GetAttachmentModel(i)->amo_plRelative.pl_PositionVector(2);
   }
 
@@ -2415,24 +3283,26 @@ void InitAniNum() {
 
     int i = 0;
     // position for wide screen
-    for (i = 0;   i <= 11; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+    for (i = 0;   i <= 11; i++)   {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
       amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //health, armor, shields
 
-    for (i = 30;  i <= 40; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+    for (i = 30;  i <= 40; i++)   {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
       amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //powerups, current ammo
 
-    for (i = 52;  i <= 109; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //ammo info/weapons info/borders of health, armor, shields, ammo
+    for (i = 49;  i <= 109; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] + h3d_fVerticalPlacementHUD;    } //ammo info/weapons info/borders of health, armor, shields, ammo, oxygen
 
-    for (i = 12;  i <= 29; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+    for (i = 12;  i <= 29; i++)   {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
       amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //score/frags and money/mana/deaths/extra life
 
-    for (i = 41;  i <= 51; i++)  {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
-      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //messages, boss health, oxygen
+    for (i = 41;  i <= 48; i++)   {    CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //messages, boss health
+
+    for (i = 110;  i <= 113; i++) {  CAttachmentModelObject* amo = m_moH3D.GetAttachmentModel(i);
+      amo->amo_plRelative.pl_PositionVector(2) = h3d_OriginalAttachmentPositions[i] - h3d_fVerticalPlacementHUD;    } //boss bar
 
 		  INDEX H3DC_DIS   = 0x33333300; //empty weapon
 		  INDEX H3DC_WHITE = 0xFFFFFF00; //score
-
 		  INDEX H3DC_GREEN = 0x00FF0000;
 
       COLOR colMax      = h3d_iColor; //for "monochrome" hud color
@@ -2442,7 +3312,7 @@ void InitAniNum() {
       COLOR colLowArmor = h3d_iColor;
       COLOR colShield   = h3d_iColor;
       COLOR colHUD      = h3d_iColor;
-      FLOAT fFE         = 0; //for increase condition for FE scheme
+      FLOAT fFE         = 0; //for increase condition of FE scheme
 
       // ************************
       // ***** COLOR SCHEME *****
@@ -2490,10 +3360,11 @@ void InitAniNum() {
         iColBarShells, iColBarBullets, iColBarRockets, iColBarGrenades, iColBarFuel, iColBarSniperBullets, iColBarElectricity, iColBarIronball, iColBarSeriousBomb;
 
 		  INDEX iCount     = 0;
+      INDEX iCountFloat= 0;
 		  INDEX iCountType = 0;
 		  FLOAT _tmNow     = _pTimer->CurrentTick();
 
-      GetHPType(iCountType, iCount);
+      GetHPType(iCountType, iCountFloat, iCount);
 
   	  INDEX GetCurrentAmmo = 0;
 		  INDEX GetWantedWeapon = 0;
@@ -2560,11 +3431,11 @@ void InitAniNum() {
       anCurrentHealth.iTo = ceil(GetHealth());
       anCurrentArmor.iTo  = ceil(m_fArmor);
 
-      anCurrentShield.iTo  = ceil(m_fShield);
+      anCurrentShield.iTo = ceil(m_fShield);
 
-      anCurrentScore.iTo  = ceil(m_psGameStats.ps_iScore);
-      anCurrentFrags.iTo  = ceil(m_psGameStats.ps_iKills);
-      anCurrentDeaths.iTo = ceil(m_psGameStats.ps_iDeaths);
+      anCurrentScore.iTo  = m_psGameStats.ps_iScore;
+      anCurrentFrags.iTo  = m_psGameStats.ps_iKills;
+      anCurrentDeaths.iTo = m_psGameStats.ps_iDeaths;
       anCurrentMana.iTo   = m_iMana;
       anCurrentMoney.iTo  = m_iMoney;
       anCurrentAmmo.iTo   = GetCurrentWeaponAmmo();
@@ -2578,11 +3449,13 @@ void InitAniNum() {
         UpdateAniNum(anCurrentHealth);    //counter-style in "Single player" game mode
         UpdateAniNum(anCurrentArmor);
 		    UpdateAniNum(anCurrentShield);
+        UpdateAniNum(anCurrentMoney);
 
       } else {
         UpdateAniDigits(anCurrentHealth); //change all digits in one time in Multiplayer
         UpdateAniDigits(anCurrentArmor);
 		    UpdateAniDigits(anCurrentShield);
+        UpdateAniDigits(anCurrentMoney);
 
         UpdateAniDigits(anCurrentFrags);
         UpdateAniDigits(anCurrentDeaths);
@@ -2591,7 +3464,6 @@ void InitAniNum() {
 
       UpdateAniDigits(anCurrentAmmo);
       UpdateAniDigits(anCurrentScore);
-	    UpdateAniNum(anCurrentMoney);
     
     // get new variables for HUD 3D
     INDEX iPlayerHealth    = ceil(anCurrentHealth.iCurrent);
@@ -2633,6 +3505,7 @@ void InitAniNum() {
 	  INDEX iCurrentAlpha = 255*fHudAppear;
 	  INDEX iIAAlpha     = iCurrentAlpha; //Hide ammo if Infinity Ammo is enabled
 	  if (iInfAmm) {iIAAlpha = 0;}        //
+    if (!hud_bShowInfo) {iCurrentAlpha = 0; iIAAlpha = 0;}
 
     INDEX iAvbWep      = GetPlayerWeapons()->m_iAvailableWeapons;
 		  
@@ -2756,10 +3629,13 @@ void InitAniNum() {
     INDEX iNumMsg3     = (iMessages%10)+1;
     INDEX iIcoMsg      = 37;  //Message icon
 
-    INDEX iNumCnt1     = ((iCount%1000)/100)+1;
-    INDEX iNumCnt2     = ((iCount%100)/10)+1;
-    INDEX iNumCnt3     = (iCount%10)+1;
-    INDEX iIcoCnt      = 13;
+    INDEX iNumCnt1     = ((iCount%10000)/1000)+1;
+    INDEX iNumCnt2     = ((iCount%1000)/100)+1;
+    INDEX iNumCnt3     = ((iCount%100)/10)+1;
+    INDEX iNumCnt4     = (iCount%10)+1;
+    INDEX iIcoCntBoss  = 144;
+    INDEX iIcoCntCount = 146;
+    INDEX iBossBar     = 132; //Boss bar off
 
     INDEX iNumOxy1     = ((iOxygen%100)/10)+1;
     INDEX iNumOxy2     = (iOxygen%10)+1;
@@ -2810,7 +3686,7 @@ void InitAniNum() {
 		    
 	  if (iPlayerHealth <= 0)   {iIcoHlt = 13;} //icon health
 	  if (iPlayerHealth >  0)   {iIcoHlt = 14;}
-	  if (iPlayerHealth >= 25)  {iIcoHlt = 15;}
+	  if (iPlayerHealth >= 15)  {iIcoHlt = 15;}
 
     // Color Scheme
     if (iPlayerHealth > 100) {
@@ -2838,13 +3714,13 @@ void InitAniNum() {
     if (iPlayerArmor < 1   ) {iNumAr3 = 11;}
 
     if (iPlayerArmor <= 0  ) {iIcoArr = 16;}  //icon armor
-	  if (iPlayerArmor >  0  ) {iIcoArr = 17;}
-	  if (iPlayerArmor >  5  ) {iIcoArr = 18;}
-	  if (iPlayerArmor >  33 ) {iIcoArr = 19;}
-	  if (iPlayerArmor >  66 ) {iIcoArr = 20;}
-	  if (iPlayerArmor >  100) {iIcoArr = 21;}
-	  if (iPlayerArmor >  133) {iIcoArr = 22;}
-	  if (iPlayerArmor >  166) {iIcoArr = 23;}
+    if (iPlayerArmor >  0  ) {iIcoArr = 17;}  // 0/6
+    if (iPlayerArmor >  5  ) {iIcoArr = 18;}  // 1/6
+    if (iPlayerArmor >  33 ) {iIcoArr = 19;}  // 2/6
+    if (iPlayerArmor >  66 ) {iIcoArr = 20;}  // 3/6
+    if (iPlayerArmor >  100) {iIcoArr = 21;}  // 4/6
+    if (iPlayerArmor >  133) {iIcoArr = 22;}  // 5/6
+    if (iPlayerArmor >  166) {iIcoArr = 23;}  // 6/6
 
     // Color Scheme
     if (iPlayerArmor > 100) {
@@ -2872,7 +3748,7 @@ void InitAniNum() {
 
     CModelObject &icoshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_008_ICO_SHIELD    )->amo_moModelObject;
 
-    if (m_fMaxShield>0) {
+    if (GetMaxShield()>0.5f) {
       if (GetFlags()&ENF_ALIVE) {
         if (iPlayerShield < 100)  {iNumShield1 = 11;} //digits
         if (iPlayerShield < 10)   {iNumShield2 = 11;}
@@ -2893,17 +3769,23 @@ void InitAniNum() {
 	      if (iPlayerShield >= 1)   {iIcoShield = 128;}
       }
   
-	  CModelObject &icoshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_008_ICO_SHIELD    )->amo_moModelObject;  icoshield.mo_toTexture.PlayAnim(iIcoShield, AOF_LOOPING|AOF_NORESTART); icoshield.mo_colBlendColor = colShield|iCurrentAlpha;
-	
-    CModelObject &dgtshield1   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100)->amo_moModelObject; dgtshield1.mo_toTexture.PlayAnim(iNumShield1+101, 0); dgtshield1.mo_colBlendColor  = colShield|iCurrentAlpha;
-    CModelObject &dgtshield2   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010)->amo_moModelObject; dgtshield2.mo_toTexture.PlayAnim(iNumShield2+101, 0); dgtshield2.mo_colBlendColor  = colShield|iCurrentAlpha;
-    CModelObject &dgtshield3   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001)->amo_moModelObject; dgtshield3.mo_toTexture.PlayAnim(iNumShield3+101, 0); dgtshield3.mo_colBlendColor  = colShield|iCurrentAlpha;
-    CModelObject &brdshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_108_BORDER_SHIELD )->amo_moModelObject;  brdshield.mo_toTexture.PlayAnim(99, 0);               brdshield.mo_colBlendColor  = 0xFF000000|INDEX(iShieldBorderAlpha*fHudAppear);
-	  }
+      CModelObject &icoshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_008_ICO_SHIELD    )->amo_moModelObject;  icoshield.mo_toTexture.PlayAnim(iIcoShield, AOF_LOOPING|AOF_NORESTART); icoshield.mo_colBlendColor = colShield|iCurrentAlpha;
+    
+      CModelObject &dgtshield1   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100)->amo_moModelObject; dgtshield1.mo_toTexture.PlayAnim(iNumShield1+101, 0); dgtshield1.mo_colBlendColor  = colShield|iCurrentAlpha;
+      CModelObject &dgtshield2   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010)->amo_moModelObject; dgtshield2.mo_toTexture.PlayAnim(iNumShield2+101, 0); dgtshield2.mo_colBlendColor  = colShield|iCurrentAlpha;
+      CModelObject &dgtshield3   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001)->amo_moModelObject; dgtshield3.mo_toTexture.PlayAnim(iNumShield3+101, 0); dgtshield3.mo_colBlendColor  = colShield|iCurrentAlpha;
+      CModelObject &brdshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_108_BORDER_SHIELD )->amo_moModelObject;  brdshield.mo_toTexture.PlayAnim(99, 0);               brdshield.mo_colBlendColor  = 0xFF000000|INDEX(iShieldBorderAlpha*fHudAppear);
+    } else {
+      CModelObject &icoshield    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_008_ICO_SHIELD    )->amo_moModelObject;  icoshield.mo_toTexture.PlayAnim(0, AOF_LOOPING|AOF_NORESTART); icoshield.mo_colBlendColor = colShield|iCurrentAlpha;
+    
+      CModelObject &dgtshield1   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_009_DGT_SHIELD_100)->amo_moModelObject; dgtshield1.mo_toTexture.PlayAnim(0, 0); dgtshield1.mo_colBlendColor  = colShield|iCurrentAlpha;
+      CModelObject &dgtshield2   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_010_DGT_SHIELD_010)->amo_moModelObject; dgtshield2.mo_toTexture.PlayAnim(0, 0); dgtshield2.mo_colBlendColor  = colShield|iCurrentAlpha;
+      CModelObject &dgtshield3   = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_011_DGT_SHIELD_001)->amo_moModelObject; dgtshield3.mo_toTexture.PlayAnim(0, 0); dgtshield3.mo_colBlendColor  = colShield|iCurrentAlpha;
+    }
 
 		// = Render Player score/frags info =====================================================
     if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-      if (iPlayerScore > 99999900) {iNumSc1 = iNumSc2 = iNumSc3 = iNumSc4 = iNumSc5 = iNumSc6 = 10;} // interface won't show you 100 million score
+      if (iPlayerScore > 99999900) {iNumSc1 = iNumSc2 = iNumSc3 = iNumSc4 = iNumSc5 = iNumSc6 = 9;} // interface won't show you 100kk score
     if (iPlayerScore<999999) {
       if (iPlayerScore < 100000)   {iNumSc1 = 11;}
       if (iPlayerScore < 10000)    {iNumSc2 = 11;}
@@ -2920,7 +3802,7 @@ void InitAniNum() {
       //if (iPlayerScore < 0)        {iNumSc6 = 11;}
     }
 
-    if (iMoney > 999999) {iNumMoney1 = iNumMoney2 = iNumMoney3 = iNumMoney4 = iNumMoney5 = iNumMoney6 = 10;}
+    if (iMoney > 999999) {iNumMoney1 = iNumMoney2 = iNumMoney3 = iNumMoney4 = iNumMoney5 = iNumMoney6 = 9;}
     if (iMoney < 100000) {iNumMoney1 = 11;}
     if (iMoney < 10000)  {iNumMoney2 = 11;}
     if (iMoney < 1000)   {iNumMoney3 = 11;}
@@ -2930,7 +3812,7 @@ void InitAniNum() {
     }
       
     if (GetSP()->sp_gmGameMode == CSessionProperties::GM_FRAGMATCH) {
-      if (iAbsPlayerFrags > 999999) {iNumFr1 = iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 10;} // Just in case
+      if (iAbsPlayerFrags > 999999) {iNumFr1 = iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 9;} // Just in case
       if (iAbsPlayerFrags < 100000) {iNumFr1 = 11;}
       if (iAbsPlayerFrags < 10000)  {iNumFr2 = 11;}
       if (iAbsPlayerFrags < 1000)   {iNumFr3 = 11;}
@@ -2951,7 +3833,7 @@ void InitAniNum() {
             if (iNumFr1 == 11 || iPlayerFrags < -99999) { 
               iNumFr1 = 10;
               //set -99999 if number was huge
-              if (iPlayerFrags < -99999) {iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 10;}
+              if (iPlayerFrags < -99999) {iNumFr2 = iNumFr3 = iNumFr4 = iNumFr5 = iNumFr6 = 9;}
               }
               break;
             }
@@ -2960,7 +3842,7 @@ void InitAniNum() {
         }
       } 
       if (GetSP()->sp_gmGameMode == CSessionProperties::GM_SCOREMATCH) {
-      if (iAbsPlayerScore > 999999)   {iNumDmSc1 = iNumDmSc2 = iNumDmSc3 = iNumDmSc4 = iNumDmSc5 = iNumDmSc6 = 10;}
+      if (iAbsPlayerScore > 999999)   {iNumDmSc1 = iNumDmSc2 = iNumDmSc3 = iNumDmSc4 = iNumDmSc5 = iNumDmSc6 = 9;}
       if (iAbsPlayerScore < 100000)   {iNumDmSc1 = 11;}
       if (iAbsPlayerScore < 10000)    {iNumDmSc2 = 11;}
       if (iAbsPlayerScore < 1000)     {iNumDmSc3 = 11;}
@@ -2978,9 +3860,9 @@ void InitAniNum() {
           case 4: if (iNumDmSc2 == 11) { iNumDmSc2 = 10; placed = TRUE; } break;
           case 5: // if last digit is zero or lower than maximum
             if (iNumDmSc1 == 11 || iPlayerScore < -99999) { 
-              iNumDmSc1 = 11;
+              iNumDmSc1 = 10;
               //set -99999 if number was huge
-              if (iPlayerScore < -99999) {iNumDmSc2 = iNumDmSc3 = iNumDmSc4 = iNumDmSc5 = iNumDmSc6 = 10;}
+              if (iPlayerScore < -99999) {iNumDmSc2 = iNumDmSc3 = iNumDmSc4 = iNumDmSc5 = iNumDmSc6 = 9;}
             }
             break;
           }
@@ -3062,7 +3944,7 @@ void InitAniNum() {
       // = Render money info ======================================================================
       
       if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
-        CModelObject &icoskl    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoScr, 0); icoskl.mo_colBlendColor  = m_iMoney > 0 ? h3d_iColor|iCurrentAlpha : colHUD|0; //I don't know what is it, but it works
+        CModelObject &icoskl    = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_020_ICO_SKULL       )->amo_moModelObject;  icoskl.mo_toTexture.PlayAnim(iIcoScr, 0); icoskl.mo_colBlendColor  = m_iMoney > 0 ? colHUD|iCurrentAlpha : colHUD|0; //I don't know what is it, but it works
 
         CModelObject &dgtmoney1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_021_DGT_DEATH_100000)->amo_moModelObject; dgtmoney1.mo_toTexture.PlayAnim(iNumMoney1+101, 0); dgtmoney1.mo_colBlendColor  = m_iMoney > 0 ? H3DC_WHITE|iCurrentAlpha : H3DC_WHITE|0;
         CModelObject &dgtmoney2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_022_DGT_DEATH_010000)->amo_moModelObject; dgtmoney2.mo_toTexture.PlayAnim(iNumMoney2+101, 0); dgtmoney2.mo_colBlendColor  = m_iMoney > 0 ? H3DC_WHITE|iCurrentAlpha : H3DC_WHITE|0;
@@ -3082,10 +3964,9 @@ void InitAniNum() {
 		
 		  if (iNumExtra < 10  ) {iNumExtra1 = 11;}
       if (iNumExtra > 99  ) {iNumExtra1 = iNumExtra2 = 9;}
+      if (!h3d_bShowExtraLife) {iNumExtra1 = iNumExtra2 = 11; iIcoExtra = 29;} //turn animation to off
 
-		  //if (iNumExtra <= 0  ) {iIcoExtra = 29;}
-
-		  CModelObject &icoextra  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_027_ICO_EXTRALIFE )->amo_moModelObject;    icoextra.mo_toTexture.PlayAnim(iIcoExtra, AOF_LOOPING|AOF_NORESTART); icoextra.mo_colBlendColor  = 0xFF520000|iCurrentAlpha;
+      CModelObject &icoextra  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_027_ICO_EXTRALIFE   )->amo_moModelObject;  icoextra.mo_toTexture.PlayAnim(iIcoExtra, 0 /*AOF_LOOPING|AOF_NORESTART*/); icoextra.mo_colBlendColor  = 0xFF520000|iCurrentAlpha;
 		  CModelObject &dgtextra1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_028_DGT_EXTRALIFE_10)->amo_moModelObject; dgtextra1.mo_toTexture.PlayAnim(iNumExtra1+101, 0); dgtextra1.mo_colBlendColor  = 0xFF520000|iCurrentAlpha;
 		  CModelObject &dgtextra2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_029_DGT_EXTRALIFE_01)->amo_moModelObject; dgtextra2.mo_toTexture.PlayAnim(iNumExtra2+101, 0); dgtextra2.mo_colBlendColor  = 0xFF520000|iCurrentAlpha;
 	  }
@@ -3179,14 +4060,14 @@ void InitAniNum() {
 		CModelObject &brdammo  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_109_BORDER_AMMO)->amo_moModelObject; brdammo.mo_toTexture.PlayAnim(99, /*AOF_LOOPING|AOF_NORESTART*/ 0);  brdammo.mo_colBlendColor  = 0xFF000000|INDEX(iBrdAmmo*fHudAppear);
 
 		  // = Render unread message info =========================================================
-      INDEX iLowTimer = 255;
+      INDEX iCurrentAlphaLowTimer = iCurrentAlpha;
       if (GetSP()->sp_bSinglePlayer || GetSP()->sp_bCooperative) {
         if (iMessages < 100) {iNumMsg1 = 12;}
 		if (iMessages < 10 ) {iNumMsg2 = 12;}
         if (iMessages < 1  ) {iNumMsg3 = 12;}
 
 		if (iMessages >  0 ) {iIcoMsg  = 39;} else {iIcoMsg = 38;}  // Message icon
-      } else { // if playing scorematch or fragmatch
+      } else if (GetSP()->sp_iTimeLimit > 0) { // if playing deathmatch
         iIcoMsg = 40;                                           // Replace message info with TIME LEFT for deathmatch
         FLOAT fTimeLeft = ClampDn(GetSP()->sp_iTimeLimit*60.0f - _pNetwork->GetGameTime(), 0.0f);
         INDEX iSeconds = (INDEX)fTimeLeft;
@@ -3217,55 +4098,102 @@ void InitAniNum() {
           
           if (iSeconds < 10) {iNumMsg1 = 12;}
           if (iSeconds < 1 ) {iNumMsg2 = 12;}
+
+          iCurrentAlphaLowTimer = Abs(Sin(_pTimer->CurrentTick()*150))*255;
           
-          if (fTimeLeft <= 0) {iLowTimer = 0;} else {
+          /*if (fTimeLeft <= 0) {iLowTimer = 0;} else {
             iLowTimer = Abs(Sin(_pTimer->CurrentTick()*150))*255;
-          }
+          }*/
         }
+      } else { //show disabled elements
+        iIcoMsg = 38; iNumMsg1 = iNumMsg2 = iNumMsg3 = 12;
       }
 
-		  CModelObject &icomsg  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_041_ICO_MESSAGE    )->amo_moModelObject;  icomsg.mo_toTexture.PlayAnim(iIcoMsg, AOF_LOOPING|AOF_NORESTART); icomsg.mo_colBlendColor  = colHUD|INDEX(iLowTimer*fHudAppear);
-		  CModelObject &dgtmsg1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100)->amo_moModelObject; dgtmsg1.mo_toTexture.PlayAnim(iNumMsg1, 0); dgtmsg1.mo_colBlendColor = colHUD|INDEX(iLowTimer*fHudAppear);
-		  CModelObject &dgtmsg2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010)->amo_moModelObject; dgtmsg2.mo_toTexture.PlayAnim(iNumMsg2, 0); dgtmsg2.mo_colBlendColor = colHUD|INDEX(iLowTimer*fHudAppear);
-		  CModelObject &dgtmsg3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001)->amo_moModelObject; dgtmsg3.mo_toTexture.PlayAnim(iNumMsg3, 0); dgtmsg3.mo_colBlendColor = colHUD|INDEX(iLowTimer*fHudAppear);
+		  CModelObject &icomsg  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_041_ICO_MESSAGE    )->amo_moModelObject;  icomsg.mo_toTexture.PlayAnim(iIcoMsg, AOF_LOOPING|AOF_NORESTART); icomsg.mo_colBlendColor  = colHUD|iCurrentAlphaLowTimer/*INDEX(iLowTimer*fHudAppear)*/;
+		  CModelObject &dgtmsg1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_042_DGT_MESSAGE_100)->amo_moModelObject; dgtmsg1.mo_toTexture.PlayAnim(iNumMsg1, 0); dgtmsg1.mo_colBlendColor = colHUD|iCurrentAlphaLowTimer/*INDEX(iLowTimer*fHudAppear)*/;
+		  CModelObject &dgtmsg2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_043_DGT_MESSAGE_010)->amo_moModelObject; dgtmsg2.mo_toTexture.PlayAnim(iNumMsg2, 0); dgtmsg2.mo_colBlendColor = colHUD|iCurrentAlphaLowTimer/*INDEX(iLowTimer*fHudAppear)*/;
+		  CModelObject &dgtmsg3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_044_DGT_MESSAGE_001)->amo_moModelObject; dgtmsg3.mo_toTexture.PlayAnim(iNumMsg3, 0); dgtmsg3.mo_colBlendColor = colHUD|iCurrentAlphaLowTimer/*INDEX(iLowTimer*fHudAppear)*/;
 
           // = Render boss/counter info ===========================================================
      
-		  if (iCount   <  100)  {iNumCnt1 = 12;}
-		  if (iCount   <  10 )  {iNumCnt2 = 12;}
-		  if (iCount   <= 0  )  {iNumCnt3 = 12;}
+		  if (iCount   >  9999)  {
+        iCount = iCountFloat; 
+        iNumCnt1 = 12;
+        iNumCnt2 = ((iCount%1000)/100)+1;
+        iNumCnt3 = ((iCount%100)/10)+1;
+        iNumCnt4 = (iCount%10)+1;
+      }
+      
+      if (iCount   <  1000)  {iNumCnt1 = 12;}
+      if (iCount   <  100 )  {iNumCnt2 = 12;}
+		  if (iCount   <  10  )  {iNumCnt3 = 12;}
+		  if (iCount   <= 0   )  {iNumCnt4 = 12;}
+      //if (iCount   >  9999)  {iNumCnt1 = iNumCnt2 = iNumCnt3 = iNumCnt4 = 10;}
 
           // Color Scheme
-      if (iCount >= 50) {
+      if (iCountFloat >= 50) {
         iColBossHealth = colTop;
-      } else if (iCount > 25) {
+      } else if (iCountFloat > 25) {
         iColBossHealth = colMid;
       } else {
         iColBossHealth = colLow;
       }
 
-      if (iCountType == 1)  {iIcoCnt  = 125;} else {iIcoCnt  = 13;}
+          // Bar description icon
 
-		  CModelObject &icocnt  = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_045_ICO_BOSSHEALTH    )->amo_moModelObject;  icocnt.mo_toTexture.PlayAnim(iIcoCnt,      0); icocnt.mo_colBlendColor  = colHUD|iCurrentAlpha;
-		  CModelObject &numcnt1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_100)->amo_moModelObject; numcnt1.mo_toTexture.PlayAnim(iNumCnt1+112, 0); numcnt1.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
-		  CModelObject &numcnt2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_010)->amo_moModelObject; numcnt2.mo_toTexture.PlayAnim(iNumCnt2+112, 0); numcnt2.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
-		  CModelObject &numcnt3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_001)->amo_moModelObject; numcnt3.mo_toTexture.PlayAnim(iNumCnt3+112, 0); numcnt3.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+      if (iCountType == 1) { // Boss bar
+        iIcoCntBoss  = 145;  // boss    on
+        iIcoCntCount = 146;  // counter off
+      }
+      if (iCountType == 2) { // Counter bar
+        iIcoCntBoss  = 144;  // boss    off
+        iIcoCntCount = 147;  // counter on
+      }
+      if (iCountType == 0) { // Enemy base bar
+        iIcoCntBoss  = 144;  // boss    off
+        iIcoCntCount = 146;  // counter off
+      }
+
+           if (iCountFloat >= 91) {iBossBar = 133;} 
+      else if (iCountFloat >= 82) {iBossBar = 134;}
+      else if (iCountFloat >= 73) {iBossBar = 135;}
+      else if (iCountFloat >= 64) {iBossBar = 136;}
+      else if (iCountFloat >= 55) {iBossBar = 137;}
+      else if (iCountFloat >= 46) {iBossBar = 138;}
+      else if (iCountFloat >= 37) {iBossBar = 139;}
+      else if (iCountFloat >= 28) {iBossBar = 140;}
+      else if (iCountFloat >= 19) {iBossBar = 141;}
+      else if (iCountFloat >= 10) {iBossBar = 142;}
+      else if (iCountFloat >   0) {iBossBar = 143;}
+      else if (iCountFloat <=  0) {iBossBar = 132;}
+
+		  CModelObject &numcnt1 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_045_DGT_BOSSHEALTH_1000)->amo_moModelObject; numcnt1.mo_toTexture.PlayAnim(iNumCnt1+112, 0); numcnt1.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+		  CModelObject &numcnt2 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_046_DGT_BOSSHEALTH_0100)->amo_moModelObject; numcnt2.mo_toTexture.PlayAnim(iNumCnt2+112, 0); numcnt2.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+		  CModelObject &numcnt3 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_047_DGT_BOSSHEALTH_0010)->amo_moModelObject; numcnt3.mo_toTexture.PlayAnim(iNumCnt3+112, 0); numcnt3.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+		  CModelObject &numcnt4 = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_048_DGT_BOSSHEALTH_0001)->amo_moModelObject; numcnt4.mo_toTexture.PlayAnim(iNumCnt4+112, 0); numcnt4.mo_colBlendColor = iColBossHealth|iCurrentAlpha;
+
+      CModelObject &barbord = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_110_BOSS_BAR           )->amo_moModelObject; barbord.mo_toTexture.PlayAnim(iBossBar,     0); barbord.mo_colBlendColor = colHUD|iCurrentAlpha;
+      CModelObject &barbobg = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_113_BOSS_BAR_BG        )->amo_moModelObject; barbobg.mo_toTexture.PlayAnim(iBossBar,     0); barbobg.mo_colBlendColor = colHUD|iCurrentAlpha;
+      CModelObject &barboss = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_111_BOSS_BAR_BOSS      )->amo_moModelObject; barboss.mo_toTexture.PlayAnim(iIcoCntBoss,  0); barboss.mo_colBlendColor = colHUD|iCurrentAlpha;
+      CModelObject &barcoun = m_moH3D.GetAttachmentModel(H3D_BASE_ATTACHMENT_112_BOSS_BAR_COUNTER   )->amo_moModelObject; barcoun.mo_toTexture.PlayAnim(iIcoCntCount, 0); barcoun.mo_colBlendColor = colHUD|iCurrentAlpha;
 
 		  // = Render oxygen info =================================================================
       if (!(GetFlags()&ENF_ALIVE)) {
-        iOxygen = 31;
+        iOxygen = 51;
 		  }
       
 	    if (iOxygen < 10) {iNumOxy1 = 12;}
 		  if (iOxygen <  0) {iNumOxy2 = 12;}
-		  if (iOxygen >=30) {iNumOxy1 = iNumOxy2 = 12;}
+		  if (iOxygen >=51) {iNumOxy1 = iNumOxy2 = 12;}
 
 		  if (iOxygen >= 0) {iIcoOxy  = 42;}
 		  if (iOxygen >  9) {iIcoOxy  = 43;}
-		  if (iOxygen >=30) {iIcoOxy  = 41;}
+		  if (iOxygen >=51) {iIcoOxy  = 41;}
 
           // Color Scheme
-      if (iOxygen > 15) {
+      if (iOxygen > 30) {
+        iColOxygen = colMax;
+      } else if (iOxygen > 15) {
         iColOxygen = colTop;
       } else if (iOxygen > 7) {
         iColOxygen = colMid;
@@ -3562,8 +4490,9 @@ void InitAniNum() {
         UpdateGUIShop();
       }
       
-      SurfaceTranslucencyType eSST = STT_TRANSLUCENT;
-      if (h3d_bRenderSurfaceAdd) {eSST = STT_ADD;} else {eSST = STT_TRANSLUCENT;}
+      SurfaceTranslucencyType eSST    = STT_TRANSLUCENT;
+      SurfaceTranslucencyType eSSTbar = STT_TRANSPARENT;
+      if (h3d_bRenderSurfaceAdd) {eSST = eSSTbar = STT_ADD;} else {eSST = STT_TRANSLUCENT; eSSTbar = STT_TRANSPARENT;}
         icohlt.SetSurfaceRenderFlags    ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);								//CHANGE HUD 3D TO STT_ADD
         dgthlt1.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         dgthlt2.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
@@ -3594,10 +4523,10 @@ void InitAniNum() {
         dgtmsg1.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         dgtmsg2.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         dgtmsg3.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
-        icocnt.SetSurfaceRenderFlags    ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         numcnt1.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         numcnt2.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         numcnt3.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
+        numcnt4.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         icooxy.SetSurfaceRenderFlags    ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         dgtoxy1.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         dgtoxy2.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
@@ -3658,19 +4587,24 @@ void InitAniNum() {
         brdhlth.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         brdarmr.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
         brdshield.SetSurfaceRenderFlags ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
-
+        barbord.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSSTbar, SRF_DIFFUSE); // bar foreground
+        barbobg.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);    // bar background
+        barboss.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
+        barcoun.SetSurfaceRenderFlags   ( 0, 0, SST_FULLBRIGHT, eSST, SRF_DIFFUSE);
   }
 
-    void GetHPType(INDEX& iCountType, INDEX& iCount) {
+    void GetHPType(INDEX& iCountType, INDEX& iCountFloat, INDEX& iCount) {
 
   		if( m_penMainMusicHolder!=NULL) {
 			  CMusicHolder &mh = (CMusicHolder&)*m_penMainMusicHolder;
+        iCountType = 0;
 
 		    if( mh.m_penBoss!=NULL && (mh.m_penBoss->en_ulFlags&ENF_ALIVE)) {
 			    CEnemyBase &eb = (CEnemyBase&)*mh.m_penBoss;
 			    ASSERT( eb.m_fMaxHealth>0);
-			    iCount     = ceil(eb.GetHealth()/eb.m_fMaxHealth*100.0f);
-			    iCountType = 1;
+			    iCount     = eb.GetHealth();
+          iCountFloat= ceil(eb.GetHealth()/eb.m_fMaxHealth*100.0f);
+			    iCountType = 1;  // enable BOSS icon
           return;
 		    }
 
@@ -3680,8 +4614,9 @@ void InitAniNum() {
             FLOAT fCount = ec.m_iCount;
             FLOAT fCountFrom = ec.m_iCountFrom;
             FLOAT f = (fCount/fCountFrom)*100.0f;
-			      iCount     = ceil(f);
-			      iCountType = 0;  // disable enemies health Icon 
+            iCount     = ec.m_iCount;
+			      iCountFloat= ceil(f);
+			      iCountType = 2;  // enable COUNTER icon
             return;
 			    }
 		    }
@@ -3695,8 +4630,20 @@ void InitAniNum() {
 
             if (!enemyBase->m_bTemplate) {
               if (enemyBase->m_fMaxHealth >= h3d_fEnemyShowMaxHealth || h3d_fEnemyShowMaxHealth == 0.0f) { 
-                iCount     = GetPlayerWeapons()->m_iEnemyHealth;
-                iCountType = 1; // On Hearth Icon Boss
+                iCount     = GetPlayerWeapons()->m_iEnemyHealthIndex;
+                iCountFloat= GetPlayerWeapons()->m_iEnemyHealth;
+                iCountType = 0; // No icon
+              }
+            }
+          }
+          if (IsDerivedFromClass(penRayHit, "Friend")) {
+            CFriend* penfriend = ((CFriend*)&*penRayHit);
+
+            if (!penfriend->m_bTemplate) {
+              if (penfriend->m_fMaxHealth >= h3d_fEnemyShowMaxHealth || h3d_fEnemyShowMaxHealth == 0.0f) { 
+                iCount     = GetPlayerWeapons()->m_iEnemyHealthIndex;
+                iCountFloat= GetPlayerWeapons()->m_iEnemyHealth;
+                iCountType = 0; // No icon
               }
             }
           }
@@ -4628,17 +5575,62 @@ void InitAniNum() {
   // find main music holder if not remembered
   void FindMusicHolder(void)
   {
+    FindGameStat();
     if (m_penMainMusicHolder==NULL) {
       m_penMainMusicHolder = _pNetwork->GetEntityWithName("MusicHolder", 0);
     }
-	if (m_penWorldLinkController==NULL && GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
+
+	  if (m_penWorldLinkController==NULL && GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
       m_penWorldLinkController = _pNetwork->GetEntityWithName("World link controller", 0);
-	  if (m_penWorldLinkController==NULL) {
-		CEntityPointer penWorldLinkController = CreateEntity(GetPlacement(), CLASS_WORLDLINKCONTROLLER);
-		penWorldLinkController->Initialize();
-		m_penWorldLinkController=penWorldLinkController;
-	  }
+	    if (m_penWorldLinkController==NULL) {
+		    CEntityPointer penWorldLinkController = CreateEntity(GetPlacement(), CLASS_WORLDLINKCONTROLLER);
+		    penWorldLinkController->Initialize();
+		    m_penWorldLinkController=penWorldLinkController;
+	    }
     }
+
+    CBackgroundViewer *penBcgViewer = (CBackgroundViewer *) GetWorld()->GetBackgroundViewer();
+    if (penBcgViewer == NULL) {
+      CPrintF("No Background Viewer. Creating...\n");
+      CEntityPointer penBackgroundViewer = CreateEntity(GetPlacement(), CLASS_BACKGROUNDVIEWER);
+      penBackgroundViewer->Initialize();
+      CPrintF("Background Viewer was initialized\n");
+    }
+
+    if (m_penOutline==NULL) {
+      CBackgroundViewer *penBcgViewer = (CBackgroundViewer *) GetWorld()->GetBackgroundViewer();
+      if (penBcgViewer != NULL) {
+        CEntityPointer penOutline     = CreateEntity(penBcgViewer->GetPlacement(), CLASS_OUTLINE);
+        CEntityPointer penOutlineFast = CreateEntity(penBcgViewer->GetPlacement(), CLASS_OUTLINE_FAST);
+        ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_ACTIVE        )->ep_slOffset, BOOL ) = TRUE;             // Mark properties
+        //ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_BLEND_TYPE    )->ep_slOffset, INDEX) = ppo_iBlendType; //    1
+        //ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_COLOR         )->ep_slOffset, COLOR) = ppo_iColor;     // 0xFFFFFFFF
+        ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_DEPTH_TESTING )->ep_slOffset, BOOL ) = FALSE;
+        //ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_FALL_OFF      )->ep_slOffset, FLOAT) = ppo_fFallOff;   // 1000.0f
+        //ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_HOT_SPOT      )->ep_slOffset, FLOAT) = ppo_fHotSpot;   //   10.0f
+        //ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_THICKNESS     )->ep_slOffset, FLOAT) = ppo_fThickness; //    0.1f
+        //ENTITYPROPERTY(penOutline.ep_pen, penOutline->PropertyForName(MARK_TYPE          )->ep_slOffset, INDEX) = ppo_iType;      //      0
+
+        ENTITYPROPERTY(penOutlineFast.ep_pen, penOutlineFast->PropertyForName(MARK_ACTIVE        )->ep_slOffset, BOOL ) = TRUE;     //
+		        penOutline->Initialize();
+        penOutlineFast->Initialize();
+		    m_penOutline=penOutline;
+        m_penOutlineFast=penOutlineFast;
+      }
+    }
+  }
+
+  // find Game Stat entity
+  void FindGameStat(void)
+  {
+    if (m_penGameStat==NULL) {
+      m_penGameStat = _pNetwork->GetEntityWithName("GameStat", 0);
+    }
+    if (m_penGameStat==NULL) {
+		  CEntityPointer penGameStat = CreateEntity(GetPlacement(), CLASS_GAMESTAT);
+		  penGameStat->Initialize();
+		  m_penGameStat=penGameStat;
+	  }
   }
 
   // update per-level stats
@@ -4652,6 +5644,7 @@ void InitAniNum() {
       return;
     }
     CMusicHolder &mh = (CMusicHolder&)*m_penMainMusicHolder;
+    CGameStat    &gs = (CGameStat&)*m_penGameStat;
 
     // assure proper count enemies in current world
     if (mh.m_ctEnemiesInWorld==0) {
@@ -4690,7 +5683,7 @@ void InitAniNum() {
   }
   void SetRandomShieldPitch(FLOAT fMin, FLOAT fMax)   // HUD 3D - Shield sound
   {
-    m_soShield.Set3DParameters(10.0f, 10.0f, 2.0f, Lerp(fMin, fMax, FRnd()));
+    m_soShield.Set3DParameters(10.0f, 10.0f, 1.0f, Lerp(fMin, fMax, FRnd()));
   }
 
   // added: also shake view because of chainsaw firing
@@ -4964,17 +5957,34 @@ void InitAniNum() {
 	    pdp->PutText(TRANS("Game options"), iGameOptionPosX, pixDPHeight*0.1f, SE_COL_BLUE_NEUTRAL_LT|CT_OPAQUE);
 	    INDEX iDisplayedOption=0;
 
+      CTString strGameMode;
+      INDEX iGameMode=(GetSP()->sp_gmGameMode);
+      if (iGameMode==-1) {
+        strGameMode = strGameMode = TRANS("Flyover");
+      }
+          switch (iGameMode) {
+	          case  0: strGameMode = TRANS("Cooperative"); break;
+	          case  1: strGameMode = TRANS("Scorematch");  break;
+	          case  2: strGameMode = TRANS("Fragmatch");   break;
+            case  3: strGameMode = TRANS("Survival co-op");   break;
+          }
+
       CTString strGameDifficulty;
       INDEX iDifficulty=(GetSP()->sp_gdGameDifficulty);
       if (iDifficulty==-1) {
         strGameDifficulty = TRANS("Tourist");
       }
 			    switch (iDifficulty) {
-					case  0: strGameDifficulty = TRANS("Easy")   ; break;
-					case  1: strGameDifficulty = TRANS("Normal") ; break;
-					case  2: strGameDifficulty = TRANS("Hard")   ; break;
-					case  3: strGameDifficulty = TRANS("Serious"); break;
+					  case  0: strGameDifficulty = TRANS("Easy")   ; break;
+					  case  1: strGameDifficulty = TRANS("Normal") ; break;
+					  case  2: strGameDifficulty = TRANS("Hard")   ; break;
+					  case  3: strGameDifficulty = TRANS("Serious"); break;
 				}
+
+        strGameMode.PrintF(TRANS("Game type: %s"), strGameMode);
+			    pdp->PutText(strGameMode , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+				iDisplayedOption++;
+
 				strGameDifficulty.PrintF(TRANS("Difficulty: %s"), strGameDifficulty);
 			    pdp->PutText(strGameDifficulty , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 				iDisplayedOption++;
@@ -5011,6 +6021,10 @@ void InitAniNum() {
 				pdp->PutText(TRANS("^cff9900Friendly fire") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 				iDisplayedOption++;
 			  }
+        if (GetSP()->sp_bResetCredits) {
+				  pdp->PutText(TRANS("Replenish credits") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+				  iDisplayedOption++;
+			  }
 			  if (GetSP()->sp_fExtraEnemyStrength>0) {
 				  INDEX i=GetSP()->sp_fExtraEnemyStrength*100;
 				  CTString str;
@@ -5031,6 +6045,10 @@ void InitAniNum() {
 			  }
 			  if (!GetSP()->sp_bRespawnInPlace) {
 				pdp->PutText(TRANS("Players reborn on control point") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
+				iDisplayedOption++;
+			  }
+        if (GetSP()->sp_bPlayerMarkerSaveWeapon) {
+				pdp->PutText(TRANS("Save weapons") , iGameOptionPosX, (pixDPHeight*0.175f)+(iHeightSpacing*iDisplayedOption*fScaleh), SE_COL_WHITE|CT_OPAQUE);
 				iDisplayedOption++;
 			  }
 
@@ -5141,7 +6159,6 @@ void InitAniNum() {
       RenderHudPicFX(pdp);
 
 	  if(hud_bShowAll && bShowExtras) {
-
         // let the player entity render its interface
         CPlacement3D plLight(_vViewerLightDirection, ANGLE3D(0,0,0));
         plLight.AbsoluteToRelative(plViewer);
@@ -5399,7 +6416,14 @@ void InitAniNum() {
     // never allow a player to be removed from the list of movers
     en_ulFlags &= ~ENF_INRENDERING;
 
-    
+    if (m_penOutlineEntity!=NULL && (m_tmOutlineTime<_pTimer->CurrentTick() || !IsValidMarkEntity(m_penOutlineEntity))) {
+      ENTITYPROPERTY(m_penOutline.ep_pen, m_penOutline->PropertyForName(MARK_OUTLINE_ENTITY)->ep_slOffset, CEntityPointer) = NULL;
+      m_penOutlineEntity = NULL;
+    }
+    if (m_penOutlineFastEntity!=NULL && (m_tmOutlineTime<_pTimer->CurrentTick() || !IsValidMarkEntity(m_penOutlineFastEntity))) {
+      ENTITYPROPERTY(m_penOutlineFast.ep_pen, m_penOutlineFast->PropertyForName(MARK_OUTLINE_ENTITY)->ep_slOffset, CEntityPointer) = NULL;
+      m_penOutlineFastEntity = NULL;
+    }
     ((CPlayerAnimator&)*m_penAnimator).AnimateSoftEyes();
     //((CPlayerAnimator&)*m_penAnimator).AnimateRecoilPitch();
 
@@ -5426,7 +6450,7 @@ void InitAniNum() {
 
     //HUD 3D - Shield regen
     if (m_tmLastDamage+m_fShieldDelay < _pTimer->CurrentTick() && GetFlags()&ENF_ALIVE) {
-      m_fShield=ClampUp(m_fShield+_pTimer->TickQuantum+(m_fMaxShield/300.0f), m_fMaxShield);
+      m_fShield=ClampUp(m_fShield+_pTimer->TickQuantum+(GetMaxShield()/*m_fMaxShield*//300.0f), GetMaxShield()/*m_fMaxShield*/);
 	  }
 
     // update ray hit for weapon target
@@ -5698,7 +6722,6 @@ void InitAniNum() {
   void ReceiveDamage( CEntity *penInflictor, enum DamageType dmtType,
                       FLOAT fDamageAmmount, const FLOAT3D &vHitPoint, const FLOAT3D &vDirection)
   {
-
     // don't harm yourself with knife or with rocket in easy/tourist mode
     if( penInflictor==this && (dmtType==DMT_CLOSERANGE || dmtType==DMT_CHAINSAW ||
         ((dmtType==DMT_EXPLOSION||dmtType==DMT_CANNONBALL_EXPLOSION||dmtType==DMT_PROJECTILE) &&
@@ -5749,6 +6772,11 @@ void InitAniNum() {
       return;
     }
 	
+    if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+      if (IsOfClass(penInflictor, "Player") && penInflictor!=this) {
+        fDamageAmmount*=0.33f;
+      }
+    }
 	// HUD 3D - Shield
 	if (dmtType != DMT_DROWNING && dmtType != DMT_ABYSS && dmtType != DMT_SPIKESTAB && dmtType != DMT_TELEPORT && dmtType != DMT_HEAT && m_fShield > 0) {
 	FLOAT fDamage=m_fShield-fDamageAmmount;
@@ -5760,7 +6788,7 @@ void InitAniNum() {
 	  if (fDamage<=0) {
       PlaySound(m_soShield, SOUND_SHIELD_BREAK, SOF_3D);
       m_tmShieldBroken=_pTimer->CurrentTick();
-      m_vShieldBroken=GetPlacement().pl_PositionVector; // set the last player position for sapwn broken shield's particles
+      m_vShieldBroken=GetPlacement().pl_PositionVector; // set the last player position to spawn particles
       m_vShieldBroken(2)+=1;
 		  fDamageAmmount-=fShield;
       m_fShieldDamageAmmount=0;
@@ -6049,19 +7077,29 @@ void InitAniNum() {
     // *********** SHIELD ***********
     else if( ee.ee_slEvent == EVENTCODE_EMaxShield)
     {
-      // determine old and new health values
-      FLOAT fMaxShieldOld = m_fMaxShield;
-      FLOAT fMaxShieldNew = fMaxShieldOld + ((EMaxShield&)ee).fMaxShield;
+      // determine old and new shield values
+      //FLOAT fMaxShieldOld = m_fMaxShield;
+      //FLOAT fMaxShieldNew = fMaxShieldOld + ((EMaxShield&)ee).fMaxShield;
 
-      // if value can be changed
-      if( ceil(fMaxShieldNew) > ceil(fMaxShieldOld)) {
-        // receive it
-        m_fMaxShield = fMaxShieldNew;
-        ItemPicked( TRANS("Energy shield"), ((EMaxShield&)ee).fMaxShield);
-        m_iMana += (INDEX)(((EMaxShield&)ee).fMaxShield);
-        m_fPickedMana   += ((EMaxShield&)ee).fMaxShield;
+      EMaxShield& eMaxShield=(EMaxShield&)ee;
+      if (eMaxShield.fMaxShield == 0.0f) {
         return TRUE;
       }
+      if (eMaxShield.bPermanent) {
+        m_fMaxShield+=eMaxShield.fMaxShield;
+      } else {
+        m_fExtraShield+=eMaxShield.fMaxShield;
+      }
+
+      // if value can be changed
+      //if( ceil(fMaxShieldNew) > ceil(fMaxShieldOld)) {
+        // receive it
+        //m_fMaxShield = fMaxShieldNew;
+      ItemPicked( TRANS("Energy shield"), ((EMaxShield&)ee).fMaxShield);
+      m_iMana += (INDEX)(((EMaxShield&)ee).fMaxShield);
+      m_fPickedMana   += ((EMaxShield&)ee).fMaxShield;
+      return TRUE;
+      //}
     }
 
     // *********** MESSAGE ***********
@@ -6371,9 +7409,9 @@ void InitAniNum() {
     m_aH3DSwayOld = m_aH3DSway;
     if (en_plViewpoint.pl_OrientationAngle(2) > -90 && en_plViewpoint.pl_OrientationAngle(2) < 90)
     {
-      m_aH3DSway(2) -= aDeltaRotation(2) * h3d_fHUDInertFactor;
+      m_aH3DSway(2) += aDeltaRotation(2) * h3d_fHUDInertFactor;
     }
-    m_aH3DSway(1) -= aDeltaRotation(1) * h3d_fHUDInertFactor;
+    m_aH3DSway(1) += aDeltaRotation(1) * h3d_fHUDInertFactor;
     m_aH3DSway /= 2;
     
     if (m_ulFlags&PLF_ISZOOMING) {
@@ -6679,6 +7717,10 @@ void InitAniNum() {
         if (ulNewButtons&(PLACT_USE)) {
            m_penCamera = NULL;
            m_penShop = NULL;
+           if (hud_iOldHUDShop>0) {
+             hud_iOldHUD     = hud_iOldHUDShop;
+             hud_iOldHUDShop = 0;
+           }
         }
 
         if (ulNewButtons&(PLACT_WEAPON_NEXT)) {
@@ -6706,11 +7748,11 @@ void InitAniNum() {
     }
 
     if (m_tmLastDamage+m_fShieldDelay < _pTimer->CurrentTick()) { // HUD 3D - Shield sound regen
-      if (m_bShieldCharging == FALSE && m_fShield<m_fMaxShield) {
+      if (m_bShieldCharging == FALSE && m_fShield<GetMaxShield()/*m_fMaxShield*/) {
         SetRandomShieldPitch( 0.9f, 1.1f);
         PlaySound(m_soShield, SOUND_SHIELD_CHARGE, SOF_3D);
         m_bShieldCharging = TRUE;
-      } else if (m_fShield==m_fMaxShield && m_bShieldCharging==TRUE) {
+      } else if (m_fShield==GetMaxShield()/*m_fMaxShield*/ && m_bShieldCharging==TRUE) {
         SetRandomShieldPitch( 0.9f, 1.1f);
         PlaySound(m_soShield, SOUND_SHIELD_CHARGED, SOF_3D);
         m_bShieldCharging = FALSE;
@@ -6744,7 +7786,7 @@ void InitAniNum() {
     }
   	// ****************************************************************************
 
-    // * HUD 3D - SHIELD **********************************************************
+    // * HUD 3D - SHIELD BROKEN ***************************************************
 	  // if less than few seconds elapsed since last damage
     FLOAT tmSinceShieldBroken = _pTimer->CurrentTick() - m_tmShieldBroken;
     if( tmSinceShieldBroken<1.0f) {
@@ -6869,9 +7911,16 @@ void InitAniNum() {
     }
   }
 
-  void PlayPowerUpSound ( void ) {
+  /*void PlayPowerUpSound ( void ) {
     m_soPowerUpBeep.Set3DParameters(50.0f, 10.0f, 4.0f, 1.0f);
     PlaySound(m_soPowerUpBeep, SOUND_POWERUP_BEEP, SOF_3D|SOF_VOLUMETRIC|SOF_LOCAL);
+  }*/
+
+  void PlayPowerUpSound ( void ) {
+    if (_pNetwork->IsPlayerLocal(this)) {
+      m_soPowerUpBeep.Set3DParameters(50.0f, 10.0f, 4.0f, 1.0f);
+      PlaySound(m_soPowerUpBeep, SOUND_POWERUP_BEEP, SOF_3D);
+    }
   }
 
   void ActiveActions(const CPlayerAction &paAction)
@@ -7316,7 +8365,7 @@ void InitAniNum() {
         (ANGLE)((FLOAT)paAction.pa_aRotation(3)*_pTimer->TickQuantum)));
     }
 
-    // HUD 3D - Enable "Tab" table button for dead players
+    // HUD 3D - Enable "Tab" button for dead players
     m_bShowingTabInfo = FALSE;
     if (ulButtonsNow&PLACT_SHOW_TAB_INFO) {
       m_bShowingTabInfo = TRUE;
@@ -7327,7 +8376,6 @@ void InitAniNum() {
       if( GetSP()->sp_bSinglePlayer) {
         // load quick savegame
         _pShell->Execute("gam_bQuickLoad=1;");
-		
       // if deathmatch or similar
       } else if( !GetSP()->sp_bCooperative) {
         // rebirth
@@ -7396,7 +8444,6 @@ void InitAniNum() {
     }
     // if reload is pressed
     if (ulReleasedButtons&PLACT_RELOAD) {
-
       ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReloadWeapon());
     }
     // if fire bomb is pressed
@@ -7413,13 +8460,25 @@ void InitAniNum() {
       }
     }
 
-    m_bShowingTabInfo = FALSE;                //  HUD 3D
+    m_bShowingTabInfo = FALSE;              //  HUD 3D
     if (ulButtonsNow&PLACT_SHOW_TAB_INFO) {
       m_bShowingTabInfo = TRUE;
     }
 
-	if (ulNewButtons&PLACT_DROP_MONEY) {        //  HUD 3D
-      DropMoney();
+	  if (ulNewButtons&PLACT_DROP_MONEY) {  //  HUD 3D
+      if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
+        DropMoney();
+      } else {
+      PrintCenterMessage(this, this, TRANS("Drop available only in co-op!"), 3.0f, MSS_NONE);
+      }
+    }
+
+    if (ulNewButtons&PLACT_MARK) {      //  HUD 3D
+      if (GetSP()->sp_bCooperative/* && !GetSP()->sp_bSinglePlayer*/) {
+        Mark();
+      } else {
+      PrintCenterMessage(this, this, TRANS("Mark is available only in co-op!"), 3.0f, MSS_NONE);
+      }
     }
 
     // if use is pressed
@@ -7497,6 +8556,21 @@ void InitAniNum() {
     return (GetSP()->sp_ctMaxPlayers==1||GetSP()->sp_bQuickTest) && m_penActionMarker==NULL && !_SE_DEMO;
   }
 
+  FLOAT GetMaxShield() {
+    if (cht_fMaxShield>=0.0f && CheatsEnabled()) {
+      return cht_fMaxShield;
+    }
+    FLOAT fExtraMaxShield = 0.0f;
+    CGameStat* penGameStat = (CGameStat* )m_penGameStat.ep_pen;
+    if (penGameStat==NULL) {
+      return NULL;
+    }
+    if (penGameStat->m_iCreditsUsed >= 7 && GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {
+      fExtraMaxShield = 5.0f*penGameStat->m_iCreditsUsed;
+    }
+    return m_fMaxShield + fExtraMaxShield + m_fExtraShield;
+  }
+
   // Cheats
   void Cheats(void)
   {
@@ -7552,10 +8626,9 @@ void InitAniNum() {
       cht_bRefresh = FALSE;
       SetHealth(TopHealth());
     }
-    if (cht_fMaxShield) { // look, a new cheat!
-      cht_fMaxShield;
-      m_fMaxShield=cht_fMaxShield;
-      //M_fShield=cht_fMaxShield;
+    if (cht_fMaxShield>=0.0f && cht_fMaxShield!=cht_fOldMaxShield) { // look, a new cheat!
+      m_fShield=cht_fMaxShield;
+      cht_fOldMaxShield=cht_fMaxShield;
     }
   };
 
@@ -7577,7 +8650,7 @@ void InitAniNum() {
       (GetSettings()->ps_ulFlags&PSF_SHARPTURNING) &&
       _pNetwork->IsPlayerLocal((CPlayer*)GetPredictionTail());
 
-    // lerp player viewpoint a 
+    // lerp player viewpoint
     FLOAT fLerpFactor = _pTimer->GetLerpFactor();
     plView.Lerp(en_plLastViewpoint, en_plViewpoint, fLerpFactor);
 
@@ -7714,7 +8787,11 @@ void InitAniNum() {
 
     if (((CPlayerWeapons*)&*m_penWeapons)->m_iCurrentWeapon==WEAPON_SNIPER
     &&bSniping) {
-      HUD_DrawSniperMask();
+      if (IsPredicted()) {
+        HUD_DrawSniperMask((CPlayer*)GetPredictor(), pdp);
+      } else {
+        HUD_DrawSniperMask(this, pdp);
+      }
     }
 
     // render weapon models if needed
@@ -7827,22 +8904,27 @@ void InitAniNum() {
     pdp->BlendScreen();
 
     // render status info line (if needed)
-    if (!m_bShowingTabInfo) {
+    if (hud_bShowInfo && !m_bShowingTabInfo && hud_iOldHUD==0) {
 	  	if(IsPredicted()) {
 		    ((CPlayer*)GetPredictor())->RenderH3D(prProjection, pdp, 
 			  vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
 		  } else {
 		    RenderH3D(prProjection, pdp, 
 			  vViewerLightDirection, colViewerLight, colViewerAmbient, bRenderWeapon, iEye);
-  		}
-	  }
-
+      }
+    }
+      BOOL bSnooping = FALSE;
+      CPlayer *penHUDPlayer = this;
+      CPlayer *penHUDOwner  = this;
+      if (penHUDPlayer->IsPredicted()) {
+        penHUDPlayer = (CPlayer *)penHUDPlayer->GetPredictor();
+      }
     if( hud_bShowInfo) { 
       if (IsPredicted()) {
-         DrawHUD( (CPlayer*)GetPredictor(), pdp);
+         DrawHUD( (CPlayer*)GetPredictor(), pdp, penHUDOwner);
       }
       else {
-         DrawHUD(this, pdp);
+         DrawHUD(this, pdp, penHUDOwner);
       }
     }
   }
@@ -7934,12 +9016,11 @@ void InitAniNum() {
     m_pstState = PST_STAND;
     m_fDamageAmmount = 0.0f;
     m_tmWoundedTime  = 0.0f;
-    m_tmInvisibility    = 0.0f;//, 
-    m_tmInvulnerability = 0.0f;//, 
-    m_tmSeriousDamage   = 0.0f;//, 
-    m_tmSeriousSpeed    = 0.0f;//,
-
-    hud_bShowNickname=0;
+    m_tmInvisibility    = 0.0f, 
+    m_tmInvulnerability = 0.0f, 
+    m_tmSeriousDamage   = 0.0f, 
+    m_tmSeriousSpeed    = 0.0f,
+    m_fShield           = 0.0f,
 
     // initialize animator
     ((CPlayerAnimator&)*m_penAnimator).Initialize();
@@ -8028,8 +9109,6 @@ void InitAniNum() {
   
   void TeleportPlayer(enum WorldLinkType EwltType) 
   {
-
-	
     INDEX iLevel = -1;
     CTString strLevelName = GetWorld()->wo_fnmFileName.FileName();
     
@@ -8157,16 +9236,19 @@ void InitAniNum() {
 
       CPlayerMarker &CpmStart = (CPlayerMarker&)*pen;
       // set player characteristics
+      //CPrintF("Before SetHealth: GetHealth()=%f\n",GetHealth());
       if (bSetHealth) {
         SetHealth(CpmStart.m_fHealth/100.0f*TopHealth());
         m_iMana  = GetSP()->sp_iInitialMana;
         m_fArmor = CpmStart.m_fShield;
+        //CPrintF("After SetHealth: GetHealth()=%f\n",GetHealth());
       } else if (bAdjustHealth) {
         FLOAT fHealth = GetHealth();
         FLOAT fTopHealth = TopHealth();
         if( fHealth < fTopHealth) {
           SetHealth(ClampUp(fHealth+fTopHealth/2.0f, fTopHealth));
         }
+        //CPrintF("After bAdjustHealth SetHealth: GetHealth()=%f\n",GetHealth());
       }
 
       // if should start in computer
@@ -8197,8 +9279,16 @@ void InitAniNum() {
         ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(CpmStart.m_iGiveWeapons, 0, 0,
           CpmStart.m_fMaxAmmoRatio);
       } else {
-        ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(CpmStart.m_iGiveWeapons, CpmStart.m_iTakeWeapons,
-          GetSP()->sp_bInfiniteAmmo?0:CpmStart.m_iTakeAmmo, CpmStart.m_fMaxAmmoRatio);
+        FLOAT fMaxAmmoRatio=CpmStart.m_fMaxAmmoRatio;
+        if (fMaxAmmoRatio<0.1f && GetSP()->sp_bPlayerMarkerSaveWeapon) {
+          fMaxAmmoRatio=0.5f;
+        }
+        INDEX iGiveWeapons=CpmStart.m_iGiveWeapons;
+        if (iGiveWeapons<m_iSavedAvailableWeapons && GetSP()->sp_bPlayerMarkerSaveWeapon) {
+          iGiveWeapons = m_iSavedAvailableWeapons;
+        }
+        ((CPlayerWeapons&)*m_penWeapons).InitializeWeapons(/*CpmStart.m_iGiveWeapons*/ iGiveWeapons, CpmStart.m_iTakeWeapons,
+          GetSP()->sp_bInfiniteAmmo?0:CpmStart.m_iTakeAmmo, /*CpmStart.m_fMaxAmmoRatio*/ fMaxAmmoRatio);
       }
       // start position relative to link
       if (EwltType == WLT_RELATIVE) {
@@ -8256,7 +9346,6 @@ void InitAniNum() {
       m_ulFlags |= PLF_LEVELSTARTED;
       m_tmLevelStarted = _pNetwork->GetGameTime();
     }
-
     // reset model appearance
     CTString strDummy;
     SetPlayerAppearance(GetModelObject(), NULL, strDummy, /*bPreview=*/FALSE);
@@ -8456,7 +9545,7 @@ procedures:
     }
     // find music holder on new world
     FindMusicHolder();
-	CheckShopInTheWorld();
+    CheckShopInTheWorld();
     // store group name
     m_strGroup = _SwcWorldChange.strGroup;
     TeleportPlayer((WorldLinkType)_SwcWorldChange.iType);
@@ -8516,6 +9605,7 @@ procedures:
   {
     // stop firing when dead
     ((CPlayerWeapons&)*m_penWeapons).SendEvent(EReleaseWeapon());
+    GetPlayerWeapons()->SendEvent(EClearAmmoPack());
     // stop all looping ifeel effects
     if(_pNetwork->IsPlayerLocal(this))
     {
@@ -8548,6 +9638,7 @@ procedures:
 		if (!m_bSpectatorDeath) {
 		  // just print death message, no score updating
 		  PrintPlayerDeathMessage(this, eDeath);
+      CGameStat* penGameStat = (CGameStat*)m_penGameStat.ep_pen;
 		  // check whether this time we respawn in place or on marker
 		  CheckDeathForRespawnInPlace(eDeath);
 		  // increase number of deaths
@@ -8876,30 +9967,34 @@ procedures:
 
 
     if (GetSettings()->ps_ulFlags&PSF_PREFER3RDPERSON) {
-		ChangePlayerView();
+		  ChangePlayerView();
     }
-	FLOAT fTime = GetSP()->sp_fForceSpectateCD; // HUD 3D
-	CMusicHolder *pmh = (CMusicHolder *)m_penMainMusicHolder.ep_pen;
-	if (GetSP()->sp_bCooperative/*GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP*/ && !GetSP()->sp_bSinglePlayer) {
-		if (_pTimer->CurrentTick()>pmh->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft>0) {
-			((CSessionProperties*)GetSP())->sp_ctCreditsLeft--;
-		} else if (_pTimer->CurrentTick()>pmh->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft==0) {
-			ForceSpectate();
+	  FLOAT fTime = GetSP()->sp_fForceSpectateCD; // HUD 3D
+  	CGameStat *pgs = (CGameStat *)m_penGameStat.ep_pen;
+  	if (GetSP()->sp_bCooperative/*GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP*/ && !GetSP()->sp_bSinglePlayer) {
+		  if (_pTimer->CurrentTick()>pgs->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft>0) {
+			  ((CSessionProperties*)GetSP())->sp_ctCreditsLeft--;
+        EPlayerDeath epd;
+        m_penGameStat->SendEvent(epd);
+		  } else if (_pTimer->CurrentTick()>pgs->m_fLevelTime+fTime && GetSP()->sp_ctCreditsLeft==0) {
+			  ForceSpectate();
 		}
 	}
     return;
   };
 
   Rebirth() {
+    m_iSavedAvailableWeapons=GetPlayerWeapons()->m_iAvailableWeapons;
+    EPlayerDeath epd;
+    //m_penGameStat->SendEvent(epd);
     
     bUseButtonHeld = FALSE;
-	
 
     // restore last view
     m_iViewState = m_iLastViewState;
     // clear ammunition
     if (!(m_ulFlags&PLF_RESPAWNINPLACE)) {
-      GetPlayerWeapons()->ClearWeapons();
+        GetPlayerWeapons()->ClearWeapons();
     }
 
     // stop and kill camera
@@ -8918,13 +10013,14 @@ procedures:
       penFlame->SendEvent(esf);
     }
 	
-	if (m_penView != NULL) {
+	  if (m_penView != NULL) {
       ((CPlayerView&)*m_penView).SendEvent(EEnd());
       m_penView = NULL;
     }
 
-	m_penSpectatorPlayer=NULL;
-	m_iSpectatorPlayerIndex=-1;
+	  m_penSpectatorPlayer=NULL;                                     // HUD 3D
+	  m_iSpectatorPlayerIndex=-1;                                    //
+    m_tmLastDamage=_pTimer->CurrentTick();
 
     FindMusicHolder();
 	
@@ -8939,7 +10035,6 @@ procedures:
 
     // initialize player (from PlayerMarker)
     InitializePlayer();
-
     return EReturn();
   };
 
@@ -9628,13 +10723,19 @@ procedures:
       on (EDamage eDamage) : { call Wounded(eDamage); }
       on (EPreLevelChange) : { 
 
-        if (GetSP()->sp_bGiveExtraShield && GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) { // * H3D - Convert left respawn credits to MaxShield
-          EMaxShield eMaxShield;
-          FLOAT fCreditsLeft;
-          fCreditsLeft=GetSP()->sp_ctCreditsLeft;
-          eMaxShield.fMaxShield=(eMaxShield.fMaxShield)+fCreditsLeft;
-          ReceiveItem(eMaxShield);
-        }                                                                                             //
+        if (GetSP()->sp_bGiveExtraShield && GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) { // * HUD 3D - Convert left respawn credits to MaxShield
+          EMaxShield eMaxShield;                                                                           //
+          eMaxShield.bPermanent = TRUE;                                                                    //
+          FLOAT fCreditsLeft;                                                                              //
+          fCreditsLeft=GetSP()->sp_ctCreditsLeft;                                                          //
+          eMaxShield.fMaxShield=(eMaxShield.fMaxShield)+fCreditsLeft;                                      //
+          if (!((CWorldLinkController* )m_penWorldLinkController.ep_pen)->m_bTriggered) {
+            eMaxShield.fMaxShield=(eMaxShield.fMaxShield)+m_fExtraShield;
+          }
+          ReceiveItem(eMaxShield);                                                                         //
+          m_fExtraShield=0.0f;                                                                             //
+        }                                                                                                  //
+        if (!(GetFlags()&ENF_ALIVE)) {SetHealth(TopHealth());}
 
         m_ulFlags&=~PLF_INITIALIZED; 
         m_ulFlags|=PLF_CHANGINGLEVEL;
@@ -9642,8 +10743,11 @@ procedures:
         resume; 
       }
       on (EPostLevelChange) : {
-        if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {    // * H3D - Reset sp_ctCreditsLeft
+        if (GetSP()->sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {    // * HUD 3D - Reset sp_ctCreditsLeft for survival co-op
           ((CSessionProperties*)GetSP())->sp_ctCreditsLeft=1;
+        }
+        if (GetSP()->sp_gmGameMode==CSessionProperties::GM_COOPERATIVE && GetSP()->sp_bResetCredits && ((CSessionProperties*)GetSP())->sp_ctCredits>0) {    // * H3D - Reset sp_ctCreditsLeft to max for co-op
+          ((CSessionProperties*)GetSP())->sp_ctCreditsLeft=((CSessionProperties*)GetSP())->sp_ctCredits;
         }
         if (GetSP()->sp_bSinglePlayer || (GetFlags()&ENF_ALIVE)) {
           call WorldChange(); 
@@ -9666,12 +10770,15 @@ procedures:
       on (EShopEntered eShopEntered) : {
         m_penShop = eShopEntered.penShop;
         m_iSelectedShopIndex = 0;
+        if (hud_iOldHUDShop>0) {
+          hud_iOldHUDShop = hud_iOldHUD;
+          hud_iOldHUD     = 0;
+        }
         resume;
       }
 
       on (ECameraStart eStart) : {
         m_penCamera = eStart.penCamera;
-
         // stop player
         if (m_penActionMarker==NULL) {
           SetDesiredTranslation(FLOAT3D(0.0f, 0.0f, 0.0f));
@@ -9715,23 +10822,22 @@ procedures:
         m_psLevelStats.ps_iScore += eScore.iPoints;
         m_psGameStats.ps_iScore += eScore.iPoints;
         m_iMana  += eScore.iPoints*GetSP()->sp_fManaTransferFactor; 
-        // m_iMoney += eScore.iPoints;
         CheckHighScore();
-		if (m_penMainMusicHolder!=NULL && GetSP()->sp_ctCredits!=-1) {
-			m_penMainMusicHolder->SendEvent(eScore);
+		if (m_penGameStat!=NULL && GetSP()->sp_ctCredits!=-1) {
+			m_penGameStat->SendEvent(eScore);
 		}
         resume;
       }
       on (EKilledEnemy) : {
         m_psLevelStats.ps_iKills += 1;
         m_psGameStats.ps_iKills += 1;
-        if (m_penMainMusicHolder != NULL) { m_penMainMusicHolder->SendEvent(EKilledEnemy());}
+        if (m_penGameStat != NULL) { m_penGameStat->SendEvent(EKilledEnemy());}
         resume;
       }
       on (ESecretFound) : {
         m_psLevelStats.ps_iSecrets += 1;
         m_psGameStats.ps_iSecrets += 1;
-        if (m_penMainMusicHolder != NULL) { m_penMainMusicHolder->SendEvent(ESecretFound());}
+        if (m_penGameStat != NULL) { m_penGameStat->SendEvent(ESecretFound());}
         resume;
       }
       on (EWeaponChanged) : {
@@ -9766,21 +10872,25 @@ procedures:
     }
 
     // we get here if the player is disconnected from the server
+    if (GetSP()->sp_bCooperative && !GetSP()->sp_bSinglePlayer) {
+		  if (GetSP()->sp_ctCreditsLeft==0 && !HasAlivePlayers(FALSE)) {
+			  m_penWorldLinkController->SendEvent(ETrigger());
+		  }
+	  }
 
-    // if we have some keys
-
+      // if we have some keys
       // find first live player
       CPlayer *penNextPlayer = NULL;
       for(INDEX iPlayer=0; iPlayer<GetMaxPlayers(); iPlayer++) {
         CPlayer *pen = (CPlayer*)&*GetPlayerEntity(iPlayer);
         if (pen!=NULL && pen!=this && (pen->GetFlags()&ENF_ALIVE) && !(pen->GetFlags()&ENF_DELETED) ) {
-			if (!IsPredictor() && m_ulKeys!=0) {
-				penNextPlayer = pen;
-			}
-		}
-		if (pen!=NULL && pen!=this && ((CPlayer*)&*pen)->m_penSpectatorPlayer==this) {
-			((CPlayer*)&*pen)->SwitchSpectatorPlayer();
-		}
+		    	if (!IsPredictor() && m_ulKeys!=0) {
+			    	penNextPlayer = pen;
+		    	}
+		    }
+	    	if (pen!=NULL && pen!=this && ((CPlayer*)&*pen)->m_penSpectatorPlayer==this) {
+		    	((CPlayer*)&*pen)->SwitchSpectatorPlayer();
+	    	}
       }
 
       // if any found
@@ -9805,6 +10915,6 @@ procedures:
     }
     Destroy();
     return;
-  };
+  }; 
 };
 

@@ -15,6 +15,7 @@ enum ShieldItemType {
 // event for sending through receive item
 event EMaxShield {
   FLOAT fMaxShield,         // shield to receive
+  BOOL  bPermanent,
 };
 
 class CShieldItem : CItem {
@@ -135,6 +136,7 @@ procedures:
     // send shield to entity
     EMaxShield eMaxShield;
     eMaxShield.fMaxShield = m_fValue;
+    eMaxShield.bPermanent = FALSE;
     // if shield is received
     if (epass.penOther->ReceiveItem(eMaxShield)) {
 

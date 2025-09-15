@@ -4,7 +4,8 @@
 #include "EntitiesMP/Common/PathFinding.h"
 #include "EntitiesMP/NavigationMarker.h"
 #include "EntitiesMP/TacticsHolder.h"
-#include "EntitiesMP/MoneyItem.h"
+#include "EntitiesMP/MoneyItem.h"          // HUD 3D
+#include "EntitiesMP/Friend.h"             //
 extern void JumpFromBouncer(CEntity *penToBounce, CEntity *penBouncer);
 extern INDEX ent_bReportBrokenChains;
 %}
@@ -955,17 +956,16 @@ functions:
   // check if an entity is valid for being your new enemy
   BOOL IsValidForEnemy(CEntity *penPlayer)
   {
-	  if (penPlayer == NULL || penPlayer == this) {
-		  return FALSE;
-	  }
-
-	  //CPrintF("Check valid for enemy: %s\n", penPlayer->GetName());
-	  //if (IsOfClass(penPlayer, "Moving Brush") || IsOfClass(penPlayer, "Santa")) {
-		  //CPrintF("Valid add target, alive: %i\n", GetFlags()&ENF_ALIVE);
-		//  return TRUE;
-	  //}
-  
-    return IsDerivedFromClass(penPlayer, "Player") && penPlayer->GetFlags()&ENF_ALIVE;
+	    /*return 
+      penPlayer!=NULL && 
+      IsDerivedFromClass(penPlayer, "Player") &&
+      penPlayer->GetFlags()&ENF_ALIVE;*/
+    if (penPlayer == NULL) { return FALSE; }
+    BOOL bIsValidPlayer = IsOfClass(penPlayer, "Player");
+    BOOL bIsValidFriend = IsOfClass(penPlayer, "Friend") && ((CFriend*)&*penPlayer)->m_bTemplate == FALSE;
+    return
+      (bIsValidPlayer || bIsValidFriend) &&
+      penPlayer->GetFlags()&ENF_ALIVE;
   }
   
   // unset target
@@ -1973,13 +1973,13 @@ functions:
       if( GetCrushHealth() != 0.0f)
       {
         ETouch eTouch = ((ETouch &) ee);
-        //if (IsOfClass(eTouch.penOther, "ModelHolder2") ||
-        //    IsOfClass(eTouch.penOther, "MovingBrush") ||
-        //    IsOfClass(eTouch.penOther, "DestroyableArchitecture") )
-        //{
-        //  InflictDirectDamage(eTouch.penOther, this, DMT_EXPLOSION, GetCrushHealth(),
-        //    eTouch.penOther->GetPlacement().pl_PositionVector, -(FLOAT3D&)eTouch.plCollision);
-        //}
+        if (IsOfClass(eTouch.penOther, "ModelHolder2") ||
+            IsOfClass(eTouch.penOther, "MovingBrush") ||
+            IsOfClass(eTouch.penOther, "DestroyableArchitecture") )
+        {
+          InflictDirectDamage(eTouch.penOther, this, DMT_EXPLOSION, GetCrushHealth(),
+            eTouch.penOther->GetPlacement().pl_PositionVector, -(FLOAT3D&)eTouch.plCollision);
+        }
       }
     }
     return CMovableModelEntity::HandleEvent(ee);
@@ -2846,7 +2846,6 @@ procedures:
 
     // send event to death target
     SendToTarget(m_penDeathTarget, m_eetDeathType, penKiller);
-
     // send event to spawner if any
     // NOTE: trigger's penCaused has been changed from penKiller to THIS;
     if (m_penSpawnerTarget) {

@@ -35,9 +35,12 @@ extern INDEX gam_bGibs;
 extern INDEX gam_bUseExtraEnemies;
 extern CTString gam_strGameSpyExtras;
 
-extern FLOAT gam_fForceSpectateCD;  // HUD 3D
-extern INDEX gam_bGiveExtraShield;  //
-extern FLOAT gam_fStartMaxShield;   //
+extern FLOAT gam_fForceSpectateCD;        // HUD 3D
+extern INDEX gam_bGiveExtraShield;        //
+extern FLOAT gam_fStartMaxShield;         //
+extern INDEX gam_bResetCredits;           //
+extern INDEX gam_bIncrementCredit;        //
+extern INDEX gam_bPlayerMarkerSaveWeapon; //
 
 
 static void SetGameModeParameters(CSessionProperties &sp)
@@ -51,7 +54,7 @@ static void SetGameModeParameters(CSessionProperties &sp)
     sp.sp_ulSpawnFlags |= SPF_SINGLEPLAYER|SPF_COOPERATIVE;
     break;
   case CSessionProperties::GM_SURVIVALCOOP:
-    sp.sp_ulSpawnFlags |= SPF_SINGLEPLAYER|SPF_COOPERATIVE;
+    sp.sp_ulSpawnFlags |= SPF_SINGLEPLAYER|SPF_COOPERATIVE;//|SPF_FLYOVER; //SPF_FLYOVER == SFP_SURVIVALCOOP
     break;
   case CSessionProperties::GM_FLYOVER:
     sp.sp_ulSpawnFlags |= SPF_FLYOVER|SPF_MASK_DIFFICULTY;
@@ -140,7 +143,7 @@ void CGame::SetSinglePlayerSession(CSessionProperties &sp)
 
   sp.sp_ctCredits     = 0;
   sp.sp_ctCreditsLeft = 0;
-  sp.sp_tmSpawnInvulnerability = 0;
+  sp.sp_tmSpawnInvulnerability = 0;;
 
   sp.sp_bTeamPlay = FALSE;
   sp.sp_bFriendlyFire = FALSE;
@@ -158,6 +161,9 @@ void CGame::SetSinglePlayerSession(CSessionProperties &sp)
 
   sp.sp_iBlood = Clamp( gam_iBlood, 0L, 3L);
   sp.sp_bGibs  = gam_bGibs;
+
+  sp.sp_bIncrementCredit = FALSE;
+  sp.sp_bPlayerMarkerSaveWeapon = FALSE;
 }
 
 // set properties for a quick start session
@@ -220,66 +226,73 @@ void CGame::SetMultiPlayerSession(CSessionProperties &sp)
   sp.sp_fForceSpectateCD = gam_fForceSpectateCD;  // HUD 3D
   sp.sp_bGiveExtraShield = gam_bGiveExtraShield;  //
   sp.sp_fStartMaxShield  = gam_fStartMaxShield;   //
+  sp.sp_bResetCredits    = gam_bResetCredits;     //
+  sp.sp_bIncrementCredit = gam_bIncrementCredit;  //
+  sp.sp_bPlayerMarkerSaveWeapon = gam_bPlayerMarkerSaveWeapon; //
 
   // set credits and limits
   if (sp.sp_gmGameMode==CSessionProperties::GM_SURVIVALCOOP) {  // SRUVIVAL CO-OP PARAMETERS
-    sp.sp_ctCredits     = 1;                                    // Start with 1 respawn credit
-    sp.sp_ctCreditsLeft = 1;                                    //
-    sp.sp_iScoreLimit = 0;
-    sp.sp_iFragLimit  = 0;
-    sp.sp_iTimeLimit  = 0;
-    sp.sp_bAllowHealth = TRUE;
-    sp.sp_bAllowArmor  = TRUE;
-	  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;              // I'll delete it on next version
-    sp.sp_bAmmoStays        = FALSE;                            // Ammo,
-    sp.sp_bHealthArmorStays = FALSE;                            // health and armor pick up only
-    sp.sp_bInfiniteAmmo     = FALSE;                            // No infinity ammo
-    sp.sp_bRespawnInPlace   = FALSE;                            // Respawn only from PlayerStart
+    sp.sp_ctCredits           = 1;                              // Start with 1 respawn credit
+    sp.sp_ctCreditsLeft       = 1;                              //
+    sp.sp_iScoreLimit         = 0;
+    sp.sp_iFragLimit          = 0;
+    sp.sp_iTimeLimit          = 0;
+    sp.sp_bAllowHealth        = TRUE;
+    sp.sp_bAllowArmor         = TRUE;
+    sp.sp_bAmmoStays          = FALSE;                          // Ammo,
+    sp.sp_bHealthArmorStays   = FALSE;                          // health and armor is pick up only
+    sp.sp_bInfiniteAmmo       = FALSE;                          // No infinity ammo
+    sp.sp_bRespawnInPlace     = FALSE;                          // Respawn only from PlayerStart
     sp.sp_fExtraEnemyStrengthPerPlayer = 0.1f;                  // +10% Enemy Strength per player
-    sp.sp_tmSpawnInvulnerability = 3;
-    sp.sp_bUseExtraEnemies  = TRUE;
-    sp.sp_bFriendlyFire = TRUE;                                 // For fun
-    sp.sp_gdGameDifficulty=sp.GD_HARD;
+    sp.sp_tmSpawnInvulnerability = 5;
+    sp.sp_bUseExtraEnemies    = TRUE;
+    sp.sp_bFriendlyFire       = TRUE;                           // For fun
+    sp.sp_gdGameDifficulty    = sp.GD_EXTREME;                  // Set SERIOUS difficulty
 
-    sp.sp_ulSpawnFlags = SPF_HARD;
-    sp.sp_fEnemyMovementSpeed = gam_afEnemyMovementSpeed [3];   // Set all stats to HARD difficulty
+    sp.sp_ulSpawnFlags = SPF_EXTREME;
+    sp.sp_fEnemyMovementSpeed = gam_afEnemyMovementSpeed [3];   // Set all stats to HARD difficulty except spawn flags
     sp.sp_fEnemyAttackSpeed   = gam_afEnemyAttackSpeed   [3];
     sp.sp_fDamageStrength     = gam_afDamageStrength     [3];
-    sp.sp_fAmmoQuantity       = gam_afAmmoQuantity       [3];
+    sp.sp_fAmmoQuantity       = gam_afAmmoQuantity       [3];   
     sp.sp_bMental = FALSE;
 
-    sp.sp_fForceSpectateCD = 60;
-    sp.sp_bGiveExtraShield = gam_bGiveExtraShield;
+    sp.sp_fForceSpectateCD    = 60;
+    sp.sp_bGiveExtraShield    = TRUE; //gam_bGiveExtraShield;
+    sp.sp_bResetCredits       = 0;
 
-    sp.sp_fStartMaxShield  = 0;
+    sp.sp_fStartMaxShield     = 15;
+    sp.sp_bResetCredits       = 0;
+    sp.sp_bIncrementCredit    = TRUE;
 
     SetGameModeParameters(sp);
     sp.sp_ulSpawnFlags&=~SPF_SINGLEPLAYER;
   } else if (sp.sp_gmGameMode==CSessionProperties::GM_COOPERATIVE) {
-    sp.sp_ctCredits     = gam_iCredits;
-    sp.sp_ctCreditsLeft = gam_iCredits;
-    sp.sp_iScoreLimit = 0;
-    sp.sp_iFragLimit  = 0;
-    sp.sp_iTimeLimit  = 0;
-    sp.sp_bAllowHealth = TRUE;
-    sp.sp_bAllowArmor  = TRUE;
-	  sp.sp_fForceSpectateCD = gam_fForceSpectateCD;
-    sp.sp_bGiveExtraShield = FALSE;
+    sp.sp_ctCredits           = gam_iCredits;
+    sp.sp_ctCreditsLeft       = gam_iCredits;
+    sp.sp_iScoreLimit         = 0;
+    sp.sp_iFragLimit          = 0;
+    sp.sp_iTimeLimit          = 0;
+    sp.sp_bAllowHealth        = TRUE;
+    sp.sp_bAllowArmor         = TRUE;
+	  sp.sp_fForceSpectateCD    = gam_fForceSpectateCD;
+    sp.sp_bGiveExtraShield    = FALSE;
+    sp.sp_bResetCredits       = gam_bResetCredits;
+    sp.sp_bIncrementCredit    = gam_bIncrementCredit;
 
   } else {
-    sp.sp_ctCredits     = -1;
-    sp.sp_ctCreditsLeft = -1;
-    sp.sp_iScoreLimit = gam_iScoreLimit;
-    sp.sp_iFragLimit  = gam_iFragLimit;
-    sp.sp_iTimeLimit  = gam_iTimeLimit;
-    sp.sp_bWeaponsStay = FALSE;
-    sp.sp_bAmmoStays = FALSE;
-    sp.sp_bHealthArmorStays = FALSE;
-    sp.sp_bGiveExtraShield = FALSE;
+    sp.sp_ctCredits           = -1;
+    sp.sp_ctCreditsLeft       = -1;
+    sp.sp_iScoreLimit         = gam_iScoreLimit;
+    sp.sp_iFragLimit          = gam_iFragLimit;
+    sp.sp_iTimeLimit          = gam_iTimeLimit;
+    sp.sp_bWeaponsStay        = FALSE;
+    sp.sp_bAmmoStays          = FALSE;
+    sp.sp_bHealthArmorStays   = FALSE;
+    sp.sp_bGiveExtraShield    = FALSE;
     if (sp.sp_bUseFrags) {
-      sp.sp_iScoreLimit = 0;
+      sp.sp_iScoreLimit       = 0;
     } else {
-      sp.sp_iFragLimit = 0;
+      sp.sp_iFragLimit        = 0;
     }
   }
 }
@@ -297,7 +310,7 @@ BOOL IsMenuEnabled(const CTString &strMenuName)
   } else if (strMenuName=="Training"   ) {
     return FALSE;
   } else if (strMenuName=="Technology Test") {
-    return TRUE;
+    return FALSE;
   } else {
     return TRUE;
   }

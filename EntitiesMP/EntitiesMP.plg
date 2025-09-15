@@ -3,196 +3,1719 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: EntitiesMP - Win32 Debug--------------------
+--------------------Configuration: EntitiesMP - Win32 Release--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP1455.bat" with contents
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AC.bat" with contents
 [
 @echo off
-cd                                                                                                                    ..\
+cd                                                                                                                     ..\
+ecc EntitiesMP/AirShockwave.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AC.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AD.bat" with contents
+[
+@echo off
+cd                                                                                                                           ..\
+ecc EntitiesMP/WorldSettingsController.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AD.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AE.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/WorldLinkController.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AE.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AF.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/WorldLink.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89AF.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B0.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/WorldBase.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B0.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B1.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Woman.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B1.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B2.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Werebull.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B2.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B3.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/WeaponItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B3.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B4.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Water.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B4.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B5.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/WatchPlayers.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B5.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B6.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/Watcher.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B6.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B7.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Walker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B7.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B8.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/VoiceHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B8.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B9.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/VisualTimer.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89B9.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BA.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/VisualCounter.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BA.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BB.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Twister.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BB.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BC.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Trigger.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BC.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BD.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/TouchField.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BD.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BE.bat" with contents
+[
+@echo off
+cd                                                                                                                           ..\
+ecc EntitiesMP/TimeController.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BE.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BF.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/TextFXHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89BF.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D0.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Teleport.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D0.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D1.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/TacticsHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D1.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D2.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/TacticsChanger.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D2.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D3.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Switch.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D3.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D4.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/SummonerMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D4.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D5.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Summoner.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D5.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D6.bat" with contents
+[
+@echo off
+cd                                                                                                                           ..\
+ecc EntitiesMP/StormController.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D6.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D7.bat" with contents
+[
+@echo off
+cd                                                                                                                        ..\
+ecc EntitiesMP/Spinner.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D7.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D8.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/SpawnerProjectile.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D8.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D9.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/SoundHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89D9.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DA.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Shop.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DA.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DB.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Shooter.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DB.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DC.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ShipMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DC.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DD.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Ship.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DD.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DE.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ShieldItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DE.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DF.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/SeriousBomb.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89DF.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F0.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ScrollHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F0.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F1.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Scorpman.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F1.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F2.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/Santa.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F2.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F3.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/RollingStone.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F3.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F4.bat" with contents
+[
+@echo off
+cd                                                                                                                        ..\
+ecc EntitiesMP/Reminder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F4.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F5.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/PyramidSpaceShipMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F5.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F6.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/PyramidSpaceShip.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F6.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F7.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Projectile.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F7.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F8.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PowerUpItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F8.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F9.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PlayerWeaponsEffects.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89F9.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FA.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PlayerWeapons.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FA.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FB.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PlayerView.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FB.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FC.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PlayerMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FC.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FD.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PlayerAnimator.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FD.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FE.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/PlayerActionMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FE.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FF.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/FriendManager.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP89FF.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A00.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/FriendMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A00.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A01.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Friend.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A01.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A11.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
 ecc EntitiesMP/Player.es
 ]
-Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP1455.bat""
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP1456.tmp" with contents
-[
-/nologo /G5 /MDd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /Fp"Debug/EntitiesMP.pch" /Yu"StdH.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
-"C:\MyMod\Sources\EntitiesMP\Player.cpp"
-]
-Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP1456.tmp"" 
-EntitiesMP/Player.es
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B8.tmp" with contents
-[
-/nologo /subsystem:windows /dll /incremental:yes /pdb:"Debug/EntitiesMPD.pdb" /map:"Debug/EntitiesMPD.map" /debug /machine:I386 /out:"Debug/EntitiesMPD.dll" /implib:"Debug/EntitiesMPD.lib" /pdbtype:sept 
-.\Debug\Common.obj
-.\Debug\EmanatingParticles.obj
-.\Debug\HUD.obj
-.\Debug\Particles.obj
-.\Debug\PathFinding.obj
-.\Debug\StdH.obj
-.\Debug\AirElemental.obj
-.\Debug\AirShockwave.obj
-.\Debug\AmmoItem.obj
-.\Debug\AmmoPack.obj
-.\Debug\AnimationChanger.obj
-.\Debug\AnimationHub.obj
-.\Debug\AreaMarker.obj
-.\Debug\ArmorItem.obj
-.\Debug\BackgroundViewer.obj
-.\Debug\BasicEffects.obj
-.\Debug\Beast.obj
-.\Debug\BigHead.obj
-.\Debug\BlendController.obj
-.\Debug\BloodSpray.obj
-.\Debug\Boneman.obj
-.\Debug\Bouncer.obj
-.\Debug\Bullet.obj
-.\Debug\Camera.obj
-.\Debug\CameraMarker.obj
-.\Debug\CannonBall.obj
-.\Debug\CannonRotating.obj
-.\Debug\CannonStatic.obj
-.\Debug\ChainsawFreak.obj
-.\Debug\Copier.obj
-.\Debug\Counter.obj
-.\Debug\CrateBus.obj
-.\Debug\CrateRider.obj
-.\Debug\CreditsHolder.obj
-.\Debug\Damager.obj
-.\Debug\Debris.obj
-.\Debug\DebugEntityStatesDisplay.obj
-.\Debug\Demon.obj
-.\Debug\DestroyableArchitecture.obj
-.\Debug\Devil.obj
-.\Debug\DevilMarker.obj
-.\Debug\DevilProjectile.obj
-.\Debug\DoorController.obj
-.\Debug\EffectMarker.obj
-.\Debug\Effector.obj
-.\Debug\Elemental.obj
-.\Debug\EnemyBase.obj
-.\Debug\EnemyCounter.obj
-.\Debug\EnemyDive.obj
-.\Debug\EnemyFly.obj
-.\Debug\EnemyMarker.obj
-.\Debug\EnemyRunInto.obj
-.\Debug\EnemySpawner.obj
-.\Debug\EnvironmentBase.obj
-.\Debug\EnvironmentMarker.obj
-.\Debug\EnvironmentParticlesHolder.obj
-.\Debug\Eruptor.obj
-.\Debug\ExotechLarva.obj
-.\Debug\ExotechLarvaBattery.obj
-.\Debug\ExotechLarvaCharger.obj
-.\Debug\Eyeman.obj
-.\Debug\Fireworks.obj
-.\Debug\Fish.obj
-.\Debug\Flame.obj
-.\Debug\FogMarker.obj
-.\Debug\Gizmo.obj
-.\Debug\Global.obj
-.\Debug\GradientMarker.obj
-.\Debug\GravityMarker.obj
-.\Debug\GravityRouter.obj
-.\Debug\Grunt.obj
-.\Debug\GruntSka.obj
-.\Debug\Guffy.obj
-.\Debug\HazeMarker.obj
-.\Debug\Headman.obj
-.\Debug\HealthItem.obj
-.\Debug\HudPicHolder.obj
-.\Debug\Item.obj
-.\Debug\KeyItem.obj
-.\Debug\LarvaOffspring.obj
-.\Debug\Light.obj
-.\Debug\Lightning.obj
-.\Debug\Marker.obj
-.\Debug\MessageHolder.obj
-.\Debug\MessageItem.obj
-.\Debug\MeteorShower.obj
-.\Debug\MirrorMarker.obj
-.\Debug\ModelDestruction.obj
-.\Debug\ModelHolder.obj
-.\Debug\ModelHolder2.obj
-.\Debug\ModelHolder3.obj
-.\Debug\MoneyItem.obj
-.\Debug\ShieldItem.obj
-.\Debug\WorldLinkController.obj
-.\Debug\MovingBrush.obj
-.\Debug\MovingBrushMarker.obj
-.\Debug\MusicChanger.obj
-.\Debug\MusicHolder.obj
-.\Debug\NavigationMarker.obj
-.\Debug\ParticlesHolder.obj
-.\Debug\Pendulum.obj
-.\Debug\PhotoAlbum.obj
-.\Debug\Player.obj
-.\Debug\PlayerActionMarker.obj
-.\Debug\PlayerAnimator.obj
-.\Debug\PlayerMarker.obj
-.\Debug\PlayerView.obj
-.\Debug\PlayerWeapons.obj
-.\Debug\PlayerWeaponsEffects.obj
-.\Debug\PowerUpItem.obj
-.\Debug\Projectile.obj
-.\Debug\PyramidSpaceShip.obj
-.\Debug\PyramidSpaceShipMarker.obj
-.\Debug\Reminder.obj
-.\Debug\RollingStone.obj
-.\Debug\Santa.obj
-.\Debug\Scorpman.obj
-.\Debug\ScrollHolder.obj
-.\Debug\SeriousBomb.obj
-.\Debug\Ship.obj
-.\Debug\ShipMarker.obj
-.\Debug\Shooter.obj
-.\Debug\Shop.obj
-.\Debug\SoundHolder.obj
-.\Debug\SpawnerProjectile.obj
-.\Debug\Spinner.obj
-.\Debug\StormController.obj
-.\Debug\Summoner.obj
-.\Debug\SummonerMarker.obj
-.\Debug\Switch.obj
-.\Debug\TacticsChanger.obj
-.\Debug\TacticsHolder.obj
-.\Debug\Teleport.obj
-.\Debug\TextFXHolder.obj
-.\Debug\TimeController.obj
-.\Debug\TouchField.obj
-.\Debug\Trigger.obj
-.\Debug\Twister.obj
-.\Debug\VisualCounter.obj
-.\Debug\VisualTimer.obj
-.\Debug\VoiceHolder.obj
-.\Debug\Walker.obj
-.\Debug\Watcher.obj
-.\Debug\WatchPlayers.obj
-.\Debug\Water.obj
-.\Debug\WeaponItem.obj
-.\Debug\Werebull.obj
-.\Debug\Woman.obj
-.\Debug\WorldBase.obj
-.\Debug\WorldLink.obj
-.\Debug\WorldSettingsController.obj
-]
-Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B8.tmp""
-Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B9.bat" with contents
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A11.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A12.bat" with contents
 [
 @echo off
-copy Debug\EntitiesMPD.dll C:\MyMod\Bin\Debug >nul
+cd                                                                                                                       ..\
+ecc EntitiesMP/PhotoAlbum.es
 ]
-Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP16B9.bat""
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A12.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A13.bat" with contents
+[
+@echo off
+cd                                                                                                                       ..\
+ecc EntitiesMP/Pendulum.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A13.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A14.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ParticlesHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A14.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A15.bat" with contents
+[
+@echo off
+cd                                                                                                                        ..\
+ecc EntitiesMP/NavigationMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A15.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A16.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MusicHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A16.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A17.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MusicChanger.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A17.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A18.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MovingBrushMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A18.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A19.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MovingBrush.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A19.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1A.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MoneyItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1A.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1B.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ModelHolder3.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1B.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1C.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ModelHolder2.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1C.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1D.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ModelHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1D.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1E.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ModelDestruction.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1E.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1F.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MirrorMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A1F.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A20.bat" with contents
+[
+@echo off
+cd                                                                                                                         ..\
+ecc EntitiesMP/MeteorShower.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A20.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A21.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MessageItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A21.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A22.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/MessageHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A22.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A23.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Marker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A23.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A34.bat" with contents
+[
+@echo off
+cd                                                                                                                         ..\
+ecc EntitiesMP/Lightning.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A34.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A35.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Light.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A35.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A36.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/LarvaOffspring.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A36.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A37.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/KeyItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A37.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A38.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Item.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A38.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A39.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/HudPicHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A39.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3A.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/HealthItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3A.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3B.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Headman.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3B.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3C.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/HazeMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3C.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3D.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Guffy.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3D.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3E.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/GruntSka.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3E.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3F.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Grunt.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A3F.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A40.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/GravityRouter.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A40.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A41.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/GravityMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A41.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A42.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/GradientMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A42.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A43.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Global.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A43.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A44.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Gizmo.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A44.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A45.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/GameStat.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A45.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A46.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/FogMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A46.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A56.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Flame.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A56.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A57.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Fish.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A57.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A58.bat" with contents
+[
+@echo off
+cd                                                                                                                         ..\
+ecc EntitiesMP/Fireworks.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A58.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A59.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Eyeman.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A59.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5A.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ExotechLarvaCharger.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5A.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5B.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ExotechLarvaBattery.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5B.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5C.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ExotechLarva.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5C.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5D.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Eruptor.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5D.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5E.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnvironmentParticlesHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5E.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5F.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnvironmentMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A5F.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A60.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnvironmentBase.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A60.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A61.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemySpawner.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A61.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A62.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemyRunInto.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A62.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A63.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemyMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A63.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A74.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemyFly.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A74.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A85.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemyDive.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A85.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A95.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemyCounter.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8A95.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC5.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/EnemyBase.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC5.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC6.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Elemental.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC6.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC7.bat" with contents
+[
+@echo off
+cd                                                                                                                         ..\
+ecc EntitiesMP/Effector.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC7.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC8.bat" with contents
+[
+@echo off
+cd                                                                                                                         ..\
+ecc EntitiesMP/EffectMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC8.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC9.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/DoorController.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AC9.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACA.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/DevilProjectile.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACA.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACB.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/DevilMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACB.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACC.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Devil.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACC.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACD.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/DestroyableArchitecture.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACD.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACE.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Demon.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACE.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACF.bat" with contents
+[
+@echo off
+cd                                                                                                                      ..\
+ecc EntitiesMP/DebugEntityStatesDisplay.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8ACF.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD0.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Debris.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD0.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD1.bat" with contents
+[
+@echo off
+cd                                                                                                                      ..\
+ecc EntitiesMP/Damager.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD1.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD2.bat" with contents
+[
+@echo off
+cd                                                                                                                      ..\
+ecc EntitiesMP/CreditsHolder.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD2.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD3.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/CrateRider.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD3.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD4.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/CrateBus.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD4.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD5.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Counter.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD5.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD6.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Copier.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AD6.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AE7.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ChainsawFreak.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AE7.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AE8.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/CannonStatic.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AE8.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AE9.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/CannonRotating.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AE9.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEA.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/CannonBall.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEA.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEB.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/CameraMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEB.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEC.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Camera.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEC.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AED.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Bullet.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AED.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEE.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Bouncer.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEE.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEF.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Boneman.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AEF.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF0.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/BloodSpray.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF0.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF1.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/BlendController.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF1.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF2.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/BigHead.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF2.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF3.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/Beast.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF3.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF4.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/BasicEffects.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF4.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF5.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/BackgroundViewer.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF5.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF6.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/ArmorItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF6.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF7.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/AreaMarker.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF7.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF8.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/AnimationHub.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF8.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF9.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/AnimationChanger.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8AF9.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B09.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/AmmoPack.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B09.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0A.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/AmmoItem.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0A.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0B.bat" with contents
+[
+@echo off
+cd                                                                                                                     ..\
+ecc EntitiesMP/AirElemental.es
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0B.bat""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0C.tmp" with contents
+[
+/nologo /G5 /MD /W3 /GX /Zi /Ox /Ot /Og /Oi /Oy- /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Fr"Release/" /Fp"Release/EntitiesMP.pch" /Yu"StdH.h" /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\MyMod\Sources\EntitiesMP\Common\Common.cpp"
+"C:\MyMod\Sources\EntitiesMP\Common\EmanatingParticles.cpp"
+"C:\MyMod\Sources\EntitiesMP\Common\HUD.cpp"
+"C:\MyMod\Sources\EntitiesMP\Common\Particles.cpp"
+"C:\MyMod\Sources\EntitiesMP\Common\PathFinding.cpp"
+"C:\MyMod\Sources\EntitiesMP\AirElemental.cpp"
+"C:\MyMod\Sources\EntitiesMP\AmmoItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\AmmoPack.cpp"
+"C:\MyMod\Sources\EntitiesMP\AnimationChanger.cpp"
+"C:\MyMod\Sources\EntitiesMP\AnimationHub.cpp"
+"C:\MyMod\Sources\EntitiesMP\AreaMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\ArmorItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\BackgroundViewer.cpp"
+"C:\MyMod\Sources\EntitiesMP\BasicEffects.cpp"
+"C:\MyMod\Sources\EntitiesMP\Beast.cpp"
+"C:\MyMod\Sources\EntitiesMP\BigHead.cpp"
+"C:\MyMod\Sources\EntitiesMP\BlendController.cpp"
+"C:\MyMod\Sources\EntitiesMP\BloodSpray.cpp"
+"C:\MyMod\Sources\EntitiesMP\Boneman.cpp"
+"C:\MyMod\Sources\EntitiesMP\Bouncer.cpp"
+"C:\MyMod\Sources\EntitiesMP\Bullet.cpp"
+"C:\MyMod\Sources\EntitiesMP\Camera.cpp"
+"C:\MyMod\Sources\EntitiesMP\CameraMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\CannonBall.cpp"
+"C:\MyMod\Sources\EntitiesMP\CannonRotating.cpp"
+"C:\MyMod\Sources\EntitiesMP\CannonStatic.cpp"
+"C:\MyMod\Sources\EntitiesMP\ChainsawFreak.cpp"
+"C:\MyMod\Sources\EntitiesMP\Copier.cpp"
+"C:\MyMod\Sources\EntitiesMP\Counter.cpp"
+"C:\MyMod\Sources\EntitiesMP\CrateBus.cpp"
+"C:\MyMod\Sources\EntitiesMP\CrateRider.cpp"
+"C:\MyMod\Sources\EntitiesMP\CreditsHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\Damager.cpp"
+"C:\MyMod\Sources\EntitiesMP\Debris.cpp"
+"C:\MyMod\Sources\EntitiesMP\DebugEntityStatesDisplay.cpp"
+"C:\MyMod\Sources\EntitiesMP\Demon.cpp"
+"C:\MyMod\Sources\EntitiesMP\DestroyableArchitecture.cpp"
+"C:\MyMod\Sources\EntitiesMP\Devil.cpp"
+"C:\MyMod\Sources\EntitiesMP\DevilMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\DevilProjectile.cpp"
+"C:\MyMod\Sources\EntitiesMP\DoorController.cpp"
+"C:\MyMod\Sources\EntitiesMP\EffectMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\Effector.cpp"
+"C:\MyMod\Sources\EntitiesMP\Elemental.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemyBase.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemyCounter.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemyDive.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemyFly.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemyMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemyRunInto.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnemySpawner.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnvironmentBase.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnvironmentMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\EnvironmentParticlesHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\Eruptor.cpp"
+"C:\MyMod\Sources\EntitiesMP\ExotechLarva.cpp"
+"C:\MyMod\Sources\EntitiesMP\ExotechLarvaBattery.cpp"
+"C:\MyMod\Sources\EntitiesMP\ExotechLarvaCharger.cpp"
+"C:\MyMod\Sources\EntitiesMP\Eyeman.cpp"
+"C:\MyMod\Sources\EntitiesMP\Fireworks.cpp"
+"C:\MyMod\Sources\EntitiesMP\Fish.cpp"
+"C:\MyMod\Sources\EntitiesMP\Flame.cpp"
+"C:\MyMod\Sources\EntitiesMP\FogMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\GameStat.cpp"
+"C:\MyMod\Sources\EntitiesMP\Gizmo.cpp"
+"C:\MyMod\Sources\EntitiesMP\Global.cpp"
+"C:\MyMod\Sources\EntitiesMP\GradientMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\GravityMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\GravityRouter.cpp"
+"C:\MyMod\Sources\EntitiesMP\Grunt.cpp"
+"C:\MyMod\Sources\EntitiesMP\GruntSka.cpp"
+"C:\MyMod\Sources\EntitiesMP\Guffy.cpp"
+"C:\MyMod\Sources\EntitiesMP\HazeMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\Headman.cpp"
+"C:\MyMod\Sources\EntitiesMP\HealthItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\HudPicHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\Item.cpp"
+"C:\MyMod\Sources\EntitiesMP\KeyItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\LarvaOffspring.cpp"
+"C:\MyMod\Sources\EntitiesMP\Light.cpp"
+"C:\MyMod\Sources\EntitiesMP\Lightning.cpp"
+"C:\MyMod\Sources\EntitiesMP\Marker.cpp"
+"C:\MyMod\Sources\EntitiesMP\MessageHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\MessageItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\MeteorShower.cpp"
+"C:\MyMod\Sources\EntitiesMP\MirrorMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\ModelDestruction.cpp"
+"C:\MyMod\Sources\EntitiesMP\ModelHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\ModelHolder2.cpp"
+"C:\MyMod\Sources\EntitiesMP\ModelHolder3.cpp"
+"C:\MyMod\Sources\EntitiesMP\MoneyItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\MovingBrush.cpp"
+"C:\MyMod\Sources\EntitiesMP\MovingBrushMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\MusicChanger.cpp"
+"C:\MyMod\Sources\EntitiesMP\MusicHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\NavigationMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\ParticlesHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\Pendulum.cpp"
+"C:\MyMod\Sources\EntitiesMP\PhotoAlbum.cpp"
+"C:\MyMod\Sources\EntitiesMP\Player.cpp"
+"C:\MyMod\Sources\EntitiesMP\Friend.cpp"
+"C:\MyMod\Sources\EntitiesMP\FriendMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\FriendManager.cpp"
+"C:\MyMod\Sources\EntitiesMP\PlayerActionMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\PlayerAnimator.cpp"
+"C:\MyMod\Sources\EntitiesMP\PlayerMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\PlayerView.cpp"
+"C:\MyMod\Sources\EntitiesMP\PlayerWeapons.cpp"
+"C:\MyMod\Sources\EntitiesMP\PlayerWeaponsEffects.cpp"
+"C:\MyMod\Sources\EntitiesMP\PowerUpItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\Projectile.cpp"
+"C:\MyMod\Sources\EntitiesMP\PyramidSpaceShip.cpp"
+"C:\MyMod\Sources\EntitiesMP\PyramidSpaceShipMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\Reminder.cpp"
+"C:\MyMod\Sources\EntitiesMP\RollingStone.cpp"
+"C:\MyMod\Sources\EntitiesMP\Santa.cpp"
+"C:\MyMod\Sources\EntitiesMP\Scorpman.cpp"
+"C:\MyMod\Sources\EntitiesMP\ScrollHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\SeriousBomb.cpp"
+"C:\MyMod\Sources\EntitiesMP\ShieldItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\Ship.cpp"
+"C:\MyMod\Sources\EntitiesMP\ShipMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\Shooter.cpp"
+"C:\MyMod\Sources\EntitiesMP\Shop.cpp"
+"C:\MyMod\Sources\EntitiesMP\SoundHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\SpawnerProjectile.cpp"
+"C:\MyMod\Sources\EntitiesMP\Spinner.cpp"
+"C:\MyMod\Sources\EntitiesMP\StormController.cpp"
+"C:\MyMod\Sources\EntitiesMP\Summoner.cpp"
+"C:\MyMod\Sources\EntitiesMP\SummonerMarker.cpp"
+"C:\MyMod\Sources\EntitiesMP\Switch.cpp"
+"C:\MyMod\Sources\EntitiesMP\TacticsChanger.cpp"
+"C:\MyMod\Sources\EntitiesMP\TacticsHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\Teleport.cpp"
+"C:\MyMod\Sources\EntitiesMP\TextFXHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\TimeController.cpp"
+"C:\MyMod\Sources\EntitiesMP\TouchField.cpp"
+"C:\MyMod\Sources\EntitiesMP\Trigger.cpp"
+"C:\MyMod\Sources\EntitiesMP\Twister.cpp"
+"C:\MyMod\Sources\EntitiesMP\VisualCounter.cpp"
+"C:\MyMod\Sources\EntitiesMP\VisualTimer.cpp"
+"C:\MyMod\Sources\EntitiesMP\VoiceHolder.cpp"
+"C:\MyMod\Sources\EntitiesMP\Walker.cpp"
+"C:\MyMod\Sources\EntitiesMP\Watcher.cpp"
+"C:\MyMod\Sources\EntitiesMP\WatchPlayers.cpp"
+"C:\MyMod\Sources\EntitiesMP\Water.cpp"
+"C:\MyMod\Sources\EntitiesMP\WeaponItem.cpp"
+"C:\MyMod\Sources\EntitiesMP\Werebull.cpp"
+"C:\MyMod\Sources\EntitiesMP\Woman.cpp"
+"C:\MyMod\Sources\EntitiesMP\WorldBase.cpp"
+"C:\MyMod\Sources\EntitiesMP\WorldLink.cpp"
+"C:\MyMod\Sources\EntitiesMP\WorldLinkController.cpp"
+"C:\MyMod\Sources\EntitiesMP\WorldSettingsController.cpp"
+]
+Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0C.tmp"" 
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0D.tmp" with contents
+[
+/nologo /G5 /MD /W3 /GX /Zi /Ox /Ot /Og /Oi /Oy- /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_AFXDLL" /D "_MBCS" /D "_USRDLL" /Fr"Release/" /Fp"Release/EntitiesMP.pch" /Yc"StdH.h" /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\MyMod\Sources\EntitiesMP\StdH\StdH.cpp"
+]
+Creating command line "cl.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSP8B0D.tmp"" 
+EntitiesMP/AirShockwave.es
+EntitiesMP/WorldSettingsController.es
+EntitiesMP/WorldLinkController.es
+EntitiesMP/WorldLink.es
+EntitiesMP/WorldBase.es
+EntitiesMP/Woman.es
+EntitiesMP/Werebull.es
+EntitiesMP/WeaponItem.es
+EntitiesMP/Water.es
+EntitiesMP/WatchPlayers.es
+EntitiesMP/Watcher.es
+EntitiesMP/Walker.es
+EntitiesMP/VoiceHolder.es
+EntitiesMP/VisualTimer.es
+EntitiesMP/VisualCounter.es
+EntitiesMP/Twister.es
+EntitiesMP/Trigger.es
+EntitiesMP/TouchField.es
+EntitiesMP/TimeController.es
+EntitiesMP/TextFXHolder.es
+EntitiesMP/Teleport.es
+EntitiesMP/TacticsHolder.es
+EntitiesMP/TacticsChanger.es
+EntitiesMP/Switch.es
+EntitiesMP/SummonerMarker.es
+EntitiesMP/Summoner.es
+EntitiesMP/StormController.es
+EntitiesMP/Spinner.es
+EntitiesMP/SpawnerProjectile.es
+EntitiesMP/SoundHolder.es
+EntitiesMP/Shop.es
+EntitiesMP/Shooter.es
+EntitiesMP/ShipMarker.es
+EntitiesMP/Ship.es
+EntitiesMP/ShieldItem.es
+EntitiesMP/SeriousBomb.es
+EntitiesMP/ScrollHolder.es
+EntitiesMP/Scorpman.es
+EntitiesMP/Santa.es
+EntitiesMP/RollingStone.es
+EntitiesMP/Reminder.es
+EntitiesMP/PyramidSpaceShipMarker.es
+EntitiesMP/PyramidSpaceShip.es
+EntitiesMP/Projectile.es
+EntitiesMP/PowerUpItem.es
+EntitiesMP/PlayerWeaponsEffects.es
+EntitiesMP/PlayerWeapons.es
+EntitiesMP/PlayerView.es
+EntitiesMP/PlayerMarker.es
+EntitiesMP/PlayerAnimator.es
+EntitiesMP/PlayerActionMarker.es
+EntitiesMP/FriendManager.es
+EntitiesMP/FriendMarker.es
+EntitiesMP/Friend.es
+EntitiesMP/Player.es
+EntitiesMP/PhotoAlbum.es
+EntitiesMP/Pendulum.es
+EntitiesMP/ParticlesHolder.es
+EntitiesMP/NavigationMarker.es
+EntitiesMP/MusicHolder.es
+EntitiesMP/MusicChanger.es
+EntitiesMP/MovingBrushMarker.es
+EntitiesMP/MovingBrush.es
+EntitiesMP/MoneyItem.es
+EntitiesMP/ModelHolder3.es
+EntitiesMP/ModelHolder2.es
+EntitiesMP/ModelHolder.es
+EntitiesMP/ModelDestruction.es
+EntitiesMP/MirrorMarker.es
+EntitiesMP/MeteorShower.es
+EntitiesMP/MessageItem.es
+EntitiesMP/MessageHolder.es
+EntitiesMP/Marker.es
+EntitiesMP/Lightning.es
+EntitiesMP/Light.es
+EntitiesMP/LarvaOffspring.es
+EntitiesMP/KeyItem.es
+EntitiesMP/Item.es
+EntitiesMP/HudPicHolder.es
+EntitiesMP/HealthItem.es
+EntitiesMP/Headman.es
+EntitiesMP/HazeMarker.es
+EntitiesMP/Guffy.es
+EntitiesMP/GruntSka.es
+EntitiesMP/Grunt.es
+EntitiesMP/GravityRouter.es
+EntitiesMP/GravityMarker.es
+EntitiesMP/GradientMarker.es
+EntitiesMP/Global.es
+EntitiesMP/Gizmo.es
+EntitiesMP/GameStat.es
+EntitiesMP/FogMarker.es
+EntitiesMP/Flame.es
+EntitiesMP/Fish.es
+EntitiesMP/Fireworks.es
+EntitiesMP/Eyeman.es
+EntitiesMP/ExotechLarvaCharger.es
+EntitiesMP/ExotechLarvaBattery.es
+EntitiesMP/ExotechLarva.es
+EntitiesMP/Eruptor.es
+EntitiesMP/EnvironmentParticlesHolder.es
+EntitiesMP/EnvironmentMarker.es
+EntitiesMP/EnvironmentBase.es
+EntitiesMP/EnemySpawner.es
+EntitiesMP/EnemyRunInto.es
+EntitiesMP/EnemyMarker.es
+EntitiesMP/EnemyFly.es
+EntitiesMP/EnemyDive.es
+EntitiesMP/EnemyCounter.es
+EntitiesMP/EnemyBase.es
+EntitiesMP/Elemental.es
+EntitiesMP/Effector.es
+EntitiesMP/EffectMarker.es
+EntitiesMP/DoorController.es
+EntitiesMP/DevilProjectile.es
+EntitiesMP/DevilMarker.es
+EntitiesMP/Devil.es
+EntitiesMP/DestroyableArchitecture.es
+EntitiesMP/Demon.es
+EntitiesMP/DebugEntityStatesDisplay.es
+EntitiesMP/Debris.es
+EntitiesMP/Damager.es
+EntitiesMP/CreditsHolder.es
+EntitiesMP/CrateRider.es
+EntitiesMP/CrateBus.es
+EntitiesMP/Counter.es
+EntitiesMP/Copier.es
+EntitiesMP/ChainsawFreak.es
+EntitiesMP/CannonStatic.es
+EntitiesMP/CannonRotating.es
+EntitiesMP/CannonBall.es
+EntitiesMP/CameraMarker.es
+EntitiesMP/Camera.es
+EntitiesMP/Bullet.es
+EntitiesMP/Bouncer.es
+EntitiesMP/Boneman.es
+EntitiesMP/BloodSpray.es
+EntitiesMP/BlendController.es
+EntitiesMP/BigHead.es
+EntitiesMP/Beast.es
+EntitiesMP/BasicEffects.es
+EntitiesMP/BackgroundViewer.es
+EntitiesMP/ArmorItem.es
+EntitiesMP/AreaMarker.es
+EntitiesMP/AnimationHub.es
+EntitiesMP/AnimationChanger.es
+EntitiesMP/AmmoPack.es
+EntitiesMP/AmmoItem.es
+EntitiesMP/AirElemental.es
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPB395.tmp" with contents
+[
+/nologo /subsystem:windows /dll /incremental:no /pdb:"Release/EntitiesMP.pdb" /map:"Release/EntitiesMP.map" /debug /machine:I386 /out:"Release/EntitiesMP.dll" /implib:"Release/EntitiesMP.lib" /pdbtype:sept 
+.\Release\Common.obj
+.\Release\EmanatingParticles.obj
+.\Release\HUD.obj
+.\Release\Particles.obj
+.\Release\PathFinding.obj
+.\Release\StdH.obj
+.\Release\AirElemental.obj
+.\Release\AmmoItem.obj
+.\Release\AmmoPack.obj
+.\Release\AnimationChanger.obj
+.\Release\AnimationHub.obj
+.\Release\AreaMarker.obj
+.\Release\ArmorItem.obj
+.\Release\BackgroundViewer.obj
+.\Release\BasicEffects.obj
+.\Release\Beast.obj
+.\Release\BigHead.obj
+.\Release\BlendController.obj
+.\Release\BloodSpray.obj
+.\Release\Boneman.obj
+.\Release\Bouncer.obj
+.\Release\Bullet.obj
+.\Release\Camera.obj
+.\Release\CameraMarker.obj
+.\Release\CannonBall.obj
+.\Release\CannonRotating.obj
+.\Release\CannonStatic.obj
+.\Release\ChainsawFreak.obj
+.\Release\Copier.obj
+.\Release\Counter.obj
+.\Release\CrateBus.obj
+.\Release\CrateRider.obj
+.\Release\CreditsHolder.obj
+.\Release\Damager.obj
+.\Release\Debris.obj
+.\Release\DebugEntityStatesDisplay.obj
+.\Release\Demon.obj
+.\Release\DestroyableArchitecture.obj
+.\Release\Devil.obj
+.\Release\DevilMarker.obj
+.\Release\DevilProjectile.obj
+.\Release\DoorController.obj
+.\Release\EffectMarker.obj
+.\Release\Effector.obj
+.\Release\Elemental.obj
+.\Release\EnemyBase.obj
+.\Release\EnemyCounter.obj
+.\Release\EnemyDive.obj
+.\Release\EnemyFly.obj
+.\Release\EnemyMarker.obj
+.\Release\EnemyRunInto.obj
+.\Release\EnemySpawner.obj
+.\Release\EnvironmentBase.obj
+.\Release\EnvironmentMarker.obj
+.\Release\EnvironmentParticlesHolder.obj
+.\Release\Eruptor.obj
+.\Release\ExotechLarva.obj
+.\Release\ExotechLarvaBattery.obj
+.\Release\ExotechLarvaCharger.obj
+.\Release\Eyeman.obj
+.\Release\Fireworks.obj
+.\Release\Fish.obj
+.\Release\Flame.obj
+.\Release\FogMarker.obj
+.\Release\GameStat.obj
+.\Release\Gizmo.obj
+.\Release\Global.obj
+.\Release\GradientMarker.obj
+.\Release\GravityMarker.obj
+.\Release\GravityRouter.obj
+.\Release\Grunt.obj
+.\Release\GruntSka.obj
+.\Release\Guffy.obj
+.\Release\HazeMarker.obj
+.\Release\Headman.obj
+.\Release\HealthItem.obj
+.\Release\HudPicHolder.obj
+.\Release\Item.obj
+.\Release\KeyItem.obj
+.\Release\LarvaOffspring.obj
+.\Release\Light.obj
+.\Release\Lightning.obj
+.\Release\Marker.obj
+.\Release\MessageHolder.obj
+.\Release\MessageItem.obj
+.\Release\MeteorShower.obj
+.\Release\MirrorMarker.obj
+.\Release\ModelDestruction.obj
+.\Release\ModelHolder.obj
+.\Release\ModelHolder2.obj
+.\Release\ModelHolder3.obj
+.\Release\MoneyItem.obj
+.\Release\MovingBrush.obj
+.\Release\MovingBrushMarker.obj
+.\Release\MusicChanger.obj
+.\Release\MusicHolder.obj
+.\Release\NavigationMarker.obj
+.\Release\ParticlesHolder.obj
+.\Release\Pendulum.obj
+.\Release\PhotoAlbum.obj
+.\Release\Player.obj
+.\Release\Friend.obj
+.\Release\FriendMarker.obj
+.\Release\FriendManager.obj
+.\Release\PlayerActionMarker.obj
+.\Release\PlayerAnimator.obj
+.\Release\PlayerMarker.obj
+.\Release\PlayerView.obj
+.\Release\PlayerWeapons.obj
+.\Release\PlayerWeaponsEffects.obj
+.\Release\PowerUpItem.obj
+.\Release\Projectile.obj
+.\Release\PyramidSpaceShip.obj
+.\Release\PyramidSpaceShipMarker.obj
+.\Release\Reminder.obj
+.\Release\RollingStone.obj
+.\Release\Santa.obj
+.\Release\Scorpman.obj
+.\Release\ScrollHolder.obj
+.\Release\SeriousBomb.obj
+.\Release\ShieldItem.obj
+.\Release\Ship.obj
+.\Release\ShipMarker.obj
+.\Release\Shooter.obj
+.\Release\Shop.obj
+.\Release\SoundHolder.obj
+.\Release\SpawnerProjectile.obj
+.\Release\Spinner.obj
+.\Release\StormController.obj
+.\Release\Summoner.obj
+.\Release\SummonerMarker.obj
+.\Release\Switch.obj
+.\Release\TacticsChanger.obj
+.\Release\TacticsHolder.obj
+.\Release\Teleport.obj
+.\Release\TextFXHolder.obj
+.\Release\TimeController.obj
+.\Release\TouchField.obj
+.\Release\Trigger.obj
+.\Release\Twister.obj
+.\Release\VisualCounter.obj
+.\Release\VisualTimer.obj
+.\Release\VoiceHolder.obj
+.\Release\Walker.obj
+.\Release\Watcher.obj
+.\Release\WatchPlayers.obj
+.\Release\Water.obj
+.\Release\WeaponItem.obj
+.\Release\Werebull.obj
+.\Release\Woman.obj
+.\Release\WorldBase.obj
+.\Release\WorldLink.obj
+.\Release\WorldLinkController.obj
+.\Release\WorldSettingsController.obj
+]
+Creating command line "link.exe @"C:\Users\ART-SE~1\AppData\Local\Temp\RSPB395.tmp""
+Creating temporary file "C:\Users\ART-SE~1\AppData\Local\Temp\RSPB396.bat" with contents
+[
+@echo off
+copy Release\EntitiesMP.dll d:\DebugSam\TSE\Bin\ >nul
+]
+Creating command line ""C:\Users\ART-SE~1\AppData\Local\Temp\RSPB396.bat""
 Compiling...
+Command line warning D4002 : ignoring unknown option '/Ot'
+Command line warning D4002 : ignoring unknown option '/Og'
+Command line warning D4002 : ignoring unknown option '/Oi'
+Command line warning D4002 : ignoring unknown option '/Oy-'
+StdH.cpp
+Compiling...
+Command line warning D4002 : ignoring unknown option '/Ot'
+Command line warning D4002 : ignoring unknown option '/Og'
+Command line warning D4002 : ignoring unknown option '/Oi'
+Command line warning D4002 : ignoring unknown option '/Oy-'
+Common.cpp
+EmanatingParticles.cpp
+HUD.cpp
+Particles.cpp
+PathFinding.cpp
+AirElemental.cpp
+AmmoItem.cpp
+AmmoPack.cpp
+AnimationChanger.cpp
+AnimationHub.cpp
+AreaMarker.cpp
+ArmorItem.cpp
+BackgroundViewer.cpp
+BasicEffects.cpp
+Beast.cpp
+BigHead.cpp
+BlendController.cpp
+BloodSpray.cpp
+Boneman.cpp
+Bouncer.cpp
+Generating Code...
+Compiling...
+Bullet.cpp
+Camera.cpp
+CameraMarker.cpp
+CannonBall.cpp
+CannonRotating.cpp
+CannonStatic.cpp
+ChainsawFreak.cpp
+Copier.cpp
+Counter.cpp
+CrateBus.cpp
+CrateRider.cpp
+CreditsHolder.cpp
+Damager.cpp
+Debris.cpp
+DebugEntityStatesDisplay.cpp
+Demon.cpp
+DestroyableArchitecture.cpp
+Devil.cpp
+DevilMarker.cpp
+DevilProjectile.cpp
+Generating Code...
+Compiling...
+DoorController.cpp
+EffectMarker.cpp
+Effector.cpp
+Elemental.cpp
+EnemyBase.cpp
+EnemyCounter.cpp
+EnemyDive.cpp
+EnemyFly.cpp
+EnemyMarker.cpp
+EnemyRunInto.cpp
+EnemySpawner.cpp
+EnvironmentBase.cpp
+EnvironmentMarker.cpp
+EnvironmentParticlesHolder.cpp
+Eruptor.cpp
+ExotechLarva.cpp
+ExotechLarvaBattery.cpp
+ExotechLarvaCharger.cpp
+Eyeman.cpp
+Fireworks.cpp
+Generating Code...
+Compiling...
+Fish.cpp
+Flame.cpp
+FogMarker.cpp
+GameStat.cpp
+Gizmo.cpp
+Global.cpp
+GradientMarker.cpp
+GravityMarker.cpp
+GravityRouter.cpp
+Grunt.cpp
+GruntSka.cpp
+Guffy.cpp
+HazeMarker.cpp
+Headman.cpp
+HealthItem.cpp
+HudPicHolder.cpp
+Item.cpp
+KeyItem.cpp
+LarvaOffspring.cpp
+Light.cpp
+Generating Code...
+Compiling...
+Lightning.cpp
+Marker.cpp
+MessageHolder.cpp
+MessageItem.cpp
+MeteorShower.cpp
+MirrorMarker.cpp
+ModelDestruction.cpp
+ModelHolder.cpp
+ModelHolder2.cpp
+ModelHolder3.cpp
+MoneyItem.cpp
+MovingBrush.cpp
+MovingBrushMarker.cpp
+MusicChanger.cpp
+MusicHolder.cpp
+NavigationMarker.cpp
+ParticlesHolder.cpp
+Pendulum.cpp
+PhotoAlbum.cpp
 Player.cpp
-C:/MyMod/Sources/EntitiesMP/Player.es(4751) : warning C4101: 'strError' : unreferenced local variable
+C:/MyMod/Sources/EntitiesMP/Player.es(5940) : warning C4101: 'strError' : unreferenced local variable
+Generating Code...
+Compiling...
+Friend.cpp
+FriendMarker.cpp
+FriendManager.cpp
+PlayerActionMarker.cpp
+PlayerAnimator.cpp
+PlayerMarker.cpp
+PlayerView.cpp
+PlayerWeapons.cpp
+PlayerWeaponsEffects.cpp
+PowerUpItem.cpp
+Projectile.cpp
+PyramidSpaceShip.cpp
+PyramidSpaceShipMarker.cpp
+Reminder.cpp
+RollingStone.cpp
+Santa.cpp
+Scorpman.cpp
+ScrollHolder.cpp
+SeriousBomb.cpp
+ShieldItem.cpp
+Generating Code...
+Compiling...
+Ship.cpp
+ShipMarker.cpp
+Shooter.cpp
+Shop.cpp
+SoundHolder.cpp
+SpawnerProjectile.cpp
+Spinner.cpp
+StormController.cpp
+Summoner.cpp
+SummonerMarker.cpp
+Switch.cpp
+TacticsChanger.cpp
+TacticsHolder.cpp
+Teleport.cpp
+TextFXHolder.cpp
+TimeController.cpp
+TouchField.cpp
+Trigger.cpp
+Twister.cpp
+VisualCounter.cpp
+Generating Code...
+Compiling...
+VisualTimer.cpp
+VoiceHolder.cpp
+Walker.cpp
+Watcher.cpp
+WatchPlayers.cpp
+Water.cpp
+WeaponItem.cpp
+Werebull.cpp
+Woman.cpp
+WorldBase.cpp
+WorldLink.cpp
+WorldLinkController.cpp
+WorldSettingsController.cpp
+Generating Code...
 Linking...
+   Creating library Release/EntitiesMP.lib and object Release/EntitiesMP.exp
 <h3>Output Window</h3>
-Copying EntitiesMPD binaries to C:\MyMod\Bin\Debug
+Copying EntitiesMP binaries to d:\DebugSam\TSE\Bin
 
 
 
 <h3>Results</h3>
-EntitiesMPD.dll - 0 error(s), 1 warning(s)
+EntitiesMP.dll - 0 error(s), 9 warning(s)
 </pre>
 </body>
 </html>
